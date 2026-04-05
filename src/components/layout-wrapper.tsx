@@ -33,15 +33,6 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
     };
   }, [isSidebarOpen, hasMounted]);
 
-  // Handle flash-free hydration
-  if (!hasMounted) {
-    return (
-      <div className="flex min-h-screen bg-[#F4F5F6] opacity-0">
-        <div className="flex-1" />
-      </div>
-    );
-  }
-
   return (
     <div className="flex min-h-screen bg-[#F4F5F6]">
       <Sidebar 
