@@ -24,16 +24,6 @@ export default function DashboardPage({
   progress: number 
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [hasMounted, setHasMounted] = useState(false);
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
-  if (!hasMounted) {
-    return <div className="min-h-screen bg-[#F4F5F6] opacity-0" />;
-  }
-  
   return (
     <div className="flex min-h-screen bg-[#F4F5F6]">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
