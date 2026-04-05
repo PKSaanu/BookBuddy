@@ -80,16 +80,16 @@ export default function TranslationPanel({ bookId, preferredLanguage }: { bookId
 
   return (
     <div className="w-full">
-      <div className="bg-[#EBECEF] rounded-[32px] p-8 sm:p-12 relative overflow-hidden group">
+      <div className="bg-[#EBECEF] rounded-[32px] p-6 sm:p-10 relative overflow-hidden group">
         
         {/* Giant Watermark Icon */}
         <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-[0.04] pointer-events-none">
              <Book size={280} strokeWidth={1} />
         </div>
 
-        <form onSubmit={handleTranslate} className="relative z-10 w-full flex flex-col h-full min-h-[220px]">
+        <form onSubmit={handleTranslate} className="relative z-10 w-full flex flex-col h-full min-h-[180px] sm:min-h-[220px]">
            <div>
-             <label htmlFor="english-text" className="block text-[11px] font-bold uppercase tracking-[0.15em] text-[#10175b] mb-6">
+             <label htmlFor="english-text" className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.15em] text-[#10175b] mb-4">
                Enter a word or sentence
              </label>
              <textarea
@@ -103,7 +103,7 @@ export default function TranslationPanel({ bookId, preferredLanguage }: { bookId
                     }
                 }}
                 placeholder="Type here to decipher..."
-                className="w-full bg-transparent border-b border-slate-300 focus:border-[#10175b] focus:outline-none resize-none text-[32px] sm:text-[40px] font-serif text-[#10175b] transition-colors placeholder:text-slate-300/80 pb-4 h-[100px]"
+                className="w-full bg-transparent border-b border-slate-300 focus:border-[#10175b] focus:outline-none resize-none text-2xl sm:text-[32px] md:text-[40px] font-serif text-[#10175b] transition-colors placeholder:text-slate-300/80 pb-2 h-[100px] sm:h-[80px]"
                 onKeyDown={(e) => {
                    if (e.key === 'Enter' && !e.shiftKey) {
                        e.preventDefault();
@@ -113,27 +113,26 @@ export default function TranslationPanel({ bookId, preferredLanguage }: { bookId
              />
            </div>
 
-           <div className="flex flex-col sm:flex-row items-center justify-between mt-auto pt-8">
+           <div className="flex flex-col sm:flex-row items-center justify-between mt-auto pt-6 gap-6 sm:gap-0">
                
-               <div className="flex items-center gap-4 mb-6 sm:mb-0">
-                    <div className="flex items-center gap-3 bg-white px-5 py-2.5 rounded-full shadow-sm border border-slate-200 group/lang">
-                        <Globe size={16} className="text-slate-500" />
+               <div className="flex items-center gap-4 w-full sm:w-auto">
+                    <div className="flex items-center gap-3 sm:gap-4 bg-white px-4 sm:px-6 py-3 rounded-full shadow-sm border border-slate-200 w-full sm:w-auto justify-center sm:justify-start">
+                        <Globe size={16} className="text-[#10175b]/60" />
                         <div className="flex items-center gap-2">
-                            <span className="text-[13px] font-semibold text-[#10175b]">English</span>
+                            <span className="text-[13px] sm:text-[14px] font-bold text-[#10175b]">English</span>
                             {inputText && (
                                 <PronunciationButton text={inputText} lang="en-US" />
                             )}
                         </div>
-                        <ArrowRight size={14} className="text-slate-400" />
-                        <span className="text-[13px] font-semibold text-[#10175b]">{preferredLanguage}</span>
+                        <ArrowRight size={14} className="text-slate-300 mx-1" />
+                        <span className="text-[13px] sm:text-[14px] font-bold text-[#10175b]">{preferredLanguage}</span>
                     </div>
-
                </div>
 
                <button
                  type="submit"
                  disabled={isTranslating || !inputText.trim()}
-                 className="inline-flex items-center gap-3 px-8 py-4 rounded-[14px] shadow-lg shadow-[#10175b]/20 text-[15px] font-bold text-white bg-[#10175b] hover:bg-[#1a2066] focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap active:scale-[0.98]"
+                 className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-10 py-4 rounded-[16px] shadow-lg shadow-[#10175b]/20 text-[15px] font-bold text-white bg-[#10175b] hover:bg-[#1a2066] focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap active:scale-[0.98]"
                >
                  {isTranslating ? <Loader2 className="animate-spin w-5 h-5" /> : <Languages className="w-5 h-5" />}
                  {isTranslating ? 'Translating...' : 'Translate'}
@@ -151,10 +150,10 @@ export default function TranslationPanel({ bookId, preferredLanguage }: { bookId
 
       {/* Render translation output */}
       {translatedText && (
-        <div className="mt-6 animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className="p-8 sm:p-10 bg-white border border-slate-200 rounded-[32px] shadow-sm relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-              <div className="flex-1">
-                  <div className="flex flex-col gap-1 mb-3">
+        <div className="mt-4 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="p-6 sm:p-10 bg-white border border-slate-200 rounded-[32px] shadow-sm relative overflow-hidden flex flex-col xl:flex-row items-center xl:items-center justify-between gap-8 md:gap-10">
+              <div className="flex-1 w-full text-center xl:text-left">
+                  <div className="flex flex-col gap-1 mb-4 xl:mb-2 items-center xl:items-start">
                       <span className="text-[10px] uppercase font-bold tracking-widest text-[#10175b]/50 inline-block">{preferredLanguage} Translation</span>
                       {correctedText && correctedText.toLowerCase() !== inputText.toLowerCase() && (
                           <div className="flex items-center gap-2">
@@ -163,8 +162,8 @@ export default function TranslationPanel({ bookId, preferredLanguage }: { bookId
                           </div>
                       )}
                   </div>
-                  <div className="flex items-center gap-4">
-                      <p className="text-4xl text-[#10175b] font-serif font-bold tracking-tight">{translatedText}</p>
+                  <div className="flex items-center justify-center xl:justify-start gap-4">
+                      <p className="text-3xl sm:text-4xl text-[#10175b] font-serif font-bold tracking-tight leading-tight">{translatedText}</p>
                       <PronunciationButton 
                           text={translatedText} 
                           lang={preferredLanguage === 'Tamil' ? 'ta-IN' : 'si-LK'} 
@@ -172,19 +171,19 @@ export default function TranslationPanel({ bookId, preferredLanguage }: { bookId
                   </div>
               </div>
               
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                <div className="relative">
+              <div className="flex flex-col sm:flex-row items-center gap-5 w-full xl:w-auto">
+                <div className="relative w-full sm:w-auto">
                     <input 
                         type="number"
                         value={pageNumber}
                         onChange={(e) => setPageNumber(e.target.value)}
                         placeholder="0"
                         required
-                        className={`w-24 px-4 py-4 text-center rounded-[14px] border-2 focus:outline-none font-bold text-[#10175b] transition-all ${
-                            !pageNumber ? 'border-red-100 bg-red-50/30' : 'border-slate-100 focus:border-[#10175b]'
+                        className={`w-full sm:w-24 px-4 py-5 sm:py-4 text-center rounded-[18px] border-2 focus:outline-none font-bold text-[#10175b] transition-all bg-[#F8F9FA] ${
+                            !pageNumber ? 'border-red-100 bg-red-50/30' : 'border-[#F0F1F3] focus:border-[#10175b]'
                         }`}
                     />
-                    <span className={`absolute -top-2 left-3 px-2 bg-white text-[9px] font-black uppercase transition-colors ${
+                    <span className={`absolute -top-2 left-4 sm:left-3 px-2 bg-[#F8F9FA] sm:bg-white text-[9px] font-black uppercase transition-colors rounded-sm ${
                         !pageNumber ? 'text-red-400' : 'text-slate-400'
                     }`}>
                         Page *
@@ -194,7 +193,7 @@ export default function TranslationPanel({ bookId, preferredLanguage }: { bookId
                 <button
                   onClick={handleSave}
                   disabled={isSaving || isSaved}
-                  className={`inline-flex items-center gap-3 px-8 py-4 text-[15px] font-bold rounded-[14px] border-2 transition-all duration-300 uppercase tracking-wider active:scale-[0.98] ${
+                  className={`w-full sm:w-auto inline-flex items-center justify-center gap-3 px-10 py-5 sm:py-4 text-[14px] font-bold rounded-[18px] border-2 transition-all duration-300 uppercase tracking-wider active:scale-[0.98] ${
                     isSaved 
                     ? 'bg-[#0f766e] border-[#0f766e] text-white' 
                     : 'border-[#10175b] text-[#10175b] hover:bg-[#10175b] hover:text-white disabled:opacity-40'

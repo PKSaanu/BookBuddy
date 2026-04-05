@@ -56,9 +56,23 @@ export default function CurationList({ vocab, bookId }: { vocab: Translation[], 
         return Object.entries(groups).sort(([a], [b]) => Number(b) - Number(a));
     }, [paginatedVocab]);
 
+    const [hasMounted, setHasMounted] = useState(false);
+
+    useEffect(() => {
+        setHasMounted(true);
+    }, []);
+
     const scrollToTop = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
+
+    if (!hasMounted) {
+        return (
+            <div className="min-h-[400px] flex items-center justify-center">
+                <div className="w-8 h-8 border-4 border-[#10175b] border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
 
     if (vocab.length === 0) {
         return (

@@ -29,6 +29,8 @@ export function CreateBookModal({ onSuccess }: { onSuccess?: () => void }) {
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
+  const [suggestedCorrection, setSuggestedCorrection] = useState<any | null>(null);
+
   useEffect(() => {
     if (state?.success) {
       formRef.current?.reset();
@@ -36,28 +38,40 @@ export function CreateBookModal({ onSuccess }: { onSuccess?: () => void }) {
       setAuthor('');
       setCoverImage('');
       setTotalPages('');
+      setSuggestedCorrection(null);
       if (onSuccess) onSuccess();
     }
   }, [state, onSuccess]);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
-      if (title.trim().length > 2 && showDropdown) {
+      if (title.trim().length > 3 && showDropdown) {
         try {
           const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(title)}&maxResults=5`);
           const data = await res.json();
           if (data.items) {
             setSuggestions(data.items);
+            
+            // Heuristic for correction suggestion
+            const topMatch = data.items[0].volumeInfo;
+            if (topMatch.title.toLowerCase() !== title.toLowerCase() && !title.includes(topMatch.title)) {
+                setSuggestedCorrection(data.items[0]);
+            } else {
+                setSuggestedCorrection(null);
+            }
           } else {
             setSuggestions([]);
+            setSuggestedCorrection(null);
           }
         } catch (e) {
           setSuggestions([]);
+          setSuggestedCorrection(null);
         }
       } else {
         setSuggestions([]);
+        setSuggestedCorrection(null);
       }
-    }, 400);
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [title, showDropdown]);
@@ -74,6 +88,7 @@ export function CreateBookModal({ onSuccess }: { onSuccess?: () => void }) {
     setCoverImage(selectedCover);
     setTotalPages(selectedPageCount);
     setShowDropdown(false);
+    setSuggestedCorrection(null);
   };
 
   return (
@@ -131,7 +146,7 @@ export function CreateBookModal({ onSuccess }: { onSuccess?: () => void }) {
                   </div>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <input
                   name="author"
                   value={author}
@@ -149,6 +164,25 @@ export function CreateBookModal({ onSuccess }: { onSuccess?: () => void }) {
                 />
               </div>
             </div>
+
+            {suggestedCorrection && !showDropdown && (
+                <div className="bg-amber-50 p-4 border border-amber-200/50 rounded-xl animate-in fade-in slide-in-from-top-2">
+                    <p className="text-[11px] font-black uppercase text-amber-700 tracking-wider mb-2">Better Version Found?</p>
+                    <div className="flex items-center justify-between gap-4">
+                        <div className="flex-1">
+                            <p className="text-sm font-bold text-slate-900 italic font-serif leading-tight">"{suggestedCorrection.volumeInfo.title}"</p>
+                            <p className="text-[10px] text-slate-500 font-medium">{suggestedCorrection.volumeInfo.authors?.[0]}</p>
+                        </div>
+                        <button 
+                            type="button"
+                            onClick={() => selectBook(suggestedCorrection)}
+                            className="shrink-0 bg-amber-600 text-white text-[10px] font-black uppercase px-3 py-1.5 rounded-lg hover:bg-amber-700 transition-colors"
+                        >
+                            Correct it
+                        </button>
+                    </div>
+                </div>
+            )}
             
             <div className="pt-4">
                 <SubmitBtn />
