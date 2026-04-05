@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Sidebar from './sidebar';
 import MobileNav from './mobile-nav';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -32,7 +33,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
     };
   }, [isSidebarOpen, hasMounted]);
 
-  // Render a simple loading shell or null until hydrated to prevent the "jump"
+  // Handle flash-free hydration
   if (!hasMounted) {
     return (
       <div className="flex min-h-screen bg-[#F4F5F6] opacity-0">

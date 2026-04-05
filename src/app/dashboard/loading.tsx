@@ -3,16 +3,20 @@ import LayoutWrapper from '@/components/layout-wrapper';
 export default function DashboardLoading() {
   return (
     <LayoutWrapper>
-      <div className="px-8 py-10 md:px-12 md:py-12 xl:px-24 xl:py-16 animate-pulse w-full">
+      <div className="px-8 py-10 md:px-12 md:py-12 xl:px-24 xl:py-16 bg-[#F4F5F6] min-h-screen w-full">
         <div className="max-w-7xl mx-auto">
-            {/* Header / Intro Skeleton */}
+            {/* Header / Intro Static (No Skeleton) */}
             <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end mb-12 gap-8">
                 <div className="max-w-2xl w-full">
-                     <div className="h-3 w-32 bg-slate-200 rounded-full mb-6"></div>
-                     <div className="h-14 md:h-20 w-4/5 max-w-xl bg-slate-200 rounded-2xl"></div>
+                     <p className="text-[12px] tracking-[0.2em] font-black text-slate-400 uppercase mb-4 animate-pulse">Welcome back, Scholar</p>
+                     <h2 className="text-5xl md:text-7xl font-serif text-[#10175b] leading-[1.1] tracking-tight">
+                        Your library is an <span className="italic">unwritten</span> chapter.
+                     </h2>
                 </div>
                 <div className="shrink-0 mb-2">
-                    <div className="h-12 w-40 bg-[#0f766e]/20 rounded-2xl"></div>
+                    <div className="bg-[#10175b] text-white px-8 py-4 rounded-xl font-bold opacity-50 whitespace-nowrap">
+                        Add New Book
+                    </div>
                 </div>
             </div>
 
