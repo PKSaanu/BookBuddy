@@ -83,6 +83,31 @@ export async function updateBookNotes(bookId: string, notes: string) {
   }
 }
 
+export async function updateBookDetails(bookId: string, title: string, author: string, totalPages: number) {
+  const session = await getSession();
+  if (!session?.id) {
+    return { error: 'Unauthorized' };
+  }
+
+  try {
+    await db.update(books)
+      .set({ title, author, totalPages })
+      .where(
+        and(
+          eq(books.id, bookId),
+          eq(books.userId, session.id as string)
+        )
+      );
+    
+    revalidatePath(`/books/${bookId}`);
+    revalidatePath('/dashboard');
+    revalidatePath('/library');
+    return { success: true };
+  } catch (error) {
+    return { error: 'Failed to update book details' };
+  }
+}
+
 export async function getBookNotes(bookId: string) {
   const session = await getSession();
   if (!session?.id) {

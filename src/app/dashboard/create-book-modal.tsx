@@ -30,6 +30,15 @@ export function CreateBookModal({ onSuccess }: { onSuccess?: () => void }) {
   const [showDropdown, setShowDropdown] = useState(false);
 
   const [suggestedCorrection, setSuggestedCorrection] = useState<any | null>(null);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  
+  // Optimization: use refs for caching and state tracking without triggering effects
+  const queryCache = useRef<Map<string, any[]>>(new Map());
+  const showDropdownRef = useRef(showDropdown);
+
+  useEffect(() => {
+    showDropdownRef.current = showDropdown;
+  }, [showDropdown]);
 
   useEffect(() => {
     if (state?.success) {
@@ -44,37 +53,73 @@ export function CreateBookModal({ onSuccess }: { onSuccess?: () => void }) {
   }, [state, onSuccess]);
 
   useEffect(() => {
+    const controller = new AbortController();
+    const query = title.trim();
+
     const timer = setTimeout(async () => {
-      if (title.trim().length > 3 && showDropdown) {
-        try {
-          const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(title)}&maxResults=5`);
-          const data = await res.json();
-          if (data.items) {
-            setSuggestions(data.items);
-            
-            // Heuristic for correction suggestion
-            const topMatch = data.items[0].volumeInfo;
-            if (topMatch.title.toLowerCase() !== title.toLowerCase() && !title.includes(topMatch.title)) {
-                setSuggestedCorrection(data.items[0]);
-            } else {
-                setSuggestedCorrection(null);
-            }
-          } else {
-            setSuggestions([]);
-            setSuggestedCorrection(null);
+      // Early return if query is too short or dropdown is closed
+      if (query.length <= 3 || !showDropdownRef.current) {
+        setSuggestions([]);
+        setSuggestedCorrection(null);
+        return;
+      }
+
+      // 1. Check Cache first
+      if (queryCache.current.has(query)) {
+        const cachedItems = queryCache.current.get(query)!;
+        setSuggestions(cachedItems);
+        
+        if (cachedItems.length > 0) {
+          const topMatch = cachedItems[0].volumeInfo;
+          if (topMatch.title.toLowerCase() !== title.toLowerCase() && !title.includes(topMatch.title)) {
+            setSuggestedCorrection(cachedItems[0]);
           }
-        } catch (e) {
+        }
+        return;
+      }
+
+      // 2. Fetch from API
+      setIsLoadingSuggestions(true);
+      try {
+        const res = await fetch(
+          `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=5`,
+          { signal: controller.signal }
+        );
+        const data = await res.json();
+        
+        const items = data.items || [];
+        // Update Cache
+        queryCache.current.set(query, items);
+        
+        if (items.length > 0) {
+          setSuggestions(items);
+          
+          // Heuristic for correction suggestion
+          const topMatch = items[0].volumeInfo;
+          if (topMatch.title.toLowerCase() !== title.toLowerCase() && !title.includes(topMatch.title)) {
+              setSuggestedCorrection(items[0]);
+          } else {
+              setSuggestedCorrection(null);
+          }
+        } else {
           setSuggestions([]);
           setSuggestedCorrection(null);
         }
-      } else {
-        setSuggestions([]);
-        setSuggestedCorrection(null);
+      } catch (e: any) {
+        if (e.name !== 'AbortError') {
+          setSuggestions([]);
+          setSuggestedCorrection(null);
+        }
+      } finally {
+        setIsLoadingSuggestions(false);
       }
-    }, 500);
+    }, 150); // Lowered debounce to 150ms for instant feel
 
-    return () => clearTimeout(timer);
-  }, [title, showDropdown]);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [title]);
 
   const selectBook = (suggestion: any) => {
     const volInfo = suggestion.volumeInfo;
@@ -112,22 +157,34 @@ export function CreateBookModal({ onSuccess }: { onSuccess?: () => void }) {
             
             <div className="space-y-4 relative">
               <div className="relative">
-                <input
-                  name="title"
-                  value={title}
-                  onChange={(e) => {
-                    setTitle(e.target.value);
-                    setShowDropdown(true);
-                  }}
-                  onFocus={() => setShowDropdown(true)}
-                  placeholder="Book Title"
-                  required
-                  autoComplete="off"
-                  className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#10175b]/20 focus:border-[#10175b] text-slate-900 placeholder-slate-400 font-medium transition-all"
-                />
+                <div className="relative flex items-center">
+                  <input
+                    name="title"
+                    value={title}
+                    onChange={(e) => {
+                      setTitle(e.target.value);
+                      setShowDropdown(true);
+                    }}
+                    onFocus={() => setShowDropdown(true)}
+                    placeholder="Book Title"
+                    required
+                    autoComplete="off"
+                    className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#10175b]/20 focus:border-[#10175b] text-slate-900 placeholder-slate-400 font-medium transition-all"
+                  />
+                  {isLoadingSuggestions && (
+                    <div className="absolute right-4">
+                      <IconLoader className="w-4 h-4 text-[#10175b] animate-spin" />
+                    </div>
+                  )}
+                </div>
                 
-                {showDropdown && suggestions.length > 0 && (
+                {showDropdown && (suggestions.length > 0 || isLoadingSuggestions) && (
                   <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-slate-200 max-h-60 overflow-y-auto z-50">
+                    {isLoadingSuggestions && suggestions.length === 0 && (
+                      <div className="px-4 py-6 text-center text-slate-400 text-xs font-bold uppercase tracking-widest animate-pulse">
+                        Searching Library...
+                      </div>
+                    )}
                     {suggestions.map((s, idx) => (
                       <div 
                         key={idx} 

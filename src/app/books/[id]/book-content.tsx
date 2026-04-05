@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IconNotes, IconChevronRight, IconTrash, IconArrowLeft } from '@tabler/icons-react';
+import { IconNotes, IconChevronRight, IconTrash, IconArrowLeft, IconEdit } from '@tabler/icons-react';
 import Link from 'next/link';
 import TranslationPanel from './translation-panel';
 import CurationList from './curation-list';
 import BookNotes from './book-notes';
 import { DeleteBookButton } from './delete-book-button';
 import { getBookNotes } from '@/actions/books';
+import { EditBookModal } from './edit-book-modal';
 
 interface BookContentProps {
   book: {
@@ -23,10 +24,14 @@ interface BookContentProps {
   progressPercent: number;
 }
 
-export default function BookContent({ book, session, vocab, progressPercent }: BookContentProps) {
+export default function BookContent({ book, session, vocab, progressPercent: initialProgress }: BookContentProps) {
   const [isNotesOpen, setIsNotesOpen] = useState(false);
   const [fetchedNotes, setFetchedNotes] = useState<string | null>(null);
   const [isLoadingNotes, setIsLoadingNotes] = useState(false);
+  
+  // Local state for book details to allow instant updates
+  const [currentBook, setCurrentBook] = useState(book);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const toggleNotes = async () => {
     const nextState = !isNotesOpen;
@@ -41,6 +46,12 @@ export default function BookContent({ book, session, vocab, progressPercent }: B
       setIsLoadingNotes(false);
     }
   };
+
+  // Re-calculate progress if book details change
+  const maxPage = vocab.reduce((max, t) => Math.max(max, t.pageNumber || 0), 0);
+  const progressPercent = currentBook.totalPages 
+    ? Math.round((maxPage / currentBook.totalPages) * 100) 
+    : 0;
 
   return (
     <div className="flex h-[calc(100vh-64px)] md:h-screen w-full overflow-hidden relative">
@@ -60,6 +71,14 @@ export default function BookContent({ book, session, vocab, progressPercent }: B
               
               <div className="flex items-center gap-3 md:gap-4">
                 <button 
+                   onClick={() => setIsEditModalOpen(true)}
+                   className="inline-flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 rounded-full text-[10px] md:text-[11px] font-black uppercase tracking-widest transition-all duration-300 border-2 bg-white text-slate-500 border-slate-200 hover:border-[#10175b] hover:text-[#10175b] shadow-sm"
+                >
+                  <IconEdit className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  <span className="hidden xs:inline">Edit Details</span>
+                </button>
+
+                <button 
                    onClick={toggleNotes}
                    className={`inline-flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 rounded-full text-[10px] md:text-[11px] font-black uppercase tracking-widest transition-all duration-300 border-2 ${isNotesOpen ? 'bg-[#10175b] text-white border-[#10175b]' : 'bg-white text-[#10175b] border-slate-200 hover:border-[#10175b] shadow-sm'}`}
                 >
@@ -67,7 +86,7 @@ export default function BookContent({ book, session, vocab, progressPercent }: B
                   <span className="hidden xs:inline">{isNotesOpen ? 'Hide Notes' : 'Notes'}</span>
                 </button>
                 
-                <DeleteBookButton bookId={book.id} bookTitle={book.title} />
+                <DeleteBookButton bookId={book.id} bookTitle={currentBook.title} />
                 
                 <div className="bg-[#0f766e] text-white text-[9px] md:text-[11px] font-bold tracking-[0.1em] uppercase px-3 md:px-4 py-1.5 rounded-full shadow-sm">
                   {progressPercent}%
@@ -76,25 +95,24 @@ export default function BookContent({ book, session, vocab, progressPercent }: B
             </div>
             
             <div className="flex flex-col border-b border-slate-200/50 pb-8">
-              <h1 className="text-3xl sm:text-5xl md:text-6xl font-serif text-[#171717] font-bold tracking-tight leading-[1.1] mb-4">{book.title}</h1>
-              {book.author && <div className="flex flex-wrap items-center gap-3 md:gap-4">
+              <h1 className="text-3xl sm:text-5xl md:text-6xl font-serif text-[#171717] font-bold tracking-tight leading-[1.1] mb-4">{currentBook.title}</h1>
+              <div className="flex flex-wrap items-center gap-3 md:gap-4">
                 <p className="text-base md:text-lg text-slate-600 font-serif italic tracking-wide">
-                  {book.author}
+                  {currentBook.author || 'Unknown Author'}
                 </p>
                 <span className="hidden sm:inline text-slate-300 font-sans font-normal">•</span>
                 <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[#10175b]">
-                  {book.totalPages ? `${book.totalPages} Total Pages` : 'Page tracking enabled'}
+                  {currentBook.totalPages ? `${currentBook.totalPages} Total Pages` : 'Page tracking enabled'}
                 </p>
-              </div>}
+              </div>
             </div>
           </div>
 
-          {/* Translation Interactive Panel */}
+          {/* ... existing panels ... */}
           <div className="mb-12">
             <TranslationPanel bookId={book.id} preferredLanguage={session.preferredLanguage as string} />
           </div>
 
-          {/* Content Display / Saved Curation */}
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-[10px] md:text-sm font-black uppercase tracking-[0.4em] text-[#10175b]">Your Saved Curation</h2>
@@ -105,11 +123,20 @@ export default function BookContent({ book, session, vocab, progressPercent }: B
         </div>
       </motion.div>
 
-      {/* Side Notes Panel */}
+      {/* Modals & Panels */}
+      {isEditModalOpen && (
+        <EditBookModal 
+          book={currentBook as any} 
+          onClose={() => setIsEditModalOpen(false)} 
+          onUpdate={(t, a, p) => {
+            setCurrentBook({ ...currentBook, title: t, author: a, totalPages: p });
+          }}
+        />
+      )}
+
       <AnimatePresence>
         {isNotesOpen && (
           <>
-            {/* Backdrop for the sidebar popup */}
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -134,8 +161,6 @@ export default function BookContent({ book, session, vocab, progressPercent }: B
           </>
         )}
       </AnimatePresence>
-      
-      {/* Mobile Swipe-up Notes Panel (optional - currently just using hidden/block for desktop fokus) */}
     </div>
   );
 }
