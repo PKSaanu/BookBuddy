@@ -1,6 +1,6 @@
 'use client';
 
-import { Volume2 } from 'lucide-react';
+import { IconVolume } from '@tabler/icons-react';
 import { useState } from 'react';
 
 export function PronunciationButton({ text, lang = 'en-US' }: { text: string, lang?: string }) {
@@ -56,7 +56,7 @@ export function PronunciationButton({ text, lang = 'en-US' }: { text: string, la
                 : 'text-slate-300 hover:text-[#10175b] hover:scale-105'
             }`}
         >
-            <Volume2 size={15} strokeWidth={2.5} />
+            <IconVolume size={15} strokeWidth={2.5} />
         </button>
     );
 }

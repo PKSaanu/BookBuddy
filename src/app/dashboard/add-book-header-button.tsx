@@ -24,7 +24,7 @@ export function AddBookHeaderButton() {
       </button>
 
       {showAddModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowAddModal(false)}></div>
           <div className="relative z-10 w-full max-w-md animate-in fade-in zoom-in-95 duration-200">
              <CreateBookModal onSuccess={() => setShowAddModal(false)} />

@@ -2,9 +2,11 @@ import { pgTable, uuid, text, timestamp, varchar, integer } from 'drizzle-orm/pg
 
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
+  name: varchar('name', { length: 255 }).notNull().default(''),
   email: varchar('email', { length: 255 }).notNull().unique(),
   passwordHash: text('password_hash').notNull(),
   preferredLanguage: varchar('preferred_language', { length: 50 }).notNull().default('Tamil'), // 'Tamil' or 'Sinhala'
+  gender: varchar('gender', { length: 50 }).notNull().default('male'), // 'male' or 'female'
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 

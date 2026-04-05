@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu } from 'lucide-react';
+import { IconMenu2 } from '@tabler/icons-react';
 import Image from 'next/image';
 
 interface MobileNavProps {
@@ -28,7 +28,7 @@ export default function MobileNav({ onOpenMenu }: MobileNavProps) {
         className="p-2 text-slate-500 hover:text-[#10175b] transition-colors"
         aria-label="Open menu"
       >
-        <Menu size={24} />
+        <IconMenu2 size={24} />
       </button>
     </div>
   );

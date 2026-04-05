@@ -4,20 +4,11 @@ import { useState, useEffect } from 'react';
 import Sidebar from '@/components/sidebar';
 import MobileNav from '@/components/mobile-nav';
 import Link from 'next/link';
-import { BookOpen, Book } from 'lucide-react';
+import { IconBook2, IconBook } from '@tabler/icons-react';
 import { AddBookHeaderButton } from './add-book-header-button';
+import { coverBackgrounds } from '@/lib/constants';
 
-// Expanded palette of premium academic gradients
-const coverBackgrounds = [
-  "from-[#10175b] via-[#1a2066] to-[#0a0d2e]",
-  "from-[#0f766e] via-[#134e4a] to-[#062c2b]",
-  "from-[#912d2d] via-[#6d1313] to-[#4c0d0d]",
-  "from-[#7c3aed] via-[#5b21b6] to-[#4c1d95]",
-  "from-[#1e40af] via-[#1e3a8a] to-[#172554]",
-  "from-[#b45309] via-[#92400e] to-[#78350f]",
-  "from-[#065f46] via-[#064e3b] to-[#022c22]",
-  "from-[#334155] via-[#1e293b] to-[#0f172a]",
-];
+
 
 export default function DashboardPage({ 
   userBooks, 
@@ -101,16 +92,52 @@ export default function DashboardPage({
                               </div>
                           </Link>
 
-                          <div className="xl:col-span-1">
-                              <div className="bg-[#10175b] text-white p-12 rounded-[2rem] h-[500px] shadow-xl flex flex-col items-start relative overflow-hidden isolate transform-gpu">
-                                  <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-                                  <div className="mb-12 mt-4 text-white">
-                                      <Book size={48} strokeWidth={1.5} />
+                          <div className="xl:col-span-1 flex flex-col gap-6 h-[500px]">
+                              {/* Daily Progress Card */}
+                              <div className="flex-1 bg-[#10175b] text-white p-6 md:p-8 rounded-[2rem] shadow-xl flex flex-col items-start relative overflow-hidden isolate transform-gpu">
+                                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+                                  <div className="mb-4 text-white/80">
+                                      <IconBook size={28} strokeWidth={1.5} />
                                   </div>
-                                  <h3 className="text-[32px] font-serif font-bold mb-6 tracking-tight">Daily Progress</h3>
-                                  <p className="text-indigo-100/90 text-[17px] leading-[1.7] font-medium max-w-[90%]">
-                                      You've mastered {userVocabCount} new vocabulary words today. Your reading streak is 4 days.
+                                  <h3 className="text-xl md:text-2xl font-serif font-bold mb-3 tracking-tight">Daily Progress</h3>
+                                  <p className="text-indigo-100/90 text-sm leading-[1.5] font-medium">
+                                      You've mastered {userVocabCount} new words today. Your reading streak is 4 days.
                                   </p>
+                              </div>
+
+                              {/* Unique 'Library Archive' Reading Quote Card */}
+                              <div className="flex-1 bg-[#FDFCF7] border-l-8 border-[#10175b] rounded-r-[2rem] rounded-l-md p-6 md:p-8 relative overflow-hidden shadow-xl group transition-all duration-500 hover:shadow-2xl hover:translate-x-1">
+                                  {/* Subtle Paper Texture */}
+                                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/paper-fibers.png')] opacity-[0.15] pointer-events-none" />
+                                  
+                                  <div className="relative z-10 h-full flex flex-col justify-between">
+                                      <div className="flex justify-between items-start">
+                                          <div className="flex flex-col">
+                                              <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#10175b]/40 mb-0.5">Archive No.</span>
+                                              <span className="text-[11px] font-mono font-bold text-[#10175b]/60">88-2024-GRRM</span>
+                                          </div>
+                                          {/* Decorative Red 'Stamp' */}
+                                          <div className="border-2 border-red-600/30 text-red-600/40 text-[8px] font-mono font-black uppercase px-2 py-0.5 rotate-12 rounded-sm select-none">
+                                              Verified
+                                          </div>
+                                      </div>
+
+                                      <div className="flex-1 flex items-center py-4">
+                                          <p className="text-lg md:text-xl font-serif italic text-[#10175b] leading-snug tracking-tight group-hover:text-black transition-colors duration-500 line-clamp-4">
+                                              "A reader lives a thousand lives before he dies. The man who never reads lives only one."
+                                          </p>
+                                      </div>
+                                      
+                                      <div className="flex items-center gap-3">
+                                          <div className="h-[1px] w-8 bg-[#10175b]/20" />
+                                          <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#10175b]">
+                                              G.R.R. Martin
+                                          </p>
+                                      </div>
+                                  </div>
+
+                                  {/* Corner Fold Effect */}
+                                  <div className="absolute top-0 right-0 w-10 h-10 bg-gradient-to-bl from-slate-200 to-transparent opacity-50 group-hover:opacity-100 transition-opacity" />
                               </div>
                           </div>
                       </div>
@@ -118,11 +145,22 @@ export default function DashboardPage({
                       {oldBooks.length > 0 && (
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12 pb-12">
                               <h3 className="col-span-full font-bold text-slate-400 uppercase tracking-widest text-[11px] mb-2">Previous Books</h3>
-                              {oldBooks.map((book) => (
+                              {oldBooks.map((book, index) => (
                                   <Link href={`/books/${book.id}`} key={book.id} className="group">
-                                      <div className="bg-white rounded-[24px] p-8 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 group-hover:scale-[1.02] isolate transform-gpu overflow-hidden will-change-transform">
-                                          <h4 className="text-2xl font-serif font-bold text-[#10175b] mb-2 group-hover:text-[#1a2066] transition-colors">{book.title}</h4>
-                                          <p className="text-[15px] text-slate-500 font-medium">{book.author || 'Unknown Author'}</p>
+                                      <div className={`relative h-48 rounded-[24px] p-8 overflow-hidden isolate shadow-sm hover:shadow-xl transition-all duration-500 group-hover:scale-[1.02] group-hover:-translate-y-1 transform-gpu`}>
+                                          {/* Dynamic Gradient Background */}
+                                          <div className={`absolute inset-0 bg-gradient-to-br ${coverBackgrounds[index % coverBackgrounds.length]} transition-transform duration-700 group-hover:scale-110`} />
+                                          
+                                          {/* Texture Overlay */}
+                                          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/paper-fibers.png')] opacity-10 pointer-events-none mix-blend-overlay" />
+                                          
+                                          {/* Glassmorphism Effect for text content */}
+                                          <div className="relative z-10 h-full flex flex-col justify-end">
+                                              <div className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-xl">
+                                                <h4 className="text-xl font-serif font-bold text-white mb-1 line-clamp-1 drop-shadow-sm">{book.title}</h4>
+                                                <p className="text-[13px] text-white/70 font-medium line-clamp-1 italic">{book.author || 'Anonymous Author'}</p>
+                                              </div>
+                                          </div>
                                       </div>
                                   </Link>
                               ))}
@@ -132,7 +170,7 @@ export default function DashboardPage({
               ) : (
                   <div className="h-[400px] rounded-[2rem] border border-dashed border-slate-300 bg-white/50 flex flex-col items-center justify-center p-8 text-center">
                       <div className="bg-[#10175b]/5 p-5 rounded-2xl mb-6 shadow-sm border border-[#10175b]/10 text-[#10175b]">
-                          <BookOpen size={40} />
+                          <IconBook2 size={40} />
                       </div>
                       <h3 className="text-2xl font-serif font-bold text-[#10175b]">No reading adventures yet</h3>
                       <p className="mt-3 text-slate-500 font-medium text-lg">Click "Add New Book" to start exploring.</p>

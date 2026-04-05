@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { IconTrash, IconLoader, IconAlertCircle } from '@tabler/icons-react';
-import { deleteBook } from '@/actions/books';
+import { deleteAccount } from '@/actions/user';
 import { useRouter } from 'next/navigation';
 
-export function DeleteBookButton({ bookId, bookTitle }: { bookId: string, bookTitle: string }) {
+export function DeleteAccountButton() {
   const [showModal, setShowModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
@@ -16,31 +16,42 @@ export function DeleteBookButton({ bookId, bookTitle }: { bookId: string, bookTi
     } else {
       document.body.style.overflow = '';
     }
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [showModal]);
 
   const handleDelete = async () => {
     setIsDeleting(true);
-    const result = await deleteBook(bookId);
+    const result = await deleteAccount();
     
     if (result.error) {
       alert(result.error);
       setIsDeleting(false);
     } else {
-      // Redirect immediately upon success
       document.body.style.overflow = '';
-      router.push('/library');
+      router.push('/login');
     }
   };
 
   return (
     <>
-      <button
-        onClick={() => setShowModal(true)}
-        className="group flex items-center justify-center p-2 rounded-full hover:bg-red-50 transition-colors"
-        title="Delete Book"
-      >
-        <IconTrash size={18} className="text-slate-400 group-hover:text-red-500 transition-colors" />
-      </button>
+      <div className="mt-8 border border-red-200/50 bg-red-50/30 rounded-[32px] p-10 hover:bg-red-50 transition-colors group">
+          <h3 className="text-sm font-black uppercase tracking-widest text-red-600 mb-6 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
+            Danger Zone
+          </h3>
+          <p className="text-sm text-red-900/60 leading-relaxed font-medium mb-10">
+              Deleting your account will permanently erase your library, progress, and custom curations. This action cannot be undone.
+          </p>
+          
+          <button 
+            onClick={() => setShowModal(true)}
+            className="w-full font-black text-[12px] uppercase tracking-widest text-red-600 py-4 px-6 border border-red-200 rounded-xl hover:bg-red-600 hover:text-white hover:border-red-600 transition-all shadow-sm hover:shadow-xl hover:shadow-red-600/20 active:scale-[0.98]"
+          >
+              Deactivate Account
+          </button>
+      </div>
 
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -52,9 +63,9 @@ export function DeleteBookButton({ bookId, bookTitle }: { bookId: string, bookTi
                  <IconAlertCircle size={32} strokeWidth={2} />
              </div>
              
-             <h3 className="text-3xl font-serif font-bold text-[#10175b] mb-4">Delete this book?</h3>
+             <h3 className="text-3xl font-serif font-bold text-[#10175b] mb-4">Deactivate Account?</h3>
              <p className="text-slate-600 font-medium mb-8 text-lg leading-relaxed">
-               Are you sure you want to permanently delete <strong className="text-[#10175b] font-serif font-bold italic">{bookTitle}</strong> from your library? All translated vocabulary associated with this book will also be lost forever.
+               Are you sure you want to permanently delete your account? All your books, curated vocabulary, and progress will be lost forever.
              </p>
              
              <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
@@ -72,7 +83,7 @@ export function DeleteBookButton({ bookId, bookTitle }: { bookId: string, bookTi
                   className="w-full sm:w-1/2 flex items-center justify-center gap-2 px-6 py-4 font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-all shadow-lg shadow-red-600/20 disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                   {isDeleting ? <IconLoader className="w-5 h-5 animate-spin" /> : <IconTrash className="w-5 h-5" />}
-                  Yes, delete it
+                  Deactivate
                 </button>
              </div>
           </div>

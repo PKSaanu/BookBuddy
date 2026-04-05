@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { logout } from '@/actions/auth';
-import { LayoutDashboard, BookOpen, Settings, LogOut, X } from 'lucide-react';
+import { IconLayoutDashboard, IconBook2, IconSettings, IconLogout, IconX } from '@tabler/icons-react';
 import Image from 'next/image';
 
 interface SidebarProps {
@@ -48,7 +48,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 className="md:hidden p-2 text-slate-400 hover:text-[#10175b] transition-colors"
                 aria-label="Close menu"
               >
-                <X size={20} />
+                <IconX size={20} />
               </button>
             )}
           </div>
@@ -62,7 +62,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               {(pathname === '/dashboard' || pathname === '/') && (
                 <div className="absolute left-[-24px] w-1.5 h-6 bg-[#10175b] rounded-r-md"></div>
               )}
-              <LayoutDashboard size={20} className={(pathname === '/dashboard' || pathname === '/') ? 'text-[#10175b]' : 'text-slate-400'} />
+              <IconLayoutDashboard size={20} className={(pathname === '/dashboard' || pathname === '/') ? 'text-[#10175b]' : 'text-slate-400'} />
               Dashboard
             </Link>
             
@@ -74,16 +74,19 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               {(pathname === '/library' || pathname.startsWith('/books/')) && (
                 <div className="absolute left-[-24px] w-1.5 h-6 bg-[#10175b] rounded-r-md"></div>
               )}
-              <BookOpen size={20} className={(pathname === '/library' || pathname.startsWith('/books/')) ? 'text-[#10175b]' : 'text-slate-400'} />
+              <IconBook2 size={20} className={(pathname === '/library' || pathname.startsWith('/books/')) ? 'text-[#10175b]' : 'text-slate-400'} />
               My Library
             </Link>
 
             <Link 
-              href="#" 
+              href="/settings" 
               onClick={onClose}
-              className="flex items-center gap-4 py-3 font-semibold text-[15px] text-slate-500 hover:text-slate-900 transition-colors"
+              className={`flex items-center gap-4 py-3 font-semibold text-[15px] transition-colors relative ${pathname === '/settings' ? 'text-[#10175b]' : 'text-slate-500 hover:text-slate-900'}`}
             >
-              <Settings size={20} className="text-slate-400" />
+              {pathname === '/settings' && (
+                <div className="absolute left-[-24px] w-1.5 h-6 bg-[#10175b] rounded-r-md"></div>
+              )}
+              <IconSettings size={20} className={pathname === '/settings' ? 'text-[#10175b]' : 'text-slate-400'} />
               Settings
             </Link>
           </nav>
@@ -92,7 +95,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="space-y-6 pt-8 border-t border-slate-200">
           <form action={logout}>
             <button className="flex items-center gap-3 text-slate-500 hover:text-[#10175b] transition-colors font-semibold px-2">
-              <LogOut size={20} className="text-slate-400" /> Logout
+              <IconLogout size={20} className="text-slate-400" /> Logout
             </button>
           </form>
         </div>

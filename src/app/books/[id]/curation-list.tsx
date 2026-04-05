@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { PronunciationButton } from './pronunciation-button';
 import { DeleteTranslationButton } from './delete-button';
-import { Search, ChevronLeft, ChevronRight, ArrowUp, X } from 'lucide-react';
+import { IconSearch, IconChevronLeft, IconChevronRight, IconArrowUp, IconX } from '@tabler/icons-react';
 
 interface Translation {
     id: string;
@@ -87,7 +87,7 @@ export default function CurationList({ vocab, bookId }: { vocab: Translation[], 
             {/* Search Bar */}
             <div className="mb-10 relative">
                 <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
-                    <Search size={18} className="text-slate-400" />
+                    <IconSearch size={18} className="text-slate-400" />
                 </div>
                 <input
                     type="text"
@@ -104,7 +104,7 @@ export default function CurationList({ vocab, bookId }: { vocab: Translation[], 
                         onClick={() => setSearchQuery('')}
                         className="absolute inset-y-0 right-5 flex items-center text-slate-300 hover:text-slate-500"
                     >
-                        <X size={18} />
+                        <IconX size={18} />
                     </button>
                 )}
             </div>
@@ -187,7 +187,7 @@ export default function CurationList({ vocab, bookId }: { vocab: Translation[], 
                         onClick={() => setCurrentPage(prev => prev - 1)}
                         className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-slate-400 hover:text-[#10175b] disabled:opacity-30 disabled:pointer-events-none transition-colors"
                     >
-                        <ChevronLeft size={16} strokeWidth={3} />
+                        <IconChevronLeft size={16} strokeWidth={3} />
                         Previous
                     </button>
 
@@ -203,7 +203,7 @@ export default function CurationList({ vocab, bookId }: { vocab: Translation[], 
                         className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-slate-400 hover:text-[#10175b] disabled:opacity-30 disabled:pointer-events-none transition-colors"
                     >
                         Next
-                        <ChevronRight size={16} strokeWidth={3} />
+                        <IconChevronRight size={16} strokeWidth={3} />
                     </button>
                 </div>
             )}
@@ -215,7 +215,7 @@ export default function CurationList({ vocab, bookId }: { vocab: Translation[], 
                     showGoToTop ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
                 }`}
             >
-                <ArrowUp size={24} strokeWidth={3} />
+                <IconArrowUp size={24} strokeWidth={3} />
             </button>
         </div>
     );

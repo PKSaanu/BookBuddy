@@ -7,11 +7,12 @@ import { hashPassword, verifyPassword, createToken, setAuthCookie, removeAuthCoo
 import { redirect } from 'next/navigation';
 
 export async function register(prevState: any, formData: FormData) {
+  const name = formData.get('name') as string;
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
   const preferredLanguage = formData.get('preferredLanguage') as string;
 
-  if (!email || !password || !preferredLanguage) {
+  if (!name || !email || !password || !preferredLanguage) {
     return { error: 'Missing required fields' };
   }
 
@@ -24,16 +25,19 @@ export async function register(prevState: any, formData: FormData) {
     const passwordHash = await hashPassword(password);
 
     const [newUser] = await db.insert(users).values({
+        name,
         email,
         passwordHash,
         preferredLanguage,
-    }).returning({
-        id: users.id,
-        email: users.email,
-        preferredLanguage: users.preferredLanguage
-    });
+    }).returning();
 
-    const token = await createToken({ id: newUser.id, email: newUser.email, preferredLanguage: newUser.preferredLanguage });
+    const token = await createToken({ 
+      id: newUser.id, 
+      name: newUser.name, 
+      email: newUser.email, 
+      preferredLanguage: newUser.preferredLanguage,
+      gender: newUser.gender
+    });
     await setAuthCookie(token);
     
   } catch (error: any) {
@@ -63,7 +67,13 @@ export async function login(prevState: any, formData: FormData) {
       return { error: 'Invalid email or password' };
     }
 
-    const token = await createToken({ id: user.id, email: user.email, preferredLanguage: user.preferredLanguage });
+    const token = await createToken({ 
+      id: user.id, 
+      name: user.name, 
+      email: user.email, 
+      preferredLanguage: user.preferredLanguage,
+      gender: user.gender
+    });
     await setAuthCookie(token);
 
   } catch (error: any) {
@@ -72,6 +82,33 @@ export async function login(prevState: any, formData: FormData) {
   }
 
   redirect('/dashboard');
+}
+
+export async function updateUserGender(gender: string) {
+  const { getSession, createToken, setAuthCookie } = await import('@/lib/auth');
+  const session = await getSession();
+  
+  if (!session?.id) {
+    throw new Error('Not authenticated');
+  }
+
+  try {
+    await db.update(users)
+      .set({ gender })
+      .where(eq(users.id, session.id as string));
+
+    // Update the session token with the new gender
+    const newToken = await createToken({
+      ...session,
+      gender
+    });
+    await setAuthCookie(newToken);
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to update gender:', error);
+    return { error: 'Failed to update gender' };
+  }
 }
 
 export async function logout() {

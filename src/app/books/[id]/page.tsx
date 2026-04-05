@@ -4,7 +4,7 @@ import { getSession } from '@/lib/auth';
 import { redirect, notFound } from 'next/navigation';
 import { eq, desc } from 'drizzle-orm';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { IconArrowLeft } from '@tabler/icons-react';
 import TranslationPanel from './translation-panel';
 import CurationList from './curation-list';
 import LayoutWrapper from '@/components/layout-wrapper';
@@ -43,7 +43,7 @@ export default async function BookPage({ params }: { params: { id: string } }) {
             <div className="mb-8">
                 <div className="flex items-center justify-between w-full mb-6">
                     <Link href="/library" className="inline-flex items-center text-[10px] md:text-[12px] font-bold text-[#10175b] hover:text-[#1a2066] transition-colors group uppercase tracking-[0.1em]">
-                        <ArrowLeft className="w-4 h-4 mr-2 transform group-hover:-translate-x-1 transition-transform" />
+                        <IconArrowLeft className="w-4 h-4 mr-2 transform group-hover:-translate-x-1 transition-transform" />
                         Back to Library
                     </Link>
                     <div className="flex items-center gap-3 md:gap-4">

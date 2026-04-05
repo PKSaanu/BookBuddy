@@ -2,7 +2,7 @@
 
 import { useActionState, useRef, useEffect, useState } from 'react';
 import { createBook } from '@/actions/books';
-import { Plus, Loader2 } from 'lucide-react';
+import { IconPlus, IconLoader } from '@tabler/icons-react';
 import { useFormStatus } from 'react-dom';
 
 function SubmitBtn() {
@@ -13,7 +13,7 @@ function SubmitBtn() {
           disabled={pending}
           className="w-full inline-flex justify-center items-center gap-2 px-6 py-3.5 border border-transparent rounded-xl shadow-lg shadow-[#0a0f44]/20 text-sm font-bold text-white bg-[#10175b] hover:bg-[#1a2066] focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
         >
-          {pending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create Book'}
+          {pending ? <IconLoader className="w-5 h-5 animate-spin" /> : 'Create Book'}
         </button>
     )
 }
@@ -96,7 +96,7 @@ export function CreateBookModal({ onSuccess }: { onSuccess?: () => void }) {
       
       <div className="relative z-10 overflow-visible">
           <div className="w-14 h-14 bg-[#10175b]/5 border border-[#10175b]/10 rounded-2xl flex items-center justify-center mb-6 text-[#10175b]">
-            <Plus className="w-7 h-7" strokeWidth={2.5} />
+            <IconPlus className="w-7 h-7" strokeWidth={2.5} />
           </div>
           
           <h3 className="text-2xl font-bold text-[#10175b] mb-2">Add New Book</h3>
