@@ -166,33 +166,35 @@ export default function TranslationPanel({ bookId, preferredLanguage }: { bookId
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-5 w-full xl:w-auto">
-              <div className="relative w-full sm:w-auto">
+            <div className="flex flex-row items-center justify-center sm:justify-start gap-3 w-full xl:w-auto">
+              <div className="relative w-20 sm:w-24">
                 <input
                   type="number"
                   value={pageNumber}
                   onChange={(e) => setPageNumber(e.target.value)}
                   placeholder="0"
                   required
-                  className={`w-full sm:w-24 px-4 py-5 sm:py-4 text-center rounded-[18px] border-2 focus:outline-none font-bold text-[#10175b] transition-all bg-[#F8F9FA] ${!pageNumber ? 'border-red-100 bg-red-50/30' : 'border-[#F0F1F3] focus:border-[#10175b]'
+                  className={`w-full px-3 py-3 sm:py-4 text-center rounded-[18px] border-2 focus:outline-none font-bold text-[#10175b] transition-all bg-[#F8F9FA] ${!pageNumber ? 'border-red-100 bg-red-50/30' : 'border-[#F0F1F3] focus:border-[#10175b]'
                     }`}
                 />
-                <span className={`absolute -top-2 left-4 sm:left-3 px-2 bg-[#F8F9FA] sm:bg-white text-[9px] font-black uppercase transition-colors rounded-sm ${!pageNumber ? 'text-red-400' : 'text-slate-400'
+                <span className={`absolute -top-2 left-3 px-2 bg-[#F8F9FA] sm:bg-white text-[9px] font-black uppercase transition-colors rounded-sm ${!pageNumber ? 'text-red-400' : 'text-slate-400'
                   }`}>
-                  Page *
+                  Pg *
                 </span>
               </div>
 
               <button
                 onClick={handleSave}
                 disabled={isSaving || isSaved}
-                className={`w-full sm:w-auto inline-flex items-center justify-center gap-3 px-10 py-5 sm:py-4 text-[14px] font-bold rounded-[18px] border-2 transition-all duration-300 uppercase tracking-wider active:scale-[0.98] ${isSaved
+                className={`flex-1 sm:flex-none sm:min-w-[120px] inline-flex items-center justify-center gap-2 px-6 py-3 sm:py-4 text-[13px] font-bold rounded-[18px] border-2 transition-all duration-300 uppercase tracking-wider active:scale-[0.98] ${isSaved
                     ? 'bg-[#0f766e] border-[#0f766e] text-white'
                     : 'border-[#10175b] text-[#10175b] hover:bg-[#10175b] hover:text-white disabled:opacity-40'
                   }`}
               >
-                {isSaved ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> : isSaving ? <IconLoader className="animate-spin w-5 h-5" /> : <IconBookmarkPlus className="w-5 h-5" strokeWidth={2.5} />}
-                {isSaved ? 'Saved!' : isSaving ? 'Saving...' : 'Add to Curation'}
+                <div className="flex items-center gap-2">
+                  {isSaved ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> : isSaving ? <IconLoader className="animate-spin w-4 h-4" /> : <IconBookmarkPlus className="w-4 h-4" strokeWidth={2.5} />}
+                  <span>{isSaved ? 'Saved' : isSaving ? '...' : 'Add'}</span>
+                </div>
               </button>
             </div>
           </div>

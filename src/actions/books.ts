@@ -59,3 +59,48 @@ export async function deleteBook(id: string) {
     return { error: 'Failed to delete book' };
   }
 }
+
+export async function updateBookNotes(bookId: string, notes: string) {
+  const session = await getSession();
+  if (!session?.id) {
+    return { error: 'Unauthorized' };
+  }
+
+  try {
+    await db.update(books)
+      .set({ notes })
+      .where(
+        and(
+          eq(books.id, bookId),
+          eq(books.userId, session.id as string)
+        )
+      );
+    
+    revalidatePath(`/books/${bookId}`);
+    return { success: true };
+  } catch (error) {
+    return { error: 'Failed to update notes' };
+  }
+}
+
+export async function getBookNotes(bookId: string) {
+  const session = await getSession();
+  if (!session?.id) {
+    return { error: 'Unauthorized' };
+  }
+
+  try {
+    const [book] = await db.select({ notes: books.notes })
+      .from(books)
+      .where(
+        and(
+          eq(books.id, bookId),
+          eq(books.userId, session.id as string)
+        )
+      );
+    
+    return { success: true, notes: book?.notes || '' };
+  } catch (error) {
+    return { error: 'Failed to fetch notes' };
+  }
+}

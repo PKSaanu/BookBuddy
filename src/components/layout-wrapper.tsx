@@ -6,7 +6,7 @@ import Sidebar from './sidebar';
 import MobileNav from './mobile-nav';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
+export default function LayoutWrapper({ children, disableScroll = false }: { children: React.ReactNode, disableScroll?: boolean }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
   const pathname = usePathname();
@@ -44,7 +44,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
         <MobileNav onOpenMenu={() => setIsSidebarOpen(true)} />
         
         {/* overflow-y-scroll ensures the scrollbar gutter is always present, preventing horizontal shifting */}
-        <main className="flex-1 md:ml-56 mt-16 md:mt-0 overflow-y-scroll overflow-x-hidden scroll-smooth">
+        <main className={`flex-1 md:ml-56 mt-16 md:mt-0 overflow-x-hidden scroll-smooth ${disableScroll ? '' : 'overflow-y-scroll'}`}>
           {children}
         </main>
       </div>
