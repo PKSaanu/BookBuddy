@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { logout } from '@/actions/auth';
 import { LayoutDashboard, BookOpen, Settings, LogOut } from 'lucide-react';
+import Image from 'next/image';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -13,8 +14,19 @@ export default function Sidebar() {
       <div className="w-64 fixed inset-y-0 left-0 bg-[#F4F5F6] border-r border-slate-200/60 px-8 py-10 flex flex-col justify-between hidden md:flex cursor-pointer">
         
         <div>
-          <Link href="/dashboard"><h1 className="text-3xl font-serif font-bold text-[#10175b] mb-1">The Scholar</h1></Link>
-          <p className="text-[13px] text-slate-500 mb-12 font-medium tracking-wide">Tamil / Sinhala</p>
+          <Link href="/dashboard" className="block mb-10">
+            <div className="flex items-center gap-3">
+              <Image 
+                src="/logo.png" 
+                alt="BookBuddy" 
+                width={140} 
+                height={40} 
+                priority 
+                style={{ height: 'auto' }}
+                className="object-contain"
+              />
+            </div>
+          </Link>
           
           <nav className="space-y-3">
             <Link 

@@ -14,8 +14,8 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "The Scholar | Reading Companion",
-  description: "Learn vocabulary while you read.",
+  title: "BookBuddy | Premium Reading Companion",
+  description: "Your premium reading and vocabulary companion. Master new languages as you read.",
 };
 
 export default function RootLayout({

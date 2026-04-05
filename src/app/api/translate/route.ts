@@ -16,7 +16,9 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
 
     if (data && data[0] && data[0][0] && data[0][0][0]) {
-      return NextResponse.json({ translatedText: data[0][0][0] });
+      const translatedText = data[0][0][0];
+      const correctedText = data[0][0][1] || text; // Corrected version is often here
+      return NextResponse.json({ translatedText, correctedText });
     } else {
       return NextResponse.json({ error: 'Translation failed' }, { status: 500 });
     }
