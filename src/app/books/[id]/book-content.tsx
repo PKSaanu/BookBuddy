@@ -16,8 +16,9 @@ import dynamic from 'next/dynamic';
 const PdfReader = dynamic(() => import('./pdf-reader'), { 
   ssr: false,
   loading: () => (
-    <div className="fixed inset-0 z-[200] bg-slate-900/50 backdrop-blur-md flex items-center justify-center">
-      <IconLoader className="animate-spin text-white w-10 h-10" />
+    <div className="fixed inset-0 z-[300] bg-[#1a1c1e] flex flex-col items-center justify-center">
+       <IconLoader className="animate-spin text-indigo-500 w-12 h-12 mb-4" />
+       <p className="text-slate-500 font-medium font-serif italic">Summoning your book...</p>
     </div>
   )
 });

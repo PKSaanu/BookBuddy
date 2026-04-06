@@ -54,9 +54,11 @@ export default function PdfReader({
   const [showDiscardModal, setShowDiscardModal] = useState(false);
   const [pageHighlights, setPageHighlights] = useState<any[]>([]);
   const [hoveredHighlight, setHoveredHighlight] = useState<any | null>(null);
+  const [selectionRects, setSelectionRects] = useState<any[]>([]);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const documentRef = useRef<HTMLDivElement>(null);
+  const lastScanParams = useRef({ page: -1, scale: -1, vocabCount: -1 });
 
 
 
@@ -79,8 +81,25 @@ export default function PdfReader({
         x: rect.left + rect.width / 2,
         y: rect.top - 10
       });
+
+      // Calculate selection rects for visual feedback
+      if (documentRef.current) {
+        const textLayer = documentRef.current.querySelector('.react-pdf__Page__textContent');
+        if (textLayer) {
+          const pageRect = textLayer.getBoundingClientRect();
+          const clientRects = Array.from(range.getClientRects());
+          const newRects = clientRects.map(r => ({
+            top: r.top - pageRect.top,
+            left: r.left - pageRect.left,
+            width: r.width,
+            height: r.height
+          }));
+          setSelectionRects(newRects);
+        }
+      }
     } else {
       setSelection(null);
+      setSelectionRects([]);
     }
   };
 
@@ -89,6 +108,7 @@ export default function PdfReader({
       setActiveTranslationText(selection.text);
       setIsSidebarOpen(true);
       setSelection(null);
+      // We no longer clear selectionRects here, to keep them visible while translating.
       // Clear selection
       window.getSelection()?.removeAllRanges();
     }
@@ -150,17 +170,67 @@ export default function PdfReader({
   };
 
   // Highlighting Logic: Scan the TextLayer after it renders with pixel-precision
-  const handlePageRenderSuccess = () => {
+  const handlePageRenderSuccess = async () => {
+    const startPage = pageNumber;
+    const startScale = scale;
+    const vocabCount = savedVocab.length;
+
+    // Optimization: Skip if we just scanned this exact state
+    if (lastScanParams.current.page === startPage && 
+        lastScanParams.current.scale === startScale && 
+        lastScanParams.current.vocabCount === vocabCount) {
+        return;
+    }
+
+    // Wait a tiny bit for the DOM to settle, especially the text layer spans
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Cancellation check: if page or scale changed while we waited, abort this scan
+    if (pageNumber !== startPage || scale !== startScale) return;
+
     if (!documentRef.current) return;
     
     const textLayer = documentRef.current.querySelector('.react-pdf__Page__textContent');
-    if (!textLayer) return;
+    if (!textLayer) {
+        console.warn('Text layer not found for highlighting');
+        return;
+    }
 
     const spans = textLayer.querySelectorAll('span');
-    const highlights: any[] = [];
-    const pageVocab = savedVocab.filter(v => v.pageNumber === pageNumber);
+    if (spans.length === 0) {
+        // If no spans, could be a scan or still loading. Try one more time briefly.
+        await new Promise(resolve => setTimeout(resolve, 150));
+        if (pageNumber !== startPage || scale !== startScale) return;
+        
+        const retrySpans = textLayer.querySelectorAll('span');
+        if (retrySpans.length === 0) return;
+    }
 
-    spans.forEach(span => {
+    const currentSpans = textLayer.querySelectorAll('span');
+    const highlights: any[] = [];
+    
+    // Create a unique Book Library from all saved vocabulary
+    // This allows a word deciphered on Page 1 to be highlighted on Page 100 automatically
+    const uniqueVocab = new Map<string, any>();
+    
+    // Since savedVocab is already sorted by latest/highest page first, 
+    // we use a simple loop to keep the most relevant entry.
+    savedVocab.forEach(v => {
+        const lower = v.originalText.toLowerCase();
+        if (!uniqueVocab.has(lower)) {
+            uniqueVocab.set(lower, v);
+        }
+    });
+
+    const pageVocab = Array.from(uniqueVocab.values());
+
+    if (pageVocab.length === 0) {
+        setPageHighlights([]);
+        lastScanParams.current = { page: startPage, scale: startScale, vocabCount };
+        return;
+    }
+
+    currentSpans.forEach(span => {
       const text = span.textContent || '';
       const textLower = text.toLowerCase();
       
@@ -168,12 +238,21 @@ export default function PdfReader({
         const word = v.originalText.toLowerCase();
         let startIndex = 0;
         
-        // Use a loop to find all occurrences of the word in this span
         while ((startIndex = textLower.indexOf(word, startIndex)) !== -1) {
+          // Check for word boundaries to prevent partial matches (e.g. "his" in "this")
+          const charBefore = startIndex > 0 ? textLower[startIndex - 1] : null;
+          const charAfter = startIndex + word.length < textLower.length ? textLower[startIndex + word.length] : null;
+          
+          const isAlphaNumeric = (char: string | null) => char !== null && /[a-z0-9]/i.test(char);
+          
+          if (isAlphaNumeric(charBefore) || isAlphaNumeric(charAfter)) {
+            startIndex += 1; // Move forward to find the next possible starting point
+            continue;
+          }
+
           try {
-            // Create a range to get the exact coordinates of the word within the span
             const range = document.createRange();
-            const textNode = span.firstChild; // Most spans in react-pdf have a single text node
+            const textNode = span.firstChild;
             
             if (textNode && textNode.nodeType === Node.TEXT_NODE) {
               range.setStart(textNode, startIndex);
@@ -183,7 +262,7 @@ export default function PdfReader({
               const pageRect = textLayer.getBoundingClientRect();
               
               highlights.push({
-                id: v.id + '-' + startIndex, // Unique ID per occurrence
+                id: v.id + '-' + startIndex,
                 text: v.originalText,
                 translation: v.translatedText,
                 top: rect.top - pageRect.top,
@@ -194,22 +273,45 @@ export default function PdfReader({
               });
             }
           } catch (e) {
-            console.warn('Could not calculate range for vocab highlight:', e);
+            // Silently ignore range errors for individual spans
           }
           
-          startIndex += word.length; // Move forward to find the next occurrence
+          startIndex += word.length;
         }
       });
     });
 
     setPageHighlights(highlights);
+    lastScanParams.current = { page: startPage, scale: startScale, vocabCount };
   };
 
 
-  // Re-scan highlights when the page, scale, or saved vocabulary changes
+  // Clear selection highlight once the word is saved in the vocabulary
   useEffect(() => {
+    if (activeTranslationText && selectionRects.length > 0) {
+      const isSaved = savedVocab.some(v => 
+        v.originalText.toLowerCase() === activeTranslationText.toLowerCase()
+      );
+      if (isSaved) {
+        setSelectionRects([]);
+      }
+    }
+  }, [savedVocab, activeTranslationText, selectionRects.length]);
+
+
+  // Clear highlights immediately when page or scale changes to avoid misalignment
+  useEffect(() => {
+    setPageHighlights([]);
+    setSelectionRects([]);
+  }, [pageNumber, scale]);
+
+
+  // Re-scan highlights when saved vocabulary changes on the current page
+  useEffect(() => {
+    // Only trigger if we already have some highlights or if vocab changed
+    // The Page component's onRenderTextLayerSuccess will handle the initial scan for a new page
     handlePageRenderSuccess();
-  }, [pageNumber, scale, savedVocab]);
+  }, [savedVocab]);
 
 
 
@@ -218,10 +320,11 @@ export default function PdfReader({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[200] bg-slate-900 flex flex-col h-screen w-screen overflow-hidden"
+      className="fixed inset-0 z-[200] bg-[#1a1c1e] flex flex-col h-screen w-screen overflow-hidden"
     >
-      {/* Top Bar Navigation */}
-      <div className="h-16 bg-slate-800 border-b border-slate-700 flex items-center justify-between px-6 shrink-0 z-50">
+      {/* Top Bar Navigation - Only show when loaded */}
+      {numPages !== null && (
+        <div className="h-16 bg-slate-800 border-b border-slate-700 flex items-center justify-between px-6 shrink-0 z-50">
         <div className="flex items-center gap-4">
           <button 
             onClick={onClose}
@@ -291,6 +394,7 @@ export default function PdfReader({
             >+</button>
         </div>
       </div>
+    )}
 
       {/* Main Reading Area & Sidebar Container */}
       <div className="flex-1 flex overflow-hidden relative">
@@ -316,7 +420,7 @@ export default function PdfReader({
                           file={fileUrl}
                           onLoadSuccess={onDocumentLoadSuccess}
                           loading={
-                              <div className="flex flex-col items-center justify-center py-40">
+                              <div className="fixed inset-0 bg-[#1a1c1e] flex flex-col items-center justify-center z-[250]">
                                    <IconLoader className="animate-spin text-indigo-500 w-12 h-12 mb-4" />
                                    <p className="text-slate-500 font-medium font-serif italic">Summoning your book...</p>
                               </div>
@@ -327,7 +431,7 @@ export default function PdfReader({
                               scale={scale} 
                               renderAnnotationLayer={true}
                               renderTextLayer={true}
-                              onRenderSuccess={handlePageRenderSuccess}
+                              onRenderTextLayerSuccess={handlePageRenderSuccess}
                               className="shadow-[20px_20px_60px_-15px_rgba(0,0,0,0.7)] rounded-sm overflow-hidden ring-1 ring-white/10"
                           />
                       </Document>
@@ -344,9 +448,26 @@ export default function PdfReader({
                               height: h.height,
                               position: 'absolute'
                             }}
-                            className="bg-indigo-500/20 border-b-2 border-indigo-500 pointer-events-auto cursor-help transition-all hover:bg-indigo-500/40"
+                            className="bg-indigo-500/20 border-b-2 border-indigo-500 pointer-events-auto cursor-help transition-colors hover:bg-indigo-500/40"
                             onMouseEnter={() => setHoveredHighlight(h)}
                             onMouseLeave={() => setHoveredHighlight(null)}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Current Selection Highlight Layer */}
+                      <div className="absolute inset-0 pointer-events-none z-10">
+                        {selectionRects.map((r, i) => (
+                          <div 
+                            key={`sel-${i}`}
+                            style={{ 
+                              top: r.top, 
+                              left: r.left, 
+                              width: r.width, 
+                              height: r.height,
+                              position: 'absolute'
+                            }}
+                            className="bg-yellow-400/40 border-b-2 border-yellow-500 animate-in fade-in duration-200"
                           />
                         ))}
                       </div>
@@ -366,7 +487,6 @@ export default function PdfReader({
                             }}
                             className="bg-slate-900 border border-indigo-500/30 text-white px-3 py-1.5 rounded-lg shadow-xl text-xs font-serif italic z-50 pointer-events-none whitespace-nowrap"
                           >
-                            <span className="text-indigo-400 font-sans font-bold uppercase tracking-tighter mr-2 text-[8px]">Deciphered</span>
                             {hoveredHighlight.translation}
                           </motion.div>
                         )}
@@ -403,7 +523,7 @@ export default function PdfReader({
                           className="bg-indigo-600 text-white px-5 py-2.5 rounded-full shadow-[0_10px_25px_-5px_rgba(79,70,229,0.5)] flex items-center gap-2 whitespace-nowrap hover:bg-indigo-500 transition-all border border-white/20 active:scale-95"
                       >
                           <IconLanguage size={16} />
-                          <span className="text-[12px] font-black uppercase tracking-widest italic">Decipher Word</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest italic">Translate</span>
                       </button>
                       <div className="absolute top-full left-1/2 -translate-x-1/2 -translate-y-px w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-indigo-600" />
                   </motion.div>

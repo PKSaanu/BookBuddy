@@ -167,12 +167,12 @@ export default function MiniTranslator({
     <div className="flex flex-col h-full bg-white/50 backdrop-blur-xl border-l border-slate-200 shadow-2xl overflow-hidden">
       {/* Top Section: Active Translation */}
       <div className="p-6 border-b border-slate-100 bg-white/80 shrink-0">
-        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#10175b] mb-4 flex items-center justify-between">
+        <h3 className="text-[13px] font-semibold text-[#10175b] mb-4 flex items-center justify-between">
           <span>Active Decipher</span>
           {text ? (
-            <span className="bg-[#10175b]/5 text-[#10175b]/60 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-[0.1em]">Page {pageNumber}</span>
+            <span className="bg-[#10175b]/5 text-[#10175b]/60 px-2.5 py-1 rounded-md text-[10px] font-bold">Page {pageNumber}</span>
           ) : (
-             <span className="text-slate-300 font-normal lowercase tracking-tight">Waiting for selection...</span>
+             <span className="text-slate-400 font-normal text-[11px]">Waiting for selection...</span>
           )}
         </h3>
 
@@ -184,7 +184,7 @@ export default function MiniTranslator({
           <>
             <div className="mb-4">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Original</span>
+                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Original</span>
                 <PronunciationButton text={text} lang="en-US" />
               </div>
               <p className="text-sm font-serif text-[#10175b] leading-tight line-clamp-2 italic">
@@ -195,12 +195,12 @@ export default function MiniTranslator({
             {isTranslating ? (
               <div className="flex items-center gap-2 py-4 text-slate-400 animate-pulse">
                 <IconLoader className="animate-spin w-4 h-4" />
-                <span className="text-[10px] font-bold uppercase tracking-widest">Processing...</span>
+                <span className="text-[11px] font-medium">Processing...</span>
               </div>
             ) : translatedText ? (
               <div className="animate-in fade-in slide-in-from-top-1 duration-300">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-[8px] font-bold text-indigo-500 uppercase tracking-widest">{preferredLanguage}</span>
+                  <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">{preferredLanguage}</span>
                   <PronunciationButton text={translatedText} lang={preferredLanguage === 'Tamil' ? 'ta-IN' : 'si-LK'} />
                 </div>
                 <p className="text-lg font-serif font-bold text-[#10175b] leading-tight mb-4">
@@ -209,7 +209,7 @@ export default function MiniTranslator({
                 <button
                   onClick={handleSave}
                   disabled={isSaving || isSaved}
-                  className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                  className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[12px] font-bold transition-all ${
                     isSaved 
                       ? 'bg-[#0f766e] text-white shadow-lg shadow-[#0f766e]/20' 
                       : 'bg-[#10175b] text-white hover:bg-[#1a2066] shadow-md disabled:opacity-50'
@@ -233,14 +233,14 @@ export default function MiniTranslator({
       <div className="flex border-b border-slate-100 bg-slate-50/50">
         <button 
           onClick={() => handleTabSwitch('history')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'history' ? 'bg-white text-[#10175b] border-b-2 border-[#10175b]' : 'text-slate-400 hover:text-slate-600'}`}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 text-[12px] font-semibold transition-all ${activeTab === 'history' ? 'bg-white text-[#10175b] border-b-2 border-[#10175b]' : 'text-slate-400 hover:text-slate-600'}`}
         >
           <IconHistory size={14} />
           History
         </button>
         <button 
           onClick={() => handleTabSwitch('notes')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'notes' ? 'bg-white text-[#10175b] border-b-2 border-[#10175b]' : 'text-slate-400 hover:text-slate-600'}`}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 text-[12px] font-semibold transition-all ${activeTab === 'notes' ? 'bg-white text-[#10175b] border-b-2 border-[#10175b]' : 'text-slate-400 hover:text-slate-600'}`}
         >
           <IconNotes size={14} />
           Notes
@@ -251,11 +251,11 @@ export default function MiniTranslator({
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto custom-scrollbar bg-white/30">
         {activeTab === 'history' ? (
-          <div className="p-4 space-y-3">
+          <div className="flex flex-col bg-white/50">
             {isLoadingHistory ? (
               // Skeleton UI
-              [1, 2, 3].map((n) => (
-                <div key={n} className="p-3 bg-white/50 border border-slate-100 rounded-xl animate-pulse">
+              [1, 2, 3, 4, 5].map((n) => (
+                <div key={n} className="p-4 border-b border-slate-100/50 animate-pulse">
                   <div className="h-4 w-24 bg-slate-200 rounded mb-2" />
                   <div className="h-3 w-40 bg-slate-100 rounded" />
                 </div>
@@ -269,11 +269,11 @@ export default function MiniTranslator({
                 <div 
                   key={i} 
                   onClick={() => onNavigate?.(item.pageNumber)}
-                  className="p-3 bg-white border border-slate-100 rounded-xl shadow-sm hover:border-indigo-100 transition-colors group cursor-pointer active:scale-95"
+                  className="p-4 border-b border-slate-100 hover:bg-white transition-colors group cursor-pointer active:bg-slate-50"
                 >
                   <div className="flex justify-between items-start mb-1">
-                    <span className="text-[11px] font-serif font-bold text-[#10175b] group-hover:text-indigo-600 transition-colors line-clamp-1">{item.originalText}</span>
-                    <span className="text-[8px] text-slate-300 font-mono">P.{item.pageNumber}</span>
+                    <span className="text-[12px] font-serif font-bold text-[#10175b] group-hover:text-indigo-600 transition-colors line-clamp-1">{item.originalText}</span>
+                    <span className="text-[9px] text-slate-400 font-mono bg-slate-100 px-1.5 py-0.5 rounded">P.{item.pageNumber}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <IconArrowRight size={10} className="text-slate-300" />
@@ -287,7 +287,7 @@ export default function MiniTranslator({
         ) : (
           <div className="p-4 h-full flex flex-col bg-[#FCF9F0]">
             <div className="flex items-center justify-between mb-4 px-1">
-               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#10175b]/60">Quick Study Notes</span>
+               <span className="text-[11px] font-bold text-[#10175b]/60 uppercase tracking-wider">Quick Study Notes</span>
                <div className="flex items-center gap-2">
                   {isSavingNotes ? (
                     <IconLoader size={14} className="animate-spin text-indigo-400" />
