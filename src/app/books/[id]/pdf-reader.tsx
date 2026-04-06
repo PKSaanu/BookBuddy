@@ -562,7 +562,6 @@ export default function PdfReader({
                           bookAuthor={bookAuthor}
                           preferredLanguage={preferredLanguage}
                           isSidebar={true}
-                          onClose={() => setIsChatOpen(false)}
                         />
                     </div>
                 </motion.div>

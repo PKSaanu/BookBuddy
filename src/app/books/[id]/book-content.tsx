@@ -233,7 +233,7 @@ export default function BookContent({ book, session, vocab, progressPercent, pre
 
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-[10px] md:text-sm font-black uppercase tracking-[0.4em] text-[#10175b]">Your Saved Curation</h2>
+              <h2 className="text-[8px] md:text-sm font-black uppercase tracking-[0.4em] text-[#10175b]">Your Saved Curation</h2>
               <div className="h-[1px] flex-1 bg-[#10175b]/10 ml-4 md:ml-8" />
             </div>
             <CurationList vocab={vocab as any} bookId={book.id} />

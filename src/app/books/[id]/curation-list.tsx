@@ -20,17 +20,15 @@ export default function CurationList({ vocab, bookId }: { vocab: Translation[], 
     const [showGoToTop, setShowGoToTop] = useState(false);
     const itemsPerPage = 10;
 
-    // Filter items based on search query
     const filteredVocab = useMemo(() => {
         if (!searchQuery.trim()) return vocab;
         const query = searchQuery.toLowerCase();
-        return vocab.filter(entry => 
-            entry.originalText.toLowerCase().includes(query) || 
+        return vocab.filter(entry =>
+            entry.originalText.toLowerCase().includes(query) ||
             entry.translatedText.toLowerCase().includes(query)
         );
     }, [vocab, searchQuery]);
 
-    // Handle show/hide of "Go to Top" button
     useEffect(() => {
         const handleScroll = () => {
             setShowGoToTop(window.scrollY > 400);
@@ -39,12 +37,10 @@ export default function CurationList({ vocab, bookId }: { vocab: Translation[], 
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // Pagination logic
     const totalPages = Math.ceil(filteredVocab.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const paginatedVocab = filteredVocab.slice(startIndex, startIndex + itemsPerPage);
 
-    // Grouping logic (grouped by pageNumber)
     const groupedVocab = useMemo(() => {
         const groups: Record<number, Translation[]> = {};
         paginatedVocab.forEach(entry => {
@@ -52,31 +48,25 @@ export default function CurationList({ vocab, bookId }: { vocab: Translation[], 
             if (!groups[page]) groups[page] = [];
             groups[page].push(entry);
         });
-        // Sort pages descending
         return Object.entries(groups).sort(([a], [b]) => Number(b) - Number(a));
     }, [paginatedVocab]);
 
     const [hasMounted, setHasMounted] = useState(false);
+    useEffect(() => { setHasMounted(true); }, []);
 
-    useEffect(() => {
-        setHasMounted(true);
-    }, []);
-
-    const scrollToTop = () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
+    const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
     if (!hasMounted) {
         return (
-            <div className="min-h-[400px] flex items-center justify-center">
-                <div className="w-8 h-8 border-4 border-[#10175b] border-t-transparent rounded-full animate-spin" />
+            <div className="min-h-[300px] flex items-center justify-center">
+                <div className="w-7 h-7 border-[3px] border-[#10175b] border-t-transparent rounded-full animate-spin" />
             </div>
         );
     }
 
     if (vocab.length === 0) {
         return (
-            <div className="bg-transparent border border-dashed border-slate-300 rounded-[24px] p-24 text-center">
+            <div className="bg-transparent border border-dashed border-slate-200 rounded-[24px] p-20 text-center">
                 <p className="text-slate-400 font-serif italic text-xl">"This curation is currently unwritten. Decipher your first sentence above."</p>
             </div>
         );
@@ -84,90 +74,83 @@ export default function CurationList({ vocab, bookId }: { vocab: Translation[], 
 
     return (
         <div className="relative">
-            {/* Search Bar */}
-            <div className="mb-10 relative">
+
+            {/* Search */}
+            <div className="mb-8 relative">
                 <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
-                    <IconSearch size={18} className="text-slate-400" />
+                    <IconSearch size={16} className="text-slate-400" />
                 </div>
                 <input
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                        setCurrentPage(1);
-                    }}
+                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                     placeholder="Search in your curation..."
-                    className="w-full pl-14 pr-12 py-4 bg-white border border-slate-200 rounded-[20px] focus:outline-none focus:ring-4 focus:ring-slate-50 focus:border-[#10175b] transition-all text-sm font-medium text-[#10175b] placeholder:text-slate-300 shadow-sm"
+                    className="w-full pl-12 pr-10 py-3.5 bg-white border border-slate-200 rounded-[18px] focus:outline-none focus:ring-4 focus:ring-slate-50 focus:border-[#10175b] transition-all text-sm font-medium text-[#10175b] placeholder:text-slate-300 shadow-sm"
                 />
                 {searchQuery && (
-                    <button 
-                        onClick={() => setSearchQuery('')}
-                        className="absolute inset-y-0 right-5 flex items-center text-slate-300 hover:text-slate-500"
-                    >
-                        <IconX size={18} />
+                    <button onClick={() => setSearchQuery('')} className="absolute inset-y-0 right-5 flex items-center text-slate-300 hover:text-slate-500">
+                        <IconX size={16} />
                     </button>
                 )}
             </div>
 
             {filteredVocab.length === 0 ? (
-                <div className="text-center py-20 bg-slate-50/50 rounded-[32px] border border-slate-100 border-dashed">
+                <div className="text-center py-16 bg-slate-50/50 rounded-[28px] border border-dashed border-slate-100">
                     <p className="text-slate-400 font-serif italic">No matching curations found for "{searchQuery}"</p>
                 </div>
             ) : (
-                <div className="space-y-16">
+                <div className="space-y-8">
                     {groupedVocab.map(([page, entries]) => (
-                        <div key={page} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                            {/* Page Heading */}
-                            <div className="flex items-center gap-4">
-                                <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-slate-200" />
-                                <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400">
-                                    {page === '0' ? 'NO PAGE' : `PAGE ${page}`}
+                        <div key={page} className="space-y-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+                            {/* Page Group Header */}
+                            <div className="flex items-center gap-4 mb-5">
+                                <div className="h-px flex-1 bg-gradient-to-r from-transparent to-slate-200" />
+                                <h3 className="text-[10px] font-bold font-sans uppercase tracking-[0.3em] text-slate-400 px-1">
+                                    {page === '0' ? 'No Page' : `Page ${page}`}
                                 </h3>
-                                <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-slate-200" />
+                                <div className="h-px flex-1 bg-gradient-to-l from-transparent to-slate-200" />
                             </div>
 
-                            <div className="space-y-12">
+                            {/* Entries — separated by a thin divider */}
+                            <div className="divide-y divide-slate-100">
                                 {entries.map((entry) => {
                                     const dateStr = new Intl.DateTimeFormat('en-US', {
                                         month: 'short', day: 'numeric', year: 'numeric'
                                     }).format(new Date(entry.createdAt)).toUpperCase();
 
                                     return (
-                                        <div key={entry.id} className="relative group">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <div className="flex-1 pr-12">
-                                                    <div className="flex items-center gap-3 mb-1.5">
-                                                        <h4 className="text-xl md:text-2xl font-serif font-bold text-[#171717] leading-tight group-hover:text-[#10175b] transition-colors">
-                                                            {entry.originalText}
-                                                        </h4>
-                                                        <div className="mt-0.5">
-                                                            <PronunciationButton text={entry.originalText} lang="en-US" />
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <div className="space-y-1">
-                                                        <div className="flex items-center gap-3">
-                                                            <p className="text-xl md:text-2xl font-bold text-[#012B5B] tracking-tight">
-                                                                {entry.translatedText}
-                                                            </p>
-                                                            <div className="mt-1">
-                                                                <PronunciationButton 
-                                                                    text={entry.translatedText} 
-                                                                    lang={entry.language === 'Tamil' ? 'ta-IN' : 'si-LK'} 
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
-                                                            {entry.language} Translation
-                                                        </p>
+                                        <div key={entry.id} className="group relative flex justify-between items-start gap-4 py-5 hover:bg-slate-50/60 -mx-4 px-4 rounded-xl transition-colors duration-200">
+
+                                            {/* Left: text content */}
+                                            <div className="flex-1 min-w-0">
+                                                {/* English */}
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <h4 className="text-lg font-serif font-semibold text-[#171717] leading-tight group-hover:text-[#10175b] transition-colors truncate">
+                                                        {entry.originalText}
+                                                    </h4>
+                                                    <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <PronunciationButton text={entry.originalText} lang="en-US" />
                                                     </div>
                                                 </div>
 
-                                                <div className="flex flex-col items-end shrink-0">
-                                                    <span className="text-[10px] font-bold text-slate-400 tracking-wider mb-4">{dateStr}</span>
-                                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <DeleteTranslationButton id={entry.id} bookId={bookId} />
-                                                    </div>
+                                                {/* Translation */}
+                                                <div className="flex items-center gap-2">
+                                                    <p className="text-lg font-sm text-[#012B5B] leading-tight truncate">
+                                                        {entry.translatedText}
+                                                    </p>
+                                                </div>
+
+                                                <p className="text-[9px] font-bold font-sans uppercase tracking-[0.2em] text-slate-400 mt-1.5">
+                                                    {entry.language} Translation
+                                                </p>
+                                            </div>
+
+                                            {/* Right: date + delete */}
+                                            <div className="flex flex-col items-end gap-2 shrink-0">
+                                                <span className="text-[10px] font-sans text-slate-400 tracking-wide">{dateStr}</span>
+                                                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <DeleteTranslationButton id={entry.id} bookId={bookId} />
                                                 </div>
                                             </div>
                                         </div>
@@ -179,43 +162,39 @@ export default function CurationList({ vocab, bookId }: { vocab: Translation[], 
                 </div>
             )}
 
-            {/* Pagination Controls */}
+            {/* Pagination */}
             {totalPages > 1 && (
-                <div className="mt-20 flex items-center justify-between py-8 border-t border-slate-100">
+                <div className="mt-12 flex items-center justify-between py-6 border-t border-slate-100">
                     <button
                         disabled={currentPage === 1}
                         onClick={() => setCurrentPage(prev => prev - 1)}
-                        className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-slate-400 hover:text-[#10175b] disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                        className="flex items-center gap-2 text-[11px] font-bold font-sans uppercase tracking-widest text-slate-400 hover:text-[#10175b] disabled:opacity-30 disabled:pointer-events-none transition-colors"
                     >
-                        <IconChevronLeft size={16} strokeWidth={3} />
+                        <IconChevronLeft size={14} strokeWidth={2.5} />
                         Previous
                     </button>
 
-                    <div className="flex items-center gap-4">
-                        <span className="text-[11px] font-black uppercase tracking-widest text-[#10175b]">
-                            {currentPage} / {totalPages}
-                        </span>
-                    </div>
+                    <span className="text-[11px] font-bold font-sans text-[#10175b] px-4 py-1.5 bg-[#10175b]/5 rounded-full">
+                        {currentPage} / {totalPages}
+                    </span>
 
                     <button
                         disabled={currentPage === totalPages}
                         onClick={() => setCurrentPage(prev => prev + 1)}
-                        className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-slate-400 hover:text-[#10175b] disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                        className="flex items-center gap-2 text-[11px] font-bold font-sans uppercase tracking-widest text-slate-400 hover:text-[#10175b] disabled:opacity-30 disabled:pointer-events-none transition-colors"
                     >
                         Next
-                        <IconChevronRight size={16} strokeWidth={3} />
+                        <IconChevronRight size={14} strokeWidth={2.5} />
                     </button>
                 </div>
             )}
 
-            {/* Go to Top Navigator */}
+            {/* Go to Top */}
             <button
                 onClick={scrollToTop}
-                className={`fixed bottom-10 right-10 p-5 bg-[#10175b] text-white rounded-full shadow-2xl transition-all duration-500 transform hover:scale-110 active:scale-95 z-50 ${
-                    showGoToTop ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
-                }`}
+                className={`fixed bottom-10 right-10 p-4 bg-[#10175b] text-white rounded-full shadow-2xl transition-all duration-500 transform hover:scale-110 active:scale-95 z-50 ${showGoToTop ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}
             >
-                <IconArrowUp size={24} strokeWidth={3} />
+                <IconArrowUp size={20} strokeWidth={2.5} />
             </button>
         </div>
     );
