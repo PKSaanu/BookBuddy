@@ -2,14 +2,26 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IconNotes, IconChevronRight, IconTrash, IconArrowLeft, IconEdit } from '@tabler/icons-react';
+import { IconNotes, IconChevronRight, IconTrash, IconArrowLeft, IconEdit, IconBook, IconLoader } from '@tabler/icons-react';
 import Link from 'next/link';
 import TranslationPanel from './translation-panel';
 import CurationList from './curation-list';
 import BookNotes from './book-notes';
 import { DeleteBookButton } from './delete-book-button';
-import { getBookNotes } from '@/actions/books';
+import { getBookNotes, removeBookFile } from '@/actions/books';
 import { EditBookModal } from './edit-book-modal';
+
+import dynamic from 'next/dynamic';
+
+const PdfReader = dynamic(() => import('./pdf-reader'), { 
+  ssr: false,
+  loading: () => (
+    <div className="fixed inset-0 z-[200] bg-slate-900/50 backdrop-blur-md flex items-center justify-center">
+      <IconLoader className="animate-spin text-white w-10 h-10" />
+    </div>
+  )
+});
+
 
 interface BookContentProps {
   book: {
@@ -18,7 +30,10 @@ interface BookContentProps {
     author: string | null;
     notes?: string | null;
     totalPages: number | null;
+    fileUrl?: string | null;
+    currentPage?: number | null;
   };
+
   session: any;
   vocab: any[];
   progressPercent: number;
@@ -32,6 +47,55 @@ export default function BookContent({ book, session, vocab, progressPercent: ini
   // Local state for book details to allow instant updates
   const [currentBook, setCurrentBook] = useState(book);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isReaderOpen, setIsReaderOpen] = useState(false);
+  const [localFileUrl, setLocalFileUrl] = useState(book.fileUrl);
+  const [localCurrentPage, setLocalCurrentPage] = useState(book.currentPage || 1);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const [selectedText, setSelectedText] = useState('');
+  const [selectedPage, setSelectedPage] = useState<number | undefined>(undefined);
+
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('bookId', book.id);
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.fileUrl) {
+        setLocalFileUrl(data.fileUrl);
+      } else {
+        alert(data.error || 'Upload failed');
+      }
+    } catch (err) {
+      alert('Upload failed');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRemoveFile = async () => {
+    if (!confirm('Are you sure you want to remove the uploaded PDF? Your reading progress will be reset.')) return;
+    
+    const res = await removeBookFile(book.id);
+    if (res.success) {
+      setLocalFileUrl(null);
+      setLocalCurrentPage(1);
+    } else {
+      alert(res.error || 'Failed to remove PDF');
+    }
+  };
+
+
 
   const toggleNotes = async () => {
     const nextState = !isNotesOpen;
@@ -91,8 +155,42 @@ export default function BookContent({ book, session, vocab, progressPercent: ini
                 <div className="bg-[#0f766e] text-white text-[9px] md:text-[11px] font-bold tracking-[0.1em] uppercase px-3 md:px-4 py-1.5 rounded-full shadow-sm">
                   {progressPercent}%
                 </div>
+
+                {/* PDF Control Buttons - Desktop Only */}
+                <div className="hidden md:flex items-center gap-3">
+                  {localFileUrl ? (
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => setIsReaderOpen(true)}
+                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest bg-[#10175b] text-white border-2 border-[#10175b] hover:bg-white hover:text-[#10175b] transition-all shadow-md group"
+                      >
+                        <IconBook className="w-4 h-4" />
+                        Read Book
+                      </button>
+                    </div>
+
+                  ) : (
+
+                    <div className="relative">
+                      <input 
+                        type="file" 
+                        accept=".pdf" 
+                        onChange={handleFileUpload}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        disabled={isUploading}
+                      />
+                      <button 
+                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest bg-white text-[#10175b] border-2 border-[#10175b] hover:bg-[#10175b] hover:text-white transition-all shadow-sm"
+                      >
+                        {isUploading ? <IconLoader className="animate-spin w-4 h-4" /> : <IconTrash className="w-4 h-4 rotate-[135deg]" />}
+                        {isUploading ? 'Uploading...' : 'Upload PDF'}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
+
             
             <div className="flex flex-col border-b border-slate-200/50 pb-8">
               <h1 className="text-3xl sm:text-5xl md:text-6xl font-serif text-[#171717] font-bold tracking-tight leading-[1.1] mb-4">{currentBook.title}</h1>
@@ -110,8 +208,14 @@ export default function BookContent({ book, session, vocab, progressPercent: ini
 
           {/* ... existing panels ... */}
           <div className="mb-12">
-            <TranslationPanel bookId={book.id} preferredLanguage={session.preferredLanguage as string} />
+            <TranslationPanel 
+              bookId={book.id} 
+              preferredLanguage={session.preferredLanguage as string} 
+              externalText={selectedText}
+              externalPageNumber={selectedPage}
+            />
           </div>
+
 
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
             <div className="flex items-center justify-between mb-8">
@@ -161,6 +265,33 @@ export default function BookContent({ book, session, vocab, progressPercent: ini
           </>
         )}
       </AnimatePresence>
+
+      <AnimatePresence>
+        {isReaderOpen && localFileUrl && (
+          <PdfReader 
+            fileUrl={localFileUrl} 
+            bookId={book.id}
+            preferredLanguage={session.preferredLanguage as string}
+            initialPage={localCurrentPage}
+            savedVocab={vocab}
+            onClose={() => setIsReaderOpen(false)}
+            onPageChange={(page) => setLocalCurrentPage(page)}
+            onFileRemoved={() => {
+              setLocalFileUrl(null);
+              setLocalCurrentPage(1);
+            }}
+            onTranslate={(text, page) => {
+              setSelectedText(text);
+              setSelectedPage(page);
+              // Reader no longer closes automatically to preserve progress
+            }}
+          />
+
+        )}
+
+      </AnimatePresence>
+
     </div>
+
   );
 }

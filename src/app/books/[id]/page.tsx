@@ -22,6 +22,8 @@ export default async function BookPage({ params }: { params: { id: string } }) {
       coverImage: books.coverImage,
       totalPages: books.totalPages,
       userId: books.userId,
+      fileUrl: books.fileUrl,
+      currentPage: books.currentPage,
       createdAt: books.createdAt,
     })
     .from(books)

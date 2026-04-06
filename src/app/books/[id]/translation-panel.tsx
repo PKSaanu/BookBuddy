@@ -1,15 +1,38 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { saveTranslation } from '@/actions/translations';
 import { IconLoader, IconWorld, IconHistory, IconArrowRight, IconLanguage, IconBook, IconBookmarkPlus } from '@tabler/icons-react';
 import { PronunciationButton } from './pronunciation-button';
 
-export default function TranslationPanel({ bookId, preferredLanguage }: { bookId: string, preferredLanguage: string }) {
+export default function TranslationPanel({ 
+  bookId, 
+  preferredLanguage,
+  externalText,
+  externalPageNumber
+}: { 
+  bookId: string, 
+  preferredLanguage: string,
+  externalText?: string,
+  externalPageNumber?: number
+}) {
   const [inputText, setInputText] = useState('');
   const [translatedText, setTranslatedText] = useState('');
   const [correctedText, setCorrectedText] = useState('');
   const [pageNumber, setPageNumber] = useState<string>('');
+  
+  // Handle external selection from PDF Reader
+  useEffect(() => {
+    if (externalText) {
+      setInputText(externalText);
+      setTranslatedText(''); // Clear old translation
+      setCorrectedText('');
+    }
+    if (externalPageNumber) {
+      setPageNumber(String(externalPageNumber));
+    }
+  }, [externalText, externalPageNumber]);
+
   const [isTranslating, setIsTranslating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);

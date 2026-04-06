@@ -17,7 +17,10 @@ export const books = pgTable('books', {
   coverImage: varchar('cover_image', { length: 1000 }),
   totalPages: integer('total_pages'),
   notes: text('notes').default(''),
+  fileUrl: varchar('file_url', { length: 1024 }),
+  currentPage: integer('current_page').default(1),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 

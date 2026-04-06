@@ -158,9 +158,11 @@ export default function SettingsClient({ initialEmail, initialPreferredLanguage 
                             <input 
                                 type="email" 
                                 value={email}
+                                autoComplete="email"
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="w-full bg-[#EBECEC] border border-slate-300/50 text-[#10175b] text-lg font-serif font-bold px-6 py-5 rounded-none outline-none focus:border-[#10175b] focus:ring-1 focus:ring-[#10175b] transition-all"
                             />
+
                         </div>
                     </div>
 
@@ -172,9 +174,11 @@ export default function SettingsClient({ initialEmail, initialPreferredLanguage 
                                 type="password" 
                                 placeholder="••••••••••••"
                                 value={currentPassword}
+                                autoComplete="current-password"
                                 onChange={(e) => setCurrentPassword(e.target.value)}
                                 className="w-full bg-[#EBECEC] border border-slate-300/50 text-[#10175b] text-lg font-bold px-6 py-5 rounded-none outline-none focus:border-[#10175b] focus:ring-1 focus:ring-[#10175b] transition-all placeholder:text-[#10175b]/40 placeholder:tracking-widest"
                             />
+
                         </div>
 
                         {currentPassword && (
@@ -184,9 +188,11 @@ export default function SettingsClient({ initialEmail, initialPreferredLanguage 
                                     type="password" 
                                     placeholder="Enter new password"
                                     value={newPassword}
+                                    autoComplete="new-password"
                                     onChange={(e) => setNewPassword(e.target.value)}
                                     className="w-full bg-[#EBECEC] border border-slate-300/50 text-[#10175b] text-lg font-bold px-6 py-5 rounded-none outline-none focus:border-[#10175b] focus:ring-1 focus:ring-[#10175b] transition-all"
                                 />
+
                             </div>
                         )}
                     </div>

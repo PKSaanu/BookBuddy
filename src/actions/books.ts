@@ -5,7 +5,7 @@ import { books } from '@/db/schema';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, ilike } from 'drizzle-orm';
 
 export async function createBook(prevState: any, formData: FormData) {
   const session = await getSession();
@@ -13,8 +13,8 @@ export async function createBook(prevState: any, formData: FormData) {
     redirect('/login');
   }
 
-  const title = formData.get('title') as string;
-  const author = formData.get('author') as string;
+  const title = (formData.get('title') as string || '').trim();
+  const author = (formData.get('author') as string || '').trim();
   const coverImage = formData.get('coverImage') as string;
   const totalPagesRaw = formData.get('totalPages');
   const totalPages = totalPagesRaw ? parseInt(totalPagesRaw as string, 10) : null;
@@ -22,6 +22,23 @@ export async function createBook(prevState: any, formData: FormData) {
   if (!title) {
     return { error: 'Book title is required' };
   }
+
+  // Case-Insensitive Duplicate Check
+  const existingBook = await db.select()
+    .from(books)
+    .where(
+      and(
+        ilike(books.title, title),
+        eq(books.userId, session.id as string)
+      )
+    )
+    .limit(1);
+
+  if (existingBook.length > 0) {
+    return { error: 'This book is already in your library.' };
+  }
+
+
 
   try {
     await db.insert(books).values({
@@ -129,3 +146,46 @@ export async function getBookNotes(bookId: string) {
     return { error: 'Failed to fetch notes' };
   }
 }
+
+export async function updateBookProgress(bookId: string, pageNumber: number) {
+  const session = await getSession();
+  if (!session?.id) return { error: 'Unauthorized' };
+
+  try {
+    await db.update(books)
+      .set({ currentPage: pageNumber })
+      .where(
+        and(
+          eq(books.id, bookId),
+          eq(books.userId, session.id as string)
+        )
+      );
+    
+    // No revalidatePath here to avoid jarring UI flickers during background save
+    return { success: true };
+  } catch (error) {
+    return { error: 'Failed to update progress' };
+  }
+}
+
+export async function removeBookFile(bookId: string) {
+  const session = await getSession();
+  if (!session?.id) return { error: 'Unauthorized' };
+
+  try {
+    await db.update(books)
+      .set({ fileUrl: null, currentPage: 1 })
+      .where(
+        and(
+          eq(books.id, bookId),
+          eq(books.userId, session.id as string)
+        )
+      );
+    
+    revalidatePath(`/books/${bookId}`);
+    return { success: true };
+  } catch (error) {
+    return { error: 'Failed to remove file' };
+  }
+}
+
