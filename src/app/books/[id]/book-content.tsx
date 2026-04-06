@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IconNotes, IconChevronRight, IconTrash, IconArrowLeft, IconEdit, IconBook, IconLoader } from '@tabler/icons-react';
+import { IconNotes, IconChevronRight, IconTrash, IconArrowLeft, IconEdit, IconBook, IconLoader, IconFileUpload } from '@tabler/icons-react';
+
 import Link from 'next/link';
 import TranslationPanel from './translation-panel';
 import CurationList from './curation-list';
@@ -182,7 +183,8 @@ export default function BookContent({ book, session, vocab, progressPercent: ini
                       <button 
                         className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest bg-white text-[#10175b] border-2 border-[#10175b] hover:bg-[#10175b] hover:text-white transition-all shadow-sm"
                       >
-                        {isUploading ? <IconLoader className="animate-spin w-4 h-4" /> : <IconTrash className="w-4 h-4 rotate-[135deg]" />}
+                        {isUploading ? <IconLoader className="animate-spin w-4 h-4" /> : <IconFileUpload className="w-4 h-4" />}
+
                         {isUploading ? 'Uploading...' : 'Upload PDF'}
                       </button>
                     </div>
