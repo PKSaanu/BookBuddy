@@ -17,6 +17,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 interface PdfReaderProps {
   fileUrl: string;
   bookId: string;
+  bookTitle: string;
   preferredLanguage: string;
   initialPage?: number;
   onClose: () => void;
@@ -26,9 +27,11 @@ interface PdfReaderProps {
   savedVocab: any[];
 }
 
+
 export default function PdfReader({ 
   fileUrl, 
   bookId, 
+  bookTitle,
   preferredLanguage, 
   initialPage = 1, 
   onClose, 
@@ -37,6 +40,7 @@ export default function PdfReader({
   onFileRemoved,
   savedVocab
 }: PdfReaderProps) {
+
 
   const [numPages, setNumPages] = useState<number | null>(null);
 
@@ -103,9 +107,8 @@ export default function PdfReader({
   }, [pageNumber, bookId, onPageChange]);
 
   const handleRemoveFile = async () => {
-    if (!confirm('Are you sure you want to remove the uploaded PDF? Your reading progress will be reset.')) return;
-    
     const res = await removeBookFile(bookId);
+
     if (res.success) {
       onFileRemoved();
       onClose();
@@ -115,14 +118,21 @@ export default function PdfReader({
   };
 
 
-  // Close reader on Escape key
+  // Close reader on Escape key & Keyboard Navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowRight') {
+        setPageNumber(prev => Math.min(numPages || prev, prev + 1));
+      }
+      if (e.key === 'ArrowLeft') {
+        setPageNumber(prev => Math.max(1, prev - 1));
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, [onClose, numPages]);
+
 
   // Sync jumpPage with actual pageNumber
   useEffect(() => {
@@ -219,8 +229,11 @@ export default function PdfReader({
           >
             <IconX size={24} />
           </button>
-          <div className="h-6 w-px bg-slate-700 hidden sm:block"></div>
-          <span className="text-white font-medium text-sm hidden sm:block truncate max-w-[200px]">Reading Book</span>
+          <div className="h-px w-px bg-slate-700 hidden sm:block"></div>
+          <span className="text-white font-serif font-bold text-sm hidden sm:block truncate max-w-[400px] italic">
+            Reading: {bookTitle}
+          </span>
+
         </div>
 
         <div className="flex items-center gap-4">

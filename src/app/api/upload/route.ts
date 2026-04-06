@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
+import { put } from '@vercel/blob';
 import { db } from '@/db/db';
 import { books } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -31,25 +30,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Book not found' }, { status: 404 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    // Create a unique filename
+    // Upload to Vercel Blob
     const filename = `${bookId}-${Date.now()}.pdf`;
-    const uploadDir = join(process.cwd(), 'public', 'uploads', 'pdfs');
-    
-    // Ensure directory exists (even if already created by mkdir -p)
-    await mkdir(uploadDir, { recursive: true });
-    
-    const filePath = join(uploadDir, filename);
-    await writeFile(filePath, buffer);
+    const blob = await put(filename, file, {
+      access: 'public',
+    });
 
-    const fileUrl = `/uploads/pdfs/${filename}`;
+
+
+    const fileUrl = blob.url;
 
     // Update database
     await db.update(books)
       .set({ fileUrl })
       .where(eq(books.id, bookId));
+
 
     revalidatePath(`/books/${bookId}`);
 

@@ -1,6 +1,9 @@
 'use server';
 
+import { del } from '@vercel/blob';
+
 import { db } from '@/db/db';
+
 import { books } from '@/db/schema';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
@@ -168,11 +171,34 @@ export async function updateBookProgress(bookId: string, pageNumber: number) {
   }
 }
 
+
 export async function removeBookFile(bookId: string) {
+
   const session = await getSession();
   if (!session?.id) return { error: 'Unauthorized' };
 
   try {
+    // 1. Fetch current file URL
+    const [book] = await db.select({ fileUrl: books.fileUrl })
+      .from(books)
+      .where(
+        and(
+          eq(books.id, bookId),
+          eq(books.userId, session.id as string)
+        )
+      );
+
+    // 2. Delete from Vercel Blob if it exists
+    if (book?.fileUrl) {
+      try {
+        await del(book.fileUrl);
+      } catch (e) {
+        console.error('Failed to delete blob from Vercel:', e);
+        // Continue anyway to clear local DB state
+      }
+    }
+
+    // 3. Clear from Database
     await db.update(books)
       .set({ fileUrl: null, currentPage: 1 })
       .where(
@@ -181,6 +207,7 @@ export async function removeBookFile(bookId: string) {
           eq(books.userId, session.id as string)
         )
       );
+
     
     revalidatePath(`/books/${bookId}`);
     return { success: true };

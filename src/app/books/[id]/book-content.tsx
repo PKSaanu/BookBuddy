@@ -272,6 +272,7 @@ export default function BookContent({ book, session, vocab, progressPercent: ini
           <PdfReader 
             fileUrl={localFileUrl} 
             bookId={book.id}
+            bookTitle={currentBook.title}
             preferredLanguage={session.preferredLanguage as string}
             initialPage={localCurrentPage}
             savedVocab={vocab}
@@ -287,6 +288,7 @@ export default function BookContent({ book, session, vocab, progressPercent: ini
               // Reader no longer closes automatically to preserve progress
             }}
           />
+
 
         )}
 

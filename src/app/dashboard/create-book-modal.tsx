@@ -161,7 +161,8 @@ export function CreateBookModal({ onSuccess }: { onSuccess?: () => void }) {
                   placeholder="Book Title"
                   required
                   autoComplete="off"
-                  className="w-full px-4 py-3 pr-12 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#10175b]/20 focus:border-[#10175b] text-sm text-slate-900 placeholder-slate-400 font-medium transition-all"
+                  className="w-full px-4 py-3 pr-12 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#10175b]/20 focus:border-[#10175b] text-base text-slate-900 placeholder-slate-400 font-medium transition-all"
+
                 />
                 {isLoading && (
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[#10175b]/50">
@@ -215,7 +216,8 @@ export function CreateBookModal({ onSuccess }: { onSuccess?: () => void }) {
                 value={author}
                 onChange={(e) => setAuthor(e.target.value)}
                 placeholder="Author"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#10175b]/20 focus:border-[#10175b] text-sm text-slate-900 placeholder-slate-400 font-medium transition-all"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#10175b]/20 focus:border-[#10175b] text-base text-slate-900 placeholder-slate-400 font-medium transition-all"
+
               />
               <input
                 name="totalPages"
@@ -223,7 +225,8 @@ export function CreateBookModal({ onSuccess }: { onSuccess?: () => void }) {
                 onChange={(e) => setTotalPages(e.target.value)}
                 placeholder="Total Pages"
                 type="number"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#10175b]/20 focus:border-[#10175b] text-sm text-slate-900 placeholder-slate-400 font-medium transition-all"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#10175b]/20 focus:border-[#10175b] text-base text-slate-900 placeholder-slate-400 font-medium transition-all"
+
               />
             </div>
           </div>

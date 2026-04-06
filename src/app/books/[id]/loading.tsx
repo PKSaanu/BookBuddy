@@ -10,11 +10,15 @@ export default function BookLoading() {
             <div className="mb-8 border-b border-slate-200/50 pb-8">
                 <div className="flex items-center justify-between w-full mb-8">
                     <div className="h-4 w-24 bg-slate-200 rounded-md"></div>
-                    <div className="flex items-center gap-3">
-                        <div className="h-8 w-24 bg-red-50 rounded-lg"></div>
-                        <div className="h-8 w-28 bg-[#0f766e]/20 rounded-full"></div>
+                    <div className="flex items-center gap-2 md:gap-3">
+                        <div className="h-8 w-16 bg-slate-100 rounded-full"></div>
+                        <div className="h-8 w-16 bg-slate-100 rounded-full"></div>
+                        <div className="h-8 w-12 bg-red-50/50 rounded-full"></div>
+                        <div className="h-8 w-24 bg-[#0f766e]/10 rounded-full"></div>
+                        <div className="h-8 w-32 bg-[#10175b]/20 rounded-full hidden md:block"></div>
                     </div>
                 </div>
+
                 
                 <div className="flex flex-col">
                      <div className="h-12 sm:h-16 w-3/4 bg-slate-200 rounded-xl mb-6"></div>
