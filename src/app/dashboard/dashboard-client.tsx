@@ -66,7 +66,7 @@ export default function DashboardPage({
                                   <div className="absolute bottom-0 left-0 p-12 w-full z-20">
                                        <div className="flex items-center gap-4 mb-6">
                                           <div className="bg-[#0f766e] text-white text-[11px] font-bold uppercase tracking-[0.1em] px-4 py-2 rounded-full shadow-sm">
-                                              Recently Opened
+                                              Recently Added
                                           </div>
                                           {recentBook.totalPages && (
                                               <div className="bg-white/10 backdrop-blur text-white text-[11px] font-bold uppercase tracking-[0.1em] px-4 py-2 rounded-full border border-white/20">

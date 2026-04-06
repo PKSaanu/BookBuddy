@@ -14,6 +14,9 @@ export default function Navbar() {
             </Link>
           </div>
           <div className="flex items-center gap-4">
+            <Link href="/about" className="text-[12px] font-bold font-sans uppercase tracking-widest text-slate-400 hover:text-[#10175b] transition-colors">
+              About
+            </Link>
             <form action={logout}>
               <button
                 type="submit"

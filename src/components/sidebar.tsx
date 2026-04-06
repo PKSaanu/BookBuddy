@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { logout } from '@/actions/auth';
-import { IconLayoutDashboard, IconBook2, IconSettings, IconLogout, IconX, IconCircles } from '@tabler/icons-react';
+import { IconLayoutDashboard, IconBook2, IconSettings, IconLogout, IconX, IconCircles, IconInfoCircle } from '@tabler/icons-react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -110,6 +110,21 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               )}
               <IconSettings size={20} className={pathname === '/settings' ? 'text-[#10175b]' : 'text-slate-400'} />
               Settings
+            </Link>
+
+            <Link 
+              href="/about" 
+              onClick={onClose}
+              className={`flex items-center gap-4 py-3 font-semibold text-[15px] transition-colors relative outline-none ${pathname === '/about' ? 'text-[#10175b]' : 'text-slate-500 hover:text-slate-900'}`}
+            >
+              {pathname === '/about' && (
+                <motion.div 
+                  layoutId="activeTab"
+                  className="absolute left-[-24px] w-1.5 h-6 bg-[#10175b] rounded-r-md"
+                />
+              )}
+              <IconInfoCircle size={20} className={pathname === '/about' ? 'text-[#10175b]' : 'text-slate-400'} />
+              About
             </Link>
           </nav>
         </div>
