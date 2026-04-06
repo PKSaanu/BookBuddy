@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { put } from '@vercel/blob';
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
 import { db } from '@/db/db';
 import { books } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -30,14 +31,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Book not found' }, { status: 404 });
     }
 
-    // Upload to Vercel Blob (Cloud Storage)
-    const filename = `${bookId}-${Date.now()}.pdf`;
-    const blob = await put(filename, file, {
-      access: 'public',
-      addRandomSuffix: false // We already have a timestamp
-    });
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
 
-    const fileUrl = blob.url;
+    // Create a unique filename
+    const filename = `${bookId}-${Date.now()}.pdf`;
+    const uploadDir = join(process.cwd(), 'public', 'uploads', 'pdfs');
+    
+    // Ensure directory exists (even if already created by mkdir -p)
+    await mkdir(uploadDir, { recursive: true });
+    
+    const filePath = join(uploadDir, filename);
+    await writeFile(filePath, buffer);
+
+    const fileUrl = `/uploads/pdfs/${filename}`;
 
     // Update database
     await db.update(books)
@@ -45,12 +52,10 @@ export async function POST(request: NextRequest) {
       .where(eq(books.id, bookId));
 
     revalidatePath(`/books/${bookId}`);
-    revalidatePath('/dashboard');
 
     return NextResponse.json({ success: true, fileUrl });
   } catch (error: any) {
-    console.error('Cloud upload error:', error);
-    return NextResponse.json({ error: error.message || 'Cloud upload failed' }, { status: 500 });
+    console.error('Upload error:', error);
+    return NextResponse.json({ error: error.message || 'Upload failed' }, { status: 500 });
   }
 }
-

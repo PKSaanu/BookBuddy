@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IconNotes, IconChevronRight, IconTrash, IconArrowLeft, IconEdit, IconBook, IconLoader, IconFileUpload } from '@tabler/icons-react';
-
 import Link from 'next/link';
 import TranslationPanel from './translation-panel';
 import CurationList from './curation-list';
