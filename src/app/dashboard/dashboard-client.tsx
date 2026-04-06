@@ -35,7 +35,7 @@ export default function DashboardPage({
           <div className="max-w-7xl mx-auto">
               {/* Header / Intro */}
               <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end mb-12 gap-8">
-                  <div className="max-w-2xl">
+                  <div className="max-w-2xl w-full">
                        <p className="text-[12px] tracking-[0.2em] font-black text-slate-400 uppercase mb-4">Welcome back, Scholar</p>
                        <h2 className="text-5xl md:text-7xl font-serif text-[#10175b] leading-[1.1] tracking-tight">
                         Your library is an <span className="italic">unwritten</span> chapter.

@@ -14,9 +14,9 @@ export default function DashboardLoading() {
                      </h2>
                 </div>
                 <div className="shrink-0 mb-2">
-                    <div className="bg-[#10175b] text-white px-8 py-4 rounded-xl font-bold opacity-50 whitespace-nowrap">
+                    <button disabled className="bg-[#10175b] text-white px-8 py-4 rounded-xl font-bold opacity-50 whitespace-nowrap cursor-default">
                         Add New Book
-                    </div>
+                    </button>
                 </div>
             </div>
 

@@ -19,7 +19,7 @@ export default function WordPoolClient({ initialWords }: { initialWords: Transla
 
   const filteredWords = useMemo(() => {
     if (!searchQuery.trim()) return initialWords;
-    return initialWords.filter(w => 
+    return initialWords.filter(w =>
       w.originalText.toLowerCase().includes(searchQuery.toLowerCase()) ||
       w.translatedText.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -29,7 +29,7 @@ export default function WordPoolClient({ initialWords }: { initialWords: Transla
     // For the word cloud, we'll randomize sizes and colors
     // But we use a hash to keep them consistent for the same word
     const colors = [
-      'text-indigo-600', 'text-teal-600', 'text-[#10175b]', 
+      'text-indigo-600', 'text-teal-600', 'text-[#10175b]',
       'text-slate-600', 'text-indigo-500', 'text-teal-500',
       'text-indigo-700', 'text-blue-600'
     ];
@@ -62,10 +62,10 @@ export default function WordPoolClient({ initialWords }: { initialWords: Transla
           placeholder="Search your deciphered library..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-white border border-slate-200 rounded-[28px] pl-14 pr-14 py-5 text-lg font-serif text-[#10175b] focus:outline-none focus:ring-4 focus:ring-indigo-50 shadow-sm transition-all placeholder:text-slate-300"
+          className="w-full bg-white border border-slate-200 rounded-full pl-12 pr-12 py-3 text-base font-serif text-[#10175b] focus:outline-none focus:ring-4 focus:ring-indigo-50 shadow-sm transition-all placeholder:text-slate-300"
         />
         {searchQuery && (
-          <button 
+          <button
             onClick={() => setSearchQuery('')}
             className="absolute inset-y-0 right-6 flex items-center text-slate-400 hover:text-[#10175b] transition-colors"
           >
@@ -97,9 +97,9 @@ export default function WordPoolClient({ initialWords }: { initialWords: Transla
               >
                 <Link href={`/books/${word.bookId}`} className="block text-center no-underline outline-none">
                   <span className={`block font-serif font-bold transition-colors ${word.color} 
-                    ${word.size === 1 ? 'text-xl md:text-2xl opacity-70' : 
-                      word.size === 2 ? 'text-2xl md:text-3xl lg:text-4xl' : 
-                      'text-3xl md:text-5xl lg:text-6xl'} 
+                    ${word.size === 1 ? 'text-xl md:text-2xl opacity-70' :
+                      word.size === 2 ? 'text-2xl md:text-3xl lg:text-4xl' :
+                        'text-3xl md:text-5xl lg:text-6xl'} 
                     group-hover:opacity-100`}
                     style={{ transform: `rotate(${word.rotation}deg)` }}
                   >
@@ -108,7 +108,7 @@ export default function WordPoolClient({ initialWords }: { initialWords: Transla
                   <span className="block text-[10px] md:text-[12px] font-medium text-slate-400 uppercase tracking-widest mt-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                     {word.translatedText}
                   </span>
-                  
+
                   {/* Floating Link Icon */}
                   <div className="absolute -top-4 -right-4 bg-white shadow-lg p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100 border border-slate-100 transform translate-y-2 group-hover:translate-y-0 text-[#10175b]">
                     <IconArrowRight size={14} />
@@ -117,7 +117,7 @@ export default function WordPoolClient({ initialWords }: { initialWords: Transla
               </motion.div>
             ))
           ) : (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="flex flex-col items-center justify-center text-center py-20"

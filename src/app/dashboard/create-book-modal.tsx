@@ -6,16 +6,25 @@ import { IconPlus, IconLoader } from '@tabler/icons-react';
 import { useFormStatus } from 'react-dom';
 
 function SubmitBtn() {
-    const { pending } = useFormStatus();
-    return (
-        <button
-          type="submit"
-          disabled={pending}
-          className="w-full inline-flex justify-center items-center gap-2 px-6 py-3.5 border border-transparent rounded-xl shadow-lg shadow-[#0a0f44]/20 text-sm font-bold text-white bg-[#10175b] hover:bg-[#1a2066] focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
-        >
-          {pending ? <IconLoader className="w-5 h-5 animate-spin" /> : 'Create Book'}
-        </button>
-    )
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="w-full inline-flex justify-center items-center gap-2 px-6 py-3.5 border border-transparent rounded-xl shadow-lg shadow-[#0a0f44]/20 text-sm font-bold text-white bg-[#10175b] hover:bg-[#1a2066] focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+    >
+      {pending ? <IconLoader className="w-5 h-5 animate-spin" /> : 'Create Book'}
+    </button>
+  )
+}
+
+// OpenLibrary Search Document Interface
+interface OpenLibraryDoc {
+  title: string;
+  author_name?: string[];
+  cover_i?: number;
+  number_of_pages_median?: number;
+  first_publish_year?: number;
 }
 
 export function CreateBookModal({ onSuccess }: { onSuccess?: () => void }) {
@@ -26,19 +35,11 @@ export function CreateBookModal({ onSuccess }: { onSuccess?: () => void }) {
   const [author, setAuthor] = useState('');
   const [coverImage, setCoverImage] = useState('');
   const [totalPages, setTotalPages] = useState<string>('');
-  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<OpenLibraryDoc[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [suggestedCorrection, setSuggestedCorrection] = useState<any | null>(null);
-  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
-  
-  // Optimization: use refs for caching and state tracking without triggering effects
-  const queryCache = useRef<Map<string, any[]>>(new Map());
-  const showDropdownRef = useRef(showDropdown);
-
-  useEffect(() => {
-    showDropdownRef.current = showDropdown;
-  }, [showDropdown]);
+  const [suggestedCorrection, setSuggestedCorrection] = useState<OpenLibraryDoc | null>(null);
 
   useEffect(() => {
     if (state?.success) {
@@ -56,54 +57,38 @@ export function CreateBookModal({ onSuccess }: { onSuccess?: () => void }) {
     const controller = new AbortController();
     const query = title.trim();
 
+    if (query.length <= 2 || !showDropdown) {
+      setSuggestions([]);
+      setSuggestedCorrection(null);
+      setIsLoading(false);
+      return;
+    }
+
     const timer = setTimeout(async () => {
-      // Early return if query is too short or dropdown is closed
-      if (query.length <= 3 || !showDropdownRef.current) {
-        setSuggestions([]);
-        setSuggestedCorrection(null);
-        return;
-      }
-
-      // 1. Check Cache first
-      if (queryCache.current.has(query)) {
-        const cachedItems = queryCache.current.get(query)!;
-        setSuggestions(cachedItems);
-        
-        if (cachedItems.length > 0) {
-          const topMatch = cachedItems[0].volumeInfo;
-          if (topMatch.title.toLowerCase() !== title.toLowerCase() && !title.includes(topMatch.title)) {
-            setSuggestedCorrection(cachedItems[0]);
-          }
-        }
-        return;
-      }
-
-      // 2. Fetch from API
-      setIsLoadingSuggestions(true);
+      setIsLoading(true);
       try {
-        const res = await fetch(
-          `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=5`,
-          { signal: controller.signal }
-        );
+        const res = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=7&fields=title,author_name,cover_i,number_of_pages_median,first_publish_year`, {
+          signal: controller.signal
+        });
+
+        if (!res.ok) throw new Error('API Error');
         const data = await res.json();
-        
-        const items = data.items || [];
-        // Update Cache
-        queryCache.current.set(query, items);
-        
-        if (items.length > 0) {
-          setSuggestions(items);
-          
-          // Heuristic for correction suggestion
-          const topMatch = items[0].volumeInfo;
-          if (topMatch.title.toLowerCase() !== title.toLowerCase() && !title.includes(topMatch.title)) {
-              setSuggestedCorrection(items[0]);
-          } else {
+
+        if (!controller.signal.aborted) {
+          if (data.docs && data.docs.length > 0) {
+            setSuggestions(data.docs);
+
+            // Heuristic for correction suggestion
+            const topMatch = data.docs[0];
+            if (topMatch && topMatch.title.toLowerCase() !== query.toLowerCase() && !query.toLowerCase().includes(topMatch.title.toLowerCase())) {
+              setSuggestedCorrection(topMatch);
+            } else {
               setSuggestedCorrection(null);
+            }
+          } else {
+            setSuggestions([]);
+            setSuggestedCorrection(null);
           }
-        } else {
-          setSuggestions([]);
-          setSuggestedCorrection(null);
         }
       } catch (e: any) {
         if (e.name !== 'AbortError') {
@@ -111,23 +96,29 @@ export function CreateBookModal({ onSuccess }: { onSuccess?: () => void }) {
           setSuggestedCorrection(null);
         }
       } finally {
-        setIsLoadingSuggestions(false);
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
       }
-    }, 150); // Lowered debounce to 150ms for instant feel
+    }, 450); // Generous debounce for OpenLibrary's slower servers
 
     return () => {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [title]);
+  }, [title, showDropdown]);
 
-  const selectBook = (suggestion: any) => {
-    const volInfo = suggestion.volumeInfo;
-    const selectedTitle = volInfo.title || '';
-    const selectedAuthor = volInfo.authors ? volInfo.authors[0] : '';
-    const selectedCover = volInfo.imageLinks?.thumbnail || '';
-    const selectedPageCount = volInfo.pageCount ? String(volInfo.pageCount) : '';
-    
+  const selectBook = (doc: OpenLibraryDoc) => {
+    const selectedTitle = doc.title || '';
+    const selectedAuthor = doc.author_name ? doc.author_name[0] : '';
+
+    // Natively construct deterministic OpenLibrary high-res URL if cover_i exists
+    const selectedCover = doc.cover_i
+      ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`
+      : '';
+
+    const selectedPageCount = doc.number_of_pages_median ? String(doc.number_of_pages_median) : '';
+
     setTitle(selectedTitle);
     setAuthor(selectedAuthor);
     setCoverImage(selectedCover);
@@ -137,114 +128,129 @@ export function CreateBookModal({ onSuccess }: { onSuccess?: () => void }) {
   };
 
   return (
-    <div className="bg-white p-8 rounded-[24px] shadow-2xl border border-slate-100 relative overflow-visible group w-full max-w-md">
-      
+    <div className="bg-white p-8 rounded-[24px] shadow-2xl border border-slate-100 relative overflow-visible group w-full max-w-3xl mx-auto">
+
+
       <div className="relative z-10 overflow-visible">
-          <div className="w-14 h-14 bg-[#10175b]/5 border border-[#10175b]/10 rounded-2xl flex items-center justify-center mb-6 text-[#10175b]">
-            <IconPlus className="w-7 h-7" strokeWidth={2.5} />
-          </div>
-          
-          <h3 className="text-2xl font-bold text-[#10175b] mb-2">Add New Book</h3>
-          <p className="text-sm text-slate-500 mb-8 font-medium">Start a new reading session and track your progress.</p>
-          
-          <form action={formAction} ref={formRef} className="w-full space-y-5">
-            <input type="hidden" name="coverImage" value={coverImage} />
-            {state?.error && (
-              <div className="text-sm font-semibold text-red-600 bg-red-50/80 backdrop-blur border border-red-100 px-4 py-3 rounded-xl">
-                {state.error}
-              </div>
-            )}
-            
-            <div className="space-y-4 relative">
+        <div className="w-14 h-14 bg-[#10175b]/5 border border-[#10175b]/10 rounded-2xl flex items-center justify-center mb-6 text-[#10175b]">
+          <IconPlus className="w-7 h-7" strokeWidth={2.5} />
+        </div>
+
+        <h3 className="text-2xl font-bold text-[#10175b] mb-2">Add New Book</h3>
+        <p className="text-sm text-slate-500 mb-8 font-medium">Start a new reading session and track your progress.</p>
+
+        <form action={formAction} ref={formRef} className="w-full space-y-5">
+          <input type="hidden" name="coverImage" value={coverImage} />
+          {state?.error && (
+            <div className="text-sm font-semibold text-red-600 bg-red-50/80 backdrop-blur border border-red-100 px-4 py-3 rounded-xl">
+              {state.error}
+            </div>
+          )}
+
+          <div className="space-y-4 relative">
+            <div className="relative">
               <div className="relative">
-                <div className="relative flex items-center">
-                  <input
-                    name="title"
-                    value={title}
-                    onChange={(e) => {
-                      setTitle(e.target.value);
-                      setShowDropdown(true);
-                    }}
-                    onFocus={() => setShowDropdown(true)}
-                    placeholder="Book Title"
-                    required
-                    autoComplete="off"
-                    className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#10175b]/20 focus:border-[#10175b] text-slate-900 placeholder-slate-400 font-medium transition-all"
-                  />
-                  {isLoadingSuggestions && (
-                    <div className="absolute right-4">
-                      <IconLoader className="w-4 h-4 text-[#10175b] animate-spin" />
-                    </div>
-                  )}
-                </div>
-                
-                {showDropdown && (suggestions.length > 0 || isLoadingSuggestions) && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-slate-200 max-h-60 overflow-y-auto z-50">
-                    {isLoadingSuggestions && suggestions.length === 0 && (
-                      <div className="px-4 py-6 text-center text-slate-400 text-xs font-bold uppercase tracking-widest animate-pulse">
-                        Searching Library...
-                      </div>
-                    )}
-                    {suggestions.map((s, idx) => (
-                      <div 
-                        key={idx} 
-                        onClick={() => selectBook(s)}
-                        className="px-4 py-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-b-0"
-                      >
-                        <p className="text-sm font-bold text-slate-900">{s.volumeInfo?.title}</p>
-                        {s.volumeInfo?.authors && (
-                          <p className="text-xs text-slate-500">{s.volumeInfo.authors.join(', ')}</p>
-                        )}
-                        {s.volumeInfo?.pageCount && (
-                          <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-bold">{s.volumeInfo.pageCount} Pages</p>
-                        )}
-                      </div>
-                    ))}
+                <input
+                  name="title"
+                  value={title}
+                  onChange={(e) => {
+                    setTitle(e.target.value);
+                    setShowDropdown(true);
+                  }}
+                  onFocus={() => setShowDropdown(true)}
+                  placeholder="Book Title"
+                  required
+                  autoComplete="off"
+                  className="w-full px-4 py-3 pr-12 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#10175b]/20 focus:border-[#10175b] text-sm text-slate-900 placeholder-slate-400 font-medium transition-all"
+                />
+                {isLoading && (
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[#10175b]/50">
+                    <IconLoader className="w-5 h-5 animate-spin" />
                   </div>
                 )}
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <input
-                  name="author"
-                  value={author}
-                  onChange={(e) => setAuthor(e.target.value)}
-                  placeholder="Author"
-                  className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#10175b]/20 focus:border-[#10175b] text-slate-900 placeholder-slate-400 font-medium transition-all"
-                />
-                <input
-                  name="totalPages"
-                  value={totalPages}
-                  onChange={(e) => setTotalPages(e.target.value)}
-                  placeholder="Total Pages"
-                  type="number"
-                  className="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#10175b]/20 focus:border-[#10175b] text-slate-900 placeholder-slate-400 font-medium transition-all"
-                />
+
+              {showDropdown && suggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-slate-200 max-h-60 overflow-y-auto z-50">
+                  {suggestions.map((doc, idx) => {
+                    const secureThumb = doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-S.jpg` : null;
+
+                    return (
+                      <div
+                        key={idx}
+                        onClick={() => selectBook(doc)}
+                        className="px-4 py-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-b-0 flex items-center gap-3"
+                      >
+                        {secureThumb ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img src={secureThumb} alt="" className="w-8 h-11 object-cover rounded-sm shadow-sm opacity-90" />
+                        ) : (
+                          <div className="w-8 h-11 bg-slate-100 rounded-sm shadow-sm flex items-center justify-center shrink-0">
+                            <span className="text-[8px] text-slate-400 uppercase font-black text-center leading-none">No<br />Img</span>
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-slate-900 leading-tight mb-0.5 truncate">{doc.title}</p>
+                          {doc.author_name && (
+                            <p className="text-xs text-slate-500 truncate">{doc.author_name.join(', ')}</p>
+                          )}
+                          <div className="flex gap-2 items-center mt-1">
+                            {doc.number_of_pages_median && (
+                              <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">{doc.number_of_pages_median} Pages</p>
+                            )}
+                            {doc.first_publish_year && (
+                              <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">• {doc.first_publish_year}</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <input
+                name="author"
+                value={author}
+                onChange={(e) => setAuthor(e.target.value)}
+                placeholder="Author"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#10175b]/20 focus:border-[#10175b] text-sm text-slate-900 placeholder-slate-400 font-medium transition-all"
+              />
+              <input
+                name="totalPages"
+                value={totalPages}
+                onChange={(e) => setTotalPages(e.target.value)}
+                placeholder="Total Pages"
+                type="number"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#10175b]/20 focus:border-[#10175b] text-sm text-slate-900 placeholder-slate-400 font-medium transition-all"
+              />
+            </div>
+          </div>
+
+          {suggestedCorrection && !showDropdown && (
+            <div className="bg-amber-50 p-4 border border-amber-200/50 rounded-xl animate-in fade-in slide-in-from-top-2">
+              <p className="text-[11px] font-black uppercase text-amber-700 tracking-wider mb-2">Better Version Found?</p>
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-slate-900 italic font-serif leading-tight truncate">"{suggestedCorrection.title}"</p>
+                  <p className="text-[10px] text-slate-500 font-medium truncate">{suggestedCorrection.author_name?.[0]}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => selectBook(suggestedCorrection)}
+                  className="shrink-0 bg-amber-600 text-white text-[10px] font-black uppercase px-3 py-1.5 rounded-lg hover:bg-amber-700 transition-colors"
+                >
+                  Correct it
+                </button>
               </div>
             </div>
+          )}
 
-            {suggestedCorrection && !showDropdown && (
-                <div className="bg-amber-50 p-4 border border-amber-200/50 rounded-xl animate-in fade-in slide-in-from-top-2">
-                    <p className="text-[11px] font-black uppercase text-amber-700 tracking-wider mb-2">Better Version Found?</p>
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="flex-1">
-                            <p className="text-sm font-bold text-slate-900 italic font-serif leading-tight">"{suggestedCorrection.volumeInfo.title}"</p>
-                            <p className="text-[10px] text-slate-500 font-medium">{suggestedCorrection.volumeInfo.authors?.[0]}</p>
-                        </div>
-                        <button 
-                            type="button"
-                            onClick={() => selectBook(suggestedCorrection)}
-                            className="shrink-0 bg-amber-600 text-white text-[10px] font-black uppercase px-3 py-1.5 rounded-lg hover:bg-amber-700 transition-colors"
-                        >
-                            Correct it
-                        </button>
-                    </div>
-                </div>
-            )}
-            
-            <div className="pt-4">
-                <SubmitBtn />
-            </div>
-          </form>
+          <div className="pt-2">
+            <SubmitBtn />
+          </div>
+        </form>
       </div>
     </div>
   );

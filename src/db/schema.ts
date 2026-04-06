@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, varchar, integer } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, varchar, integer, serial } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -30,3 +30,16 @@ export const translations = pgTable('translations', {
   language: varchar('language', { length: 50 }).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+// Read-only reference catalog seeded with curated accurate data from Google Books
+export const bookCatalog = pgTable('book_catalog', {
+  id: serial('id').primaryKey(),
+  title: varchar('title', { length: 512 }).notNull(),
+  author: varchar('author', { length: 512 }),
+  coverImage: varchar('cover_image', { length: 1024 }),
+  totalPages: integer('total_pages'),
+  isbn: varchar('isbn', { length: 64 }),
+  genre: varchar('genre', { length: 128 }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
