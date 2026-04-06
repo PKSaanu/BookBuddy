@@ -1,5 +1,5 @@
 import { db } from '@/db/db';
-import { books, translations } from '@/db/schema';
+import { books, translations, users } from '@/db/schema';
 import { getSession } from '@/lib/auth';
 import { redirect, notFound } from 'next/navigation';
 import { eq, desc } from 'drizzle-orm';
@@ -29,6 +29,14 @@ export default async function BookPage({ params }: { params: { id: string } }) {
     .from(books)
     .where(eq(books.id, bookId));
 
+  const [user] = await db.select({
+      preferredLanguage: users.preferredLanguage
+    })
+    .from(users)
+    .where(eq(users.id, session.id as string));
+
+  const preferredLanguage = user?.preferredLanguage || 'Tamil';
+
   if (!book || book.userId !== session.id) {
     notFound();
   }
@@ -48,6 +56,7 @@ export default async function BookPage({ params }: { params: { id: string } }) {
         session={session} 
         vocab={vocab as any} 
         progressPercent={progressPercent} 
+        preferredLanguage={preferredLanguage}
       />
     </LayoutWrapper>
   );

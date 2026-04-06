@@ -5,9 +5,10 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IconX, IconChevronLeft, IconChevronRight, IconLanguage, IconLoader } from '@tabler/icons-react';
+import { IconX, IconChevronLeft, IconChevronRight, IconLanguage, IconLoader, IconMessageChatbot } from '@tabler/icons-react';
 import { updateBookProgress, removeBookFile } from '@/actions/books';
 import MiniTranslator from './mini-translator';
+import BookChat from './book-chat';
 import { IconTrash } from '@tabler/icons-react';
 
 
@@ -18,6 +19,7 @@ interface PdfReaderProps {
   fileUrl: string;
   bookId: string;
   bookTitle: string;
+  bookAuthor?: string | null;
   preferredLanguage: string;
   initialPage?: number;
   onClose: () => void;
@@ -32,6 +34,7 @@ export default function PdfReader({
   fileUrl, 
   bookId, 
   bookTitle,
+  bookAuthor,
   preferredLanguage, 
   initialPage = 1, 
   onClose, 
@@ -50,6 +53,7 @@ export default function PdfReader({
   const [selection, setSelection] = useState<{ text: string; x: number; y: number } | null>(null);
   const [activeTranslationText, setActiveTranslationText] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [jumpPage, setJumpPage] = useState(String(initialPage));
   const [showDiscardModal, setShowDiscardModal] = useState(false);
   const [pageHighlights, setPageHighlights] = useState<any[]>([]);
@@ -533,6 +537,52 @@ export default function PdfReader({
 
         {/* Translation Sidebar - Overlay Style */}
 
+
+        {/* AI Chat Companion - Left Overlay Style */}
+        <AnimatePresence>
+            {isChatOpen && (
+                <motion.div 
+                  initial={{ x: '-100%' }}
+                  animate={{ x: 0 }}
+                  exit={{ x: '-100%' }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                  className="absolute left-0 top-0 bottom-0 w-[85%] sm:w-[350px] lg:w-[400px] h-full z-[210] shadow-[10px_0_30px_rgba(0,0,0,0.2)] bg-white"
+                >
+                    <div className="relative h-full">
+                       {/* Close handle */}
+                       <button 
+                         onClick={() => setIsChatOpen(false)}
+                         className="absolute -right-12 top-10 w-12 h-14 bg-[#10175b] border border-white/10 border-l-0 rounded-r-2xl flex items-center justify-center text-white/60 hover:text-white transition-colors group z-50 shadow-xl"
+                       >
+                          <IconChevronLeft size={24} className="group-hover:-translate-x-0.5 transition-transform" />
+                       </button>
+
+                       <BookChat 
+                          bookTitle={bookTitle}
+                          bookAuthor={bookAuthor}
+                          preferredLanguage={preferredLanguage}
+                          isSidebar={true}
+                          onClose={() => setIsChatOpen(false)}
+                        />
+                    </div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+
+        {/* Re-open handle for Chat */}
+        {!isChatOpen && (
+          <motion.button
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            whileHover={{ x: 4 }}
+            onClick={() => setIsChatOpen(true)}
+            className="absolute left-0 top-10 w-12 h-14 bg-[#10175b] text-white flex items-center justify-center rounded-r-2xl shadow-xl z-40 border border-white/10 border-l-0 group overflow-hidden"
+            title="Open AI Chat"
+          >
+            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <IconMessageChatbot size={24} className="relative z-10" />
+          </motion.button>
+        )}
 
         <AnimatePresence>
             {isSidebarOpen && (

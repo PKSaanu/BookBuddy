@@ -22,8 +22,9 @@ export async function updateLanguage(language: string) {
             preferredLanguage: language 
         });
         await setAuthCookie(token);
-
+        
         revalidatePath('/settings');
+        revalidatePath('/', 'layout');
         return { success: true };
     } catch (error) {
         return { error: 'Failed to update language' };

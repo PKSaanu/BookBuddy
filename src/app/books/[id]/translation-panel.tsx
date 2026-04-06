@@ -16,11 +16,16 @@ export default function TranslationPanel({
   externalText?: string,
   externalPageNumber?: number
 }) {
+  const [mounted, setMounted] = useState(false);
   const [inputText, setInputText] = useState('');
   const [translatedText, setTranslatedText] = useState('');
   const [correctedText, setCorrectedText] = useState('');
   const [pageNumber, setPageNumber] = useState<string>('');
   
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Handle external selection from PDF Reader
   useEffect(() => {
     if (externalText) {
@@ -59,10 +64,10 @@ export default function TranslationPanel({
         setTranslatedText(data.translatedText);
         setCorrectedText(data.correctedText || inputText);
       } else {
-        setError('Translation API failed. Please try again.');
+        setTranslatedText("I apologize, I'm unable to translate this section right now. Please try again soon.");
       }
     } catch (err) {
-      setError('A network error occurred.');
+      setTranslatedText("I apologize, I'm unable to translate this section right now. Please try again soon.");
     } finally {
       setIsTranslating(false);
     }
@@ -143,7 +148,9 @@ export default function TranslationPanel({
                   )}
                 </div>
                 <IconArrowRight size={14} className="text-slate-300 mx-1" />
-                <span className="text-[13px] sm:text-[14px] font-bold text-[#10175b]">{preferredLanguage}</span>
+                <span className="text-[13px] sm:text-[14px] font-bold text-[#10175b]">
+                  {mounted ? preferredLanguage : '...'}
+                </span>
               </div>
             </div>
 

@@ -1,17 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IconNotes, IconChevronRight, IconTrash, IconArrowLeft, IconEdit, IconBook, IconLoader, IconFileUpload } from '@tabler/icons-react';
+import { IconNotes, IconChevronRight, IconTrash, IconArrowLeft, IconEdit, IconBook, IconLoader, IconFileUpload, IconMessageChatbot, IconChevronLeft, IconArrowsDiagonalMinimize2 } from '@tabler/icons-react';
 import Link from 'next/link';
 import TranslationPanel from './translation-panel';
 import CurationList from './curation-list';
 import BookNotes from './book-notes';
 import { DeleteBookButton } from './delete-book-button';
-import { getBookNotes, removeBookFile } from '@/actions/books';
 import { EditBookModal } from './edit-book-modal';
-
+import { getBookNotes, removeBookFile } from '@/actions/books';
 import dynamic from 'next/dynamic';
+import BookChat from './book-chat';
 
 const PdfReader = dynamic(() => import('./pdf-reader'), { 
   ssr: false,
@@ -28,20 +28,27 @@ interface BookContentProps {
   book: {
     id: string;
     title: string;
-    author: string | null;
-    notes?: string | null;
-    totalPages: number | null;
+    author?: string | null;
+    coverImage?: string | null;
+    totalPages?: number | null;
+    userId: string;
     fileUrl?: string | null;
     currentPage?: number | null;
+    createdAt: Date;
   };
-
   session: any;
   vocab: any[];
   progressPercent: number;
+  preferredLanguage?: string;
 }
 
-export default function BookContent({ book, session, vocab, progressPercent: initialProgress }: BookContentProps) {
+export default function BookContent({ book, session, vocab, progressPercent, preferredLanguage = 'Tamil' }: BookContentProps) {
+  const [mounted, setMounted] = useState(false);
   const [isNotesOpen, setIsNotesOpen] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [fetchedNotes, setFetchedNotes] = useState<string | null>(null);
   const [isLoadingNotes, setIsLoadingNotes] = useState(false);
   
@@ -49,6 +56,7 @@ export default function BookContent({ book, session, vocab, progressPercent: ini
   const [currentBook, setCurrentBook] = useState(book);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isReaderOpen, setIsReaderOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [localFileUrl, setLocalFileUrl] = useState(book.fileUrl);
   const [localCurrentPage, setLocalCurrentPage] = useState(book.currentPage || 1);
   const [isUploading, setIsUploading] = useState(false);
@@ -114,7 +122,7 @@ export default function BookContent({ book, session, vocab, progressPercent: ini
 
   // Re-calculate progress if book details change
   const maxPage = vocab.reduce((max, t) => Math.max(max, t.pageNumber || 0), 0);
-  const progressPercent = currentBook.totalPages 
+  const progressPercentValue = currentBook.totalPages 
     ? Math.round((maxPage / currentBook.totalPages) * 100) 
     : 0;
 
@@ -154,7 +162,7 @@ export default function BookContent({ book, session, vocab, progressPercent: ini
                 <DeleteBookButton bookId={book.id} bookTitle={currentBook.title} />
                 
                 <div className="bg-[#0f766e] text-white text-[9px] md:text-[11px] font-bold tracking-[0.1em] uppercase px-3 md:px-4 py-1.5 rounded-full shadow-sm">
-                  {progressPercent}%
+                  {progressPercentValue}%
                 </div>
 
                 {/* PDF Control Buttons - Desktop Only */}
@@ -195,15 +203,19 @@ export default function BookContent({ book, session, vocab, progressPercent: ini
 
             
             <div className="flex flex-col border-b border-slate-200/50 pb-8">
-              <h1 className="text-3xl sm:text-5xl md:text-6xl font-serif text-[#171717] font-bold tracking-tight leading-[1.1] mb-4">{currentBook.title}</h1>
-              <div className="flex flex-wrap items-center gap-3 md:gap-4">
+              <h1 className="text-3xl sm:text-5xl md:text-6xl font-serif text-[#171717] font-bold tracking-tight leading-[1.2] mb-4">{currentBook.title}</h1>
+              
+              <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-4">
                 <p className="text-base md:text-lg text-slate-600 font-serif italic tracking-wide">
                   {currentBook.author || 'Unknown Author'}
                 </p>
-                <span className="hidden sm:inline text-slate-300 font-sans font-normal">•</span>
-                <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[#10175b]">
-                  {currentBook.totalPages ? `${currentBook.totalPages} Total Pages` : 'Page tracking enabled'}
-                </p>
+                
+                <div className="flex items-center gap-3">
+                  <span className="hidden sm:inline text-slate-300 font-sans font-normal">•</span>
+                  <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[#10175b] bg-[#10175b]/5 sm:bg-transparent px-2 sm:px-0 py-0.5 sm:py-0 rounded-md">
+                    {currentBook.totalPages ? `${currentBook.totalPages} Total Pages` : 'Page tracking enabled'}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -212,7 +224,7 @@ export default function BookContent({ book, session, vocab, progressPercent: ini
           <div className="mb-12">
             <TranslationPanel 
               bookId={book.id} 
-              preferredLanguage={session.preferredLanguage as string} 
+              preferredLanguage={preferredLanguage} 
               externalText={selectedText}
               externalPageNumber={selectedPage}
             />
@@ -228,6 +240,47 @@ export default function BookContent({ book, session, vocab, progressPercent: ini
           </div>
         </div>
       </motion.div>
+
+      {/* Right Sidebar: AI Chat companion (Retractable) */}
+      <AnimatePresence mode="wait">
+        {isChatOpen && (
+          <motion.div 
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: typeof window !== 'undefined' && window.innerWidth > 1280 ? 420 : 380, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 220 }}
+            className="hidden lg:block h-full border-l border-slate-100 bg-white shrink-0 z-10 relative overflow-hidden"
+          >
+            <div className="w-[380px] xl:w-[420px] h-full">
+              <div className="h-full w-full">
+                <BookChat 
+                  bookTitle={currentBook.title} 
+                  bookAuthor={currentBook.author} 
+                  preferredLanguage={mounted ? preferredLanguage : undefined}
+                  onClose={() => setIsChatOpen(false)}
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Toggle Handle for Dashboard Chat */}
+      {!isChatOpen && (
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="hidden lg:flex fixed right-0 top-24 flex-col items-center z-40"
+        >
+          <button
+            onClick={() => setIsChatOpen(true)}
+            className="w-12 h-12 bg-[#10175b] text-white flex flex-col items-center justify-center gap-4 rounded-l-2xl shadow-lg border border-white/10 border-r-0 group overflow-hidden transition-all hover:w-14"
+            title="Open Book Buddy"
+          >
+            <IconMessageChatbot size={22} />
+          </button>
+        </motion.div>
+      )}
 
       {/* Modals & Panels */}
       {isEditModalOpen && (
