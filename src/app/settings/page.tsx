@@ -36,6 +36,9 @@ export default async function SettingsPage() {
                 initialEmail={user.email} 
                 initialPreferredLanguage={user.preferredLanguage}
                 initialIsResearcher={user.isResearcher}
+                initialVoiceRate={user.voiceRate}
+                initialVoiceGender={user.gender}
+                initialVoiceName={user.voiceName || ''}
             />
         </div>
 

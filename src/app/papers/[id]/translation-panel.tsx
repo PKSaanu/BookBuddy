@@ -9,12 +9,18 @@ export default function TranslationPanel({
   paperId, 
   preferredLanguage,
   externalText,
-  externalPageNumber
+  externalPageNumber,
+  voiceGender,
+  voiceRate,
+  voiceName
 }: { 
   paperId: string, 
   preferredLanguage: string,
   externalText?: string,
-  externalPageNumber?: number
+  externalPageNumber?: number,
+  voiceGender?: string,
+  voiceRate?: string,
+  voiceName?: string
 }) {
   const [mounted, setMounted] = useState(false);
   const [inputText, setInputText] = useState('');
@@ -144,7 +150,13 @@ export default function TranslationPanel({
                 <div className="flex items-center gap-2">
                   <span className="text-[13px] sm:text-[14px] font-bold text-[#10175b]">English</span>
                   {inputText && (
-                    <PronunciationButton text={inputText} lang="en-US" />
+                    <PronunciationButton 
+                      text={inputText} 
+                      lang="en-US" 
+                      voiceGender={voiceGender} 
+                      voiceRate={voiceRate} 
+                      voiceName={voiceName}
+                    />
                   )}
                 </div>
                 <IconArrowRight size={14} className="text-slate-300 mx-1" />
@@ -192,6 +204,9 @@ export default function TranslationPanel({
                 <PronunciationButton
                   text={translatedText}
                   lang={preferredLanguage === 'Tamil' ? 'ta-IN' : 'si-LK'}
+                  voiceGender={voiceGender}
+                  voiceRate={voiceRate}
+                  voiceName={voiceName}
                 />
               </div>
             </div>

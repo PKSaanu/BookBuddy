@@ -25,6 +25,9 @@ interface MiniTranslatorProps {
   pageNumber: number;
   onSaved?: () => void;
   onNavigate?: (page: number) => void;
+  voiceGender?: string;
+  voiceRate?: string;
+  voiceName?: string;
 }
 
 
@@ -35,7 +38,10 @@ export default function MiniTranslator({
   text, 
   pageNumber,
   onSaved,
-  onNavigate
+  onNavigate,
+  voiceGender = 'female',
+  voiceRate = '0.8',
+  voiceName = ''
 }: MiniTranslatorProps) {
 
   const [translatedText, setTranslatedText] = useState('');
@@ -191,7 +197,13 @@ export default function MiniTranslator({
             <div className="mb-4">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Original</span>
-                <PronunciationButton text={text} lang="en-US" />
+                <PronunciationButton 
+                  text={text} 
+                  lang="en-US" 
+                  voiceGender={voiceGender} 
+                  voiceRate={voiceRate} 
+                  voiceName={voiceName}
+                />
               </div>
               <p className="text-sm font-serif text-[#10175b] leading-tight line-clamp-2 italic">
                 "{text}"
@@ -207,7 +219,13 @@ export default function MiniTranslator({
               <div className="animate-in fade-in slide-in-from-top-1 duration-300">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">{preferredLanguage}</span>
-                  <PronunciationButton text={translatedText} lang={preferredLanguage === 'Tamil' ? 'ta-IN' : 'si-LK'} />
+                  <PronunciationButton 
+                    text={translatedText} 
+                    lang={preferredLanguage === 'Tamil' ? 'ta-IN' : 'si-LK'} 
+                    voiceGender={voiceGender} 
+                    voiceRate={voiceRate} 
+                    voiceName={voiceName}
+                  />
                 </div>
                 <p className="text-lg font-serif font-bold text-[#10175b] leading-tight mb-4">
                   {translatedText}

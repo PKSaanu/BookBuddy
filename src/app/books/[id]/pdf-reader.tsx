@@ -27,6 +27,9 @@ interface PdfReaderProps {
   onPageChange: (page: number) => void;
   onFileRemoved: () => void;
   savedVocab: any[];
+  voiceGender?: string;
+  voiceRate?: string;
+  voiceName?: string;
 }
 
 
@@ -41,7 +44,10 @@ export default function PdfReader({
   onTranslate, 
   onPageChange, 
   onFileRemoved,
-  savedVocab
+  savedVocab,
+  voiceGender = 'female',
+  voiceRate = '0.8',
+  voiceName = ''
 }: PdfReaderProps) {
 
 
@@ -681,6 +687,9 @@ export default function PdfReader({
                           text={activeTranslationText}
                           pageNumber={pageNumber}
                           onNavigate={(page) => setPageNumber(page)}
+                          voiceGender={voiceGender}
+                          voiceRate={voiceRate}
+                          voiceName={voiceName}
                         />
 
                     </div>

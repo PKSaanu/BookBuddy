@@ -123,3 +123,24 @@ export async function updateResearcherMode(isResearcher: boolean) {
         return { error: 'Failed to update researcher mode' };
     }
 }
+
+export async function updateAudioSettings(rate: string, gender: string, voiceName: string) {
+    const session = await getSession();
+    if (!session?.id) return { error: 'Unauthorized' };
+
+    try {
+        await db.update(users)
+            .set({ 
+                voiceRate: rate, 
+                gender: gender,
+                voiceName: voiceName 
+            })
+            .where(eq(users.id, session.id as string));
+
+        revalidatePath('/settings');
+        revalidatePath('/', 'layout');
+        return { success: true };
+    } catch (error) {
+        return { error: 'Failed to update audio settings' };
+    }
+}

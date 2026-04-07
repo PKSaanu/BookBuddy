@@ -30,12 +30,17 @@ export default async function BookPage({ params }: { params: { id: string } }) {
     .where(eq(books.id, bookId));
 
   const [user] = await db.select({
-      preferredLanguage: users.preferredLanguage
+      preferredLanguage: users.preferredLanguage,
+      gender: users.gender,
+      voiceRate: users.voiceRate,
+      voiceName: users.voiceName,
     })
     .from(users)
     .where(eq(users.id, session.id as string));
 
   const preferredLanguage = user?.preferredLanguage || 'Tamil';
+  const voiceGender = user?.gender || 'female';
+  const voiceRate = user?.voiceRate || '0.8';
 
   if (!book || book.userId !== session.id) {
     notFound();
@@ -61,7 +66,10 @@ export default async function BookPage({ params }: { params: { id: string } }) {
         session={session} 
         vocab={vocab as any} 
         progressPercent={progressPercent} 
-        preferredLanguage={preferredLanguage}
+        preferredLanguage={user.preferredLanguage || 'Tamil'}
+        voiceGender={user.gender || 'female'}
+        voiceRate={user.voiceRate || '0.8'}
+        voiceName={user.voiceName || ''}
       />
     </LayoutWrapper>
   );

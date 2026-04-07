@@ -3,7 +3,19 @@
 import { IconVolume } from '@tabler/icons-react';
 import { useState } from 'react';
 
-export function PronunciationButton({ text, lang = 'en-US' }: { text: string, lang?: string }) {
+export function PronunciationButton({ 
+    text, 
+    lang = 'en-US',
+    voiceGender = 'female',
+    voiceRate = '0.8',
+    voiceName = ''
+}: { 
+    text: string, 
+    lang?: string,
+    voiceGender?: string,
+    voiceRate?: string,
+    voiceName?: string
+}) {
     const [isPlaying, setIsPlaying] = useState(false);
 
     const speak = () => {
@@ -14,27 +26,32 @@ export function PronunciationButton({ text, lang = 'en-US' }: { text: string, la
 
         const utterance = new SpeechSynthesisUtterance(text);
         
-        // Find best voice for English
-        if (lang.startsWith('en')) {
-            const voices = window.speechSynthesis.getVoices();
-            const preferred = [
-                'Google US English', 
-                'Samantha', 
-                'Microsoft Zira', 
-                'Alex'
-            ];
+        const voices = window.speechSynthesis.getVoices();
+        let selectedVoice: SpeechSynthesisVoice | undefined;
+
+        // 1. Try exact match from preferences
+        if (voiceName) {
+            selectedVoice = voices.find(v => v.name === voiceName);
+        }
+
+        // 2. Fallback to gender-based preferred lists if English
+        if (!selectedVoice && lang.startsWith('en')) {
+            const preferredMale = ['Google UK English Male', 'Alex', 'Microsoft David', 'Daniel'];
+            const preferredFemale = ['Google US English', 'Google UK English Female', 'Samantha', 'Microsoft Zira'];
             
-            const bestVoice = preferred
+            const preferred = voiceGender === 'male' ? preferredMale : preferredFemale;
+            
+            selectedVoice = preferred
                 .map(v => voices.find(voice => voice.name.includes(v)))
                 .find(v => !!v);
+        }
 
-            if (bestVoice) {
-                utterance.voice = bestVoice;
-            }
+        if (selectedVoice) {
+            utterance.voice = selectedVoice;
         }
 
         utterance.lang = lang;
-        utterance.rate = 1.0; // Standard speed
+        utterance.rate = parseFloat(voiceRate);
         utterance.pitch = 1.1; // Slightly more positive
         
         utterance.onstart = () => setIsPlaying(true);

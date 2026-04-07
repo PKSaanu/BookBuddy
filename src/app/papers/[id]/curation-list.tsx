@@ -14,7 +14,19 @@ interface Translation {
     createdAt: Date;
 }
 
-export default function CurationList({ vocab, paperId }: { vocab: Translation[], paperId: string }) {
+export default function CurationList({ 
+    vocab, 
+    paperId,
+    voiceGender,
+    voiceRate,
+    voiceName
+}: { 
+    vocab: Translation[], 
+    paperId: string,
+    voiceGender?: string,
+    voiceRate?: string,
+    voiceName?: string
+}) {
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [showGoToTop, setShowGoToTop] = useState(false);
@@ -130,7 +142,13 @@ export default function CurationList({ vocab, paperId }: { vocab: Translation[],
                                                         {entry.originalText}
                                                     </h4>
                                                     <div className="shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                                                        <PronunciationButton text={entry.originalText} lang="en-US" />
+                                                        <PronunciationButton 
+                                                            text={entry.originalText} 
+                                                            lang="en-US" 
+                                                            voiceGender={voiceGender}
+                                                            voiceRate={voiceRate}
+                                                            voiceName={voiceName}
+                                                        />
                                                     </div>
                                                 </div>
 

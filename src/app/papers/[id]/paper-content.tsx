@@ -41,9 +41,21 @@ interface PaperContentProps {
   vocab: any[];
   progressPercent: number;
   preferredLanguage?: string;
+  voiceGender?: string;
+  voiceRate?: string;
+  voiceName?: string;
 }
 
-export default function PaperContent({ paper, session, vocab, progressPercent, preferredLanguage = 'Tamil' }: PaperContentProps) {
+export default function PaperContent({ 
+  paper, 
+  session, 
+  vocab, 
+  progressPercent, 
+  preferredLanguage = 'Tamil',
+  voiceGender = 'female',
+  voiceRate = '0.8',
+  voiceName = ''
+}: PaperContentProps) {
   const [mounted, setMounted] = useState(false);
   const [isNotesOpen, setIsNotesOpen] = useState(false);
   
@@ -228,6 +240,9 @@ export default function PaperContent({ paper, session, vocab, progressPercent, p
               preferredLanguage={preferredLanguage} 
               externalText={selectedText}
               externalPageNumber={selectedPage}
+              voiceGender={voiceGender}
+              voiceRate={voiceRate}
+              voiceName={voiceName}
             />
           </div>
 
@@ -237,7 +252,13 @@ export default function PaperContent({ paper, session, vocab, progressPercent, p
               <h2 className="text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] text-[#10175b]/50">Your Saved Curation</h2>
               <div className="h-[1px] flex-1 bg-[#10175b]/10 ml-4 md:ml-8" />
             </div>
-            <CurationList vocab={vocab as any} paperId={paper.id} />
+            <CurationList 
+              vocab={vocab as any} 
+              paperId={paper.id} 
+              voiceGender={voiceGender} 
+              voiceRate={voiceRate} 
+              voiceName={voiceName}
+            />
           </div>
         </div>
       </motion.div>
