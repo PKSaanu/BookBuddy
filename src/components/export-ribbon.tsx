@@ -126,10 +126,10 @@ export default function ExportRibbon({ title, author, vocab, notes, isChatOpen }
     // ... internal PDF generation logic remains same ...
     const wrapper = document.createElement('div');
     wrapper.style.cssText = `
-      position: fixed;
-      top: 0; left: 0;
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
       width: 794px;
-      z-index: 99999;
       background: #ffffff;
       font-family: 'Inter', sans-serif;
       color: #111827;
@@ -182,10 +182,10 @@ export default function ExportRibbon({ title, author, vocab, notes, isChatOpen }
 
     const wrapper = document.createElement('div');
     wrapper.style.cssText = `
-      position: fixed;
-      top: 0; left: 0;
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
       width: 794px;
-      z-index: 99999;
       background: #ffffff;
       font-family: 'Inter', sans-serif;
       color: #111827;
