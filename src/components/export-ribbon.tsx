@@ -29,64 +29,127 @@ function injectFonts() {
   document.head.appendChild(link);
 }
 
-// ─── html2canvas helper ───────────────────────────────────────────────────────
-async function captureElementToPDF(
-  element: HTMLElement,
-  filename: string
+// ─── PDF Generation Helper ───────────────────────────────────────────────────
+async function captureToSelectablePDF(
+    element: HTMLElement,
+    filename: string,
+    title: string
 ): Promise<void> {
-  await document.fonts.ready;
-  await new Promise((r) => setTimeout(r, 400));
+    await document.fonts.ready;
+    await new Promise((r) => setTimeout(r, 400));
+    
+    const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        width: element.scrollWidth,
+        height: element.scrollHeight,
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight,
+    });
+    
+    const MARGIN = 36;
+    const PW = 595.28;
+    const PH = 841.89;
+    const CONTENT_W = PW - MARGIN * 2;
+    const CONTENT_H = PH - MARGIN * 2;
+    
+    const scaleFactor = CONTENT_W / canvas.width;
+    const pagePixels = Math.floor(CONTENT_H / scaleFactor);
+    
+    const doc = new jsPDF('p', 'pt', 'a4');
+    let srcY = 0;
+    
+    // Function to find all text nodes deeply within the element
+    const getTextNodes = (node: Node): Text[] => {
+        const textNodes: Text[] = [];
+        if (node.nodeType === Node.TEXT_NODE) {
+            if (node.textContent?.trim()) textNodes.push(node as Text);
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+            // Skip hidden elements or scripts
+            const el = node as HTMLElement;
+            if (el.style.display === 'none' || el.tagName === 'SCRIPT' || el.tagName === 'STYLE') return [];
+            node.childNodes.forEach(child => {
+                textNodes.push(...getTextNodes(child));
+            });
+        }
+        return textNodes;
+    };
 
-  const canvas = await html2canvas(element, {
-    scale: 2,
-    useCORS: true,
-    allowTaint: true,
-    logging: false,
-    backgroundColor: '#ffffff',
-    width: element.scrollWidth,
-    height: element.scrollHeight,
-    windowWidth: element.scrollWidth,
-    windowHeight: element.scrollHeight,
-  });
+    const textNodes = getTextNodes(element);
+    const parentRect = element.getBoundingClientRect();
+    
+    while (srcY < canvas.height) {
+        if (srcY > 0) doc.addPage();
+        
+        const sliceH = Math.min(pagePixels, canvas.height - srcY);
+        const slice = document.createElement('canvas');
+        slice.width = canvas.width;
+        slice.height = sliceH;
+        const ctx = slice.getContext('2d')!;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, slice.width, slice.height);
+        ctx.drawImage(canvas, 0, srcY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+        
+        const imgData = slice.toDataURL('image/jpeg', 0.92);
+        doc.addImage(imgData, 'JPEG', MARGIN, MARGIN, CONTENT_W, sliceH * scaleFactor);
+        
+        // Add invisible text layer for this page using granular word measurement
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        
+        const pageTop = srcY;
+        const pageBottom = srcY + pagePixels;
+        
+        textNodes.forEach(node => {
+            const text = node.textContent || '';
+            // Split by words to get precise highlights
+            const words = text.split(/(\s+)/);
+            let offset = 0;
 
-  const MARGIN   = 36;
-  const PW       = 595.28;
-  const PH       = 841.89;
-  const CONTENT_W = PW - MARGIN * 2;
-  const CONTENT_H = PH - MARGIN * 2;
+            words.forEach(word => {
+                if (word.trim().length > 0) {
+                    try {
+                        const range = document.createRange();
+                        range.setStart(node, offset);
+                        range.setEnd(node, offset + word.length);
+                        
+                        // We use the first rect of the word (usually just one)
+                        const rects = range.getClientRects();
+                        for (let i = 0; i < rects.length; i++) {
+                            const rect = rects[i];
+                            const relY = rect.top - parentRect.top;
+                            const relX = rect.left - parentRect.left;
 
-  const scale = CONTENT_W / canvas.width;
-  const pagePixels = Math.floor(CONTENT_H / scale);
-
-  const doc = new jsPDF('p', 'pt', 'a4');
-  let srcY = 0;
-
-  while (srcY < canvas.height) {
-    if (srcY > 0) doc.addPage();
-
-    const sliceH = Math.min(pagePixels, canvas.height - srcY);
-
-    const slice = document.createElement('canvas');
-    slice.width  = canvas.width;
-    slice.height = sliceH;
-    const ctx = slice.getContext('2d')!;
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, slice.width, slice.height);
-    ctx.drawImage(canvas, 0, srcY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
-
-    const imgData = slice.toDataURL('image/jpeg', 0.97);
-    doc.addImage(imgData, 'JPEG', MARGIN, MARGIN, CONTENT_W, sliceH * scale);
-
-    const pageNum = (doc as any).internal.getCurrentPageInfo().pageNumber;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
-    doc.setTextColor(180, 180, 180);
-    doc.text(`${filename.replace('.pdf', '')}  |  Page ${pageNum}`, PW / 2, PH - 14, { align: 'center' });
-
-    srcY += pagePixels;
-  }
-
-  doc.save(filename);
+                            if (relY >= pageTop && relY < pageBottom) {
+                                const pdfX = MARGIN + (relX * scaleFactor);
+                                const pdfY = MARGIN + ((relY - pageTop) * scaleFactor);
+                                // Account for baseline (approx 80% of height)
+                                const baselineOffset = rect.height * scaleFactor * 0.8;
+                                
+                                doc.text(word, pdfX, pdfY + baselineOffset, {
+                                    renderingMode: 'invisible'
+                                });
+                            }
+                        }
+                    } catch (e) { /* Range error ignore */ }
+                }
+                offset += word.length;
+            });
+        });
+        
+        // Page numbering (visible)
+        const pageNum = (doc as any).internal.getCurrentPageInfo().pageNumber;
+        doc.setFontSize(7.5);
+        doc.setTextColor(180, 180, 180);
+        doc.text(`${title}  |  Page ${pageNum}`, PW / 2, PH - 14, { align: 'center' });
+        
+        srcY += pagePixels;
+    }
+    
+    doc.save(filename);
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -123,7 +186,6 @@ export default function ExportRibbon({ title, author, vocab, notes, isChatOpen }
     setIsExporting('pdf-trans');
     injectFonts();
 
-    // ... internal PDF generation logic remains same ...
     const wrapper = document.createElement('div');
     wrapper.style.cssText = `
       position: absolute;
@@ -138,14 +200,17 @@ export default function ExportRibbon({ title, author, vocab, notes, isChatOpen }
     `;
 
     wrapper.innerHTML = `
-      <div style="margin-bottom:0;">
-        <img src="/footer.png" crossorigin="anonymous" style="width:20%;height:auto;display:block;margin-bottom:18px;border-radius:6px;" />
-        <div style="font-size:10px;color:#6b7280;line-height:1.7;margin-bottom:14px;">
-          <span style="font-weight:600;color:#10175b;">Subject:</span> ${title}&nbsp;&nbsp;
+      <div style="margin-bottom:18px; border-bottom: 2px solid #10175b; padding-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+          <div style="font-size: 18px; font-weight: 800; color: #10175b; letter-spacing: -0.02em; margin-bottom: 4px;">BookBuddy</div>
+          <div style="font-size:10px;color:#6b7280;line-height:1.2;">
+            <span style="font-weight:600;color:#10175b;">Subject:</span> ${title}
+          </div>
+        </div>
+        <div style="font-size:10px;color:#6b7280; text-align: right;">
           <span style="font-weight:600;color:#10175b;">Exported:</span> ${new Date().toLocaleDateString()}
         </div>
       </div>
-      <div style="height:1.5px;background:#10175b;opacity:0.15;margin-bottom:18px;"></div>
       <table style="width:100%;border-collapse:collapse;font-size:11px;">
         <thead>
           <tr style="background:#10175b;color:#fff;">
@@ -168,7 +233,7 @@ export default function ExportRibbon({ title, author, vocab, notes, isChatOpen }
 
     document.body.appendChild(wrapper);
     try {
-      await captureElementToPDF(wrapper, `${title.slice(0, 20)}_Translations.pdf`);
+      await captureToSelectablePDF(wrapper, `${title.slice(0, 20)}_Translations.pdf`, title);
     } finally {
       document.body.removeChild(wrapper);
       setIsExporting(null);
@@ -194,18 +259,20 @@ export default function ExportRibbon({ title, author, vocab, notes, isChatOpen }
     `;
 
     wrapper.innerHTML = `
-      <div style="margin-bottom:28px;">
-        <div style="font-size:9px;text-transform:uppercase;color:#6b7280;margin-bottom:6px;">BookBuddy · Reading Notes</div>
-        <h1 style="font-size:30px;color:#10175b;margin:0 0 8px;font-family:Georgia,serif;">${title}</h1>
+      <div style="margin-bottom:28px; border-bottom: 2px solid #10175b; padding-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+          <div style="font-size: 24px; font-weight: 800; color: #10175b; letter-spacing: -0.02em;">BookBuddy</div>
+          <div style="font-size:9px;text-transform:uppercase;color:#6b7280; font-weight: 600; letter-spacing: 0.05em;">Reading Notes</div>
+        </div>
+        <h1 style="font-size:32px;color:#111827;margin:0 0 8px;font-family:Georgia,serif; line-height: 1.1;">${title}</h1>
         <div style="font-size:12px;color:#6b7280;">by ${author || 'Unknown'} &nbsp;·&nbsp; ${new Date().toLocaleDateString()}</div>
       </div>
-      <div style="height:1.5px;background:#10175b;opacity:0.15;margin-bottom:28px;"></div>
       <div style="font-size:13px;line-height:1.9;color:#374151;font-family:'Noto Sans Tamil','Noto Sans Sinhala','Inter',sans-serif;white-space:pre-wrap;">${notes}</div>
     `;
 
     document.body.appendChild(wrapper);
     try {
-      await captureElementToPDF(wrapper, `${title.slice(0, 20)}_Notes.pdf`);
+      await captureToSelectablePDF(wrapper, `${title.slice(0, 20)}_Notes.pdf`, title);
     } finally {
       document.body.removeChild(wrapper);
       setIsExporting(null);
