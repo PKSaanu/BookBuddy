@@ -2,7 +2,7 @@ import { db } from '@/db/db';
 import { books, translations, users } from '@/db/schema';
 import { getSession } from '@/lib/auth';
 import { redirect, notFound } from 'next/navigation';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 import LayoutWrapper from '@/components/layout-wrapper';
 import BookContent from './book-content';
 
@@ -43,7 +43,12 @@ export default async function BookPage({ params }: { params: { id: string } }) {
 
   const vocab = await db.select()
     .from(translations)
-    .where(eq(translations.bookId, bookId))
+    .where(
+        and(
+            eq(translations.bookId, bookId),
+            eq(translations.userId, session.id as string)
+        )
+    )
     .orderBy(desc(translations.pageNumber), desc(translations.createdAt));
 
   const maxPage = vocab.reduce((max, t) => Math.max(max, t.pageNumber || 0), 0);

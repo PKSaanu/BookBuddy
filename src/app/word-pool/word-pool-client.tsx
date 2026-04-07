@@ -9,7 +9,8 @@ interface Translation {
   id: string;
   originalText: string;
   translatedText: string;
-  bookId: string;
+  bookId?: string;
+  paperId?: string;
   language: string;
   createdAt: any;
 }
@@ -95,7 +96,7 @@ export default function WordPoolClient({ initialWords }: { initialWords: Transla
                 whileHover={{ scale: 1.1, zIndex: 10 }}
                 className="relative group cursor-pointer"
               >
-                <Link href={`/books/${word.bookId}`} className="block text-center no-underline outline-none">
+                <Link href={word.bookId ? `/books/${word.bookId}` : `/papers/${word.paperId}`} className="block text-center no-underline outline-none">
                   <span className={`block font-serif font-bold transition-colors ${word.color} 
                     ${word.size === 1 ? 'text-xl md:text-2xl opacity-70' :
                       word.size === 2 ? 'text-2xl md:text-3xl lg:text-4xl' :

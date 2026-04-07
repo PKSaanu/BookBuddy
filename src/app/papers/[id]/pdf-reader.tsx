@@ -6,9 +6,9 @@ import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { IconX, IconChevronLeft, IconChevronRight, IconLanguage, IconLoader, IconMessageChatbot, IconLayoutColumns, IconLayoutSidebarRightCollapse, IconLayoutSidebarRightExpand } from '@tabler/icons-react';
-import { updateBookProgress, removeBookFile } from '@/actions/books';
+import { updatePaperProgress, removePaperFile } from '@/actions/papers';
 import MiniTranslator from './mini-translator';
-import BookChat from './book-chat';
+import PaperChat from './paper-chat';
 import { IconTrash } from '@tabler/icons-react';
 
 
@@ -17,9 +17,9 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 
 interface PdfReaderProps {
   fileUrl: string;
-  bookId: string;
-  bookTitle: string;
-  bookAuthor?: string | null;
+  paperId: string;
+  paperTitle: string;
+  paperAuthors?: string | null;
   preferredLanguage: string;
   initialPage?: number;
   onClose: () => void;
@@ -32,9 +32,9 @@ interface PdfReaderProps {
 
 export default function PdfReader({ 
   fileUrl, 
-  bookId, 
-  bookTitle,
-  bookAuthor,
+  paperId, 
+  paperTitle,
+  paperAuthors,
   preferredLanguage, 
   initialPage = 1, 
   onClose, 
@@ -166,15 +166,15 @@ export default function PdfReader({
     if (!pageNumber || pageNumber < 1) return;
     
     const timer = setTimeout(async () => {
-      await updateBookProgress(bookId, pageNumber);
+      await updatePaperProgress(paperId, pageNumber);
       onPageChange(pageNumber); // Sync back to parent
     }, 3000); // 3 second debounce to keep it snappy
 
     return () => clearTimeout(timer);
-  }, [pageNumber, bookId, onPageChange]);
+  }, [pageNumber, paperId, onPageChange]);
 
   const handleRemoveFile = async () => {
-    const res = await removeBookFile(bookId);
+    const res = await removePaperFile(paperId);
 
     if (res.success) {
       onFileRemoved();
@@ -256,7 +256,7 @@ export default function PdfReader({
     const currentSpans = textLayer.querySelectorAll('span');
     const highlights: any[] = [];
     
-    // Create a unique Book Library from all saved vocabulary
+    // Create a unique Paper Library from all saved vocabulary
     // This allows a word deciphered on Page 1 to be highlighted on Page 100 automatically
     const uniqueVocab = new Map<string, any>();
     
@@ -380,7 +380,7 @@ export default function PdfReader({
             <IconX size={24} />
           </button>
           <span className="text-white font-serif font-bold text-sm hidden sm:block truncate max-w-[400px] italic">
-            Reading: {bookTitle}
+            Reading: {paperTitle}
           </span>
         </div>
 
@@ -430,7 +430,7 @@ export default function PdfReader({
           {/* Split Mode Toggle Button - Now on the right */}
           <button 
                 onClick={toggleSplitMode}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all text-xs font-sm uppercase tracking-wider h-10 ${isSplitMode ? 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-700 border border-transparent'}`}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all text-xs font-bold uppercase tracking-wider h-10 ${isSplitMode ? 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-700 border border-transparent'}`}
                 title={isSplitMode ? "Disable Split View" : "Enable Split View"}
           >
                 {isSplitMode ? <IconLayoutSidebarRightCollapse size={18} /> : <IconLayoutColumns size={18} />}
@@ -481,7 +481,7 @@ export default function PdfReader({
                           loading={
                               <div className="fixed inset-0 bg-[#1a1c1e] flex flex-col items-center justify-center z-[250]">
                                    <IconLoader className="animate-spin text-indigo-500 w-12 h-12 mb-4" />
-                                   <p className="text-slate-500 font-medium font-serif italic">Summoning your book...</p>
+                                   <p className="text-slate-500 font-medium font-serif italic">Summoning your paper...</p>
                               </div>
                           }
                       >
@@ -612,9 +612,9 @@ export default function PdfReader({
                           <IconChevronLeft size={24} className="group-hover:-translate-x-0.5 transition-transform" />
                        </button>
 
-                       <BookChat 
-                          bookTitle={bookTitle}
-                          bookAuthor={bookAuthor}
+                       <PaperChat 
+                          paperTitle={paperTitle}
+                          paperAuthors={paperAuthors}
                           preferredLanguage={preferredLanguage}
                           isSidebar={true}
                         />
@@ -676,7 +676,7 @@ export default function PdfReader({
                        )}
 
                        <MiniTranslator 
-                          bookId={bookId}
+                          paperId={paperId}
                           preferredLanguage={preferredLanguage}
                           text={activeTranslationText}
                           pageNumber={pageNumber}
@@ -729,7 +729,7 @@ export default function PdfReader({
               
               <h3 className="text-2xl font-serif font-bold text-white text-center mb-3">Discard PDF?</h3>
               <p className="text-slate-400 text-center mb-8 leading-relaxed">
-                Are you sure you want to remove this PDF from your study desk? Your current reading progress for this book will be reset.
+                Are you sure you want to remove this PDF from your study desk? Your current reading progress for this paper will be reset.
               </p>
               
               <div className="flex gap-3">

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { saveTranslation, getLatestTranslations } from '@/actions/translations';
-import { updateBookNotes, getBookNotes } from '@/actions/books';
+import { saveTranslation, getLatestTranslations } from '@/actions/paperTranslations';
+import { updatePaperNotes, getPaperNotes } from '@/actions/papers';
 import { 
   IconLoader, 
   IconWorld, 
@@ -19,7 +19,7 @@ import {
 import { PronunciationButton } from './pronunciation-button';
 
 interface MiniTranslatorProps {
-  bookId: string;
+  paperId: string;
   preferredLanguage: string;
   text: string;
   pageNumber: number;
@@ -30,7 +30,7 @@ interface MiniTranslatorProps {
 
 
 export default function MiniTranslator({ 
-  bookId, 
+  paperId, 
   preferredLanguage, 
   text, 
   pageNumber,
@@ -67,11 +67,11 @@ export default function MiniTranslator({
   useEffect(() => {
     fetchHistory();
     fetchNotes();
-  }, [bookId]);
+  }, [paperId]);
 
   const fetchHistory = async (showLoading = true) => {
     if (showLoading) setIsLoadingHistory(true);
-    const res = await getLatestTranslations(bookId);
+    const res = await getLatestTranslations(paperId);
     if (res.success && res.history) {
       setHistory(res.history);
     }
@@ -80,7 +80,7 @@ export default function MiniTranslator({
 
 
   const fetchNotes = async () => {
-    const res = await getBookNotes(bookId);
+    const res = await getPaperNotes(paperId);
     if (res.success) {
       setNotes(res.notes || '');
       setIsModified(false);
@@ -121,7 +121,7 @@ export default function MiniTranslator({
     if (!translatedText || !finalOriginalText || isSaved) return;
 
     setIsSaving(true);
-    const result = await saveTranslation(bookId, finalOriginalText, translatedText, preferredLanguage, pageNumber);
+    const result = await saveTranslation(paperId, finalOriginalText, translatedText, preferredLanguage, pageNumber);
     
     if (result.error) {
       setError(result.error);
@@ -145,7 +145,7 @@ export default function MiniTranslator({
     if (!isModified || isSavingNotes) return;
     
     setIsSavingNotes(true);
-    const res = await updateBookNotes(bookId, notes);
+    const res = await updatePaperNotes(paperId, notes);
     if (res.success) {
       setIsModified(false);
       setIsSavingNotes(false);
@@ -170,13 +170,13 @@ export default function MiniTranslator({
 
 
   return (
-    <div className="flex flex-col h-full bg-white/50 backdrop-blur-xl border-l border-slate-200 shadow-2xl overflow-hidden">
+    <div className="flex flex-col h-full bg-white border-l border-slate-200 shadow-2xl overflow-hidden">
       {/* Top Section: Active Translation */}
-      <div className="p-6 border-b border-slate-100 bg-white/80 shrink-0">
+      <div className="p-6 border-b border-slate-100 bg-white shrink-0">
         <h3 className="text-[13px] font-semibold text-[#10175b] mb-4 flex items-center justify-between">
           <span>Active Decipher</span>
           {text ? (
-            <span className="bg-[#10175b]/5 text-[#10175b]/60 px-2.5 py-1 rounded-md text-[10px] font-bold">Page {pageNumber}</span>
+            <span className="bg-slate-100 text-slate-500 px-2.5 py-1 rounded-md text-[10px] font-bold">Page {pageNumber}</span>
           ) : (
              <span className="text-slate-400 font-normal text-[11px]">Waiting for selection...</span>
           )}
@@ -236,7 +236,7 @@ export default function MiniTranslator({
       </div>
 
       {/* Tabs Switcher */}
-      <div className="flex border-b border-slate-100 bg-slate-50/50">
+      <div className="flex border-b border-slate-100 bg-slate-50">
         <button 
           onClick={() => handleTabSwitch('history')}
           className={`flex-1 flex items-center justify-center gap-2 py-2 text-[12px] font-semibold transition-all ${activeTab === 'history' ? 'bg-white text-[#10175b] border-b-2 border-[#10175b]' : 'text-slate-400 hover:text-slate-600'}`}
@@ -255,20 +255,20 @@ export default function MiniTranslator({
 
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar bg-white/30">
+      <div className="flex-1 overflow-y-auto custom-scrollbar bg-white">
         {activeTab === 'history' ? (
-          <div className="flex flex-col bg-white/50">
+          <div className="flex flex-col">
             {isLoadingHistory ? (
               // Skeleton UI
               [1, 2, 3, 4, 5].map((n) => (
-                <div key={n} className="p-4 border-b border-slate-100/50 animate-pulse">
+                <div key={n} className="p-4 border-b border-slate-100 animate-pulse">
                   <div className="h-4 w-24 bg-slate-200 rounded mb-2" />
                   <div className="h-3 w-40 bg-slate-100 rounded" />
                 </div>
               ))
             ) : history.length === 0 ? (
               <div className="py-12 text-center text-slate-300 italic text-[11px]">
-                No translations yet.
+                No paperTranslations yet.
               </div>
             ) : (
               history.map((item, i) => (
@@ -293,7 +293,7 @@ export default function MiniTranslator({
         ) : (
           <div className="p-4 h-full flex flex-col bg-[#FCF9F0]">
             <div className="flex items-center justify-between mb-4 px-1">
-               <span className="text-[11px] font-bold text-[#10175b]/60 uppercase tracking-wider">Quick Study Notes</span>
+               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Quick Study Notes</span>
                <div className="flex items-center gap-2">
                   {isSavingNotes ? (
                     <IconLoader size={14} className="animate-spin text-indigo-400" />
@@ -324,7 +324,7 @@ export default function MiniTranslator({
       </div>
 
       {/* Footer info */}
-      <div className="p-4 bg-slate-50/80 border-t border-slate-100">
+      <div className="p-4 bg-slate-100 border-t border-slate-100">
         <p className="text-[9px] text-slate-400 leading-tight italic text-center">
           Decipherings are saved across all your sessions.
         </p>

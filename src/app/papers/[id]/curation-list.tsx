@@ -14,7 +14,7 @@ interface Translation {
     createdAt: Date;
 }
 
-export default function CurationList({ vocab, bookId }: { vocab: Translation[], bookId: string }) {
+export default function CurationList({ vocab, paperId }: { vocab: Translation[], paperId: string }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [showGoToTop, setShowGoToTop] = useState(false);
@@ -150,7 +150,7 @@ export default function CurationList({ vocab, bookId }: { vocab: Translation[], 
                                             <div className="flex flex-col items-end gap-2 shrink-0">
                                                 <span className="text-[10px] font-sans text-slate-400 tracking-wide">{dateStr}</span>
                                                 <div className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                                                    <DeleteTranslationButton id={entry.id} bookId={bookId} />
+                                                    <DeleteTranslationButton id={entry.id} paperId={paperId} />
                                                 </div>
                                             </div>
                                         </div>

@@ -98,3 +98,28 @@ export async function deleteAccount() {
         return { error: 'Failed to deactivate account' };
     }
 }
+
+export async function updateResearcherMode(isResearcher: boolean) {
+    const session = await getSession();
+    if (!session?.id) return { error: 'Unauthorized' };
+
+    try {
+        await db.update(users)
+            .set({ isResearcher })
+            .where(eq(users.id, session.id as string));
+
+        const token = await createToken({ 
+            id: session.id, 
+            email: session.email, 
+            preferredLanguage: session.preferredLanguage,
+            isResearcher
+        });
+        await setAuthCookie(token);
+
+        revalidatePath('/settings');
+        revalidatePath('/', 'layout');
+        return { success: true };
+    } catch (error) {
+        return { error: 'Failed to update researcher mode' };
+    }
+}

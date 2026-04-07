@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { CreateBookModal } from './create-book-modal';
 
-export function AddBookHeaderButton() {
+export function AddBookHeaderButton({ isResearcher }: { isResearcher?: boolean }) {
   const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
@@ -20,14 +20,14 @@ export function AddBookHeaderButton() {
         onClick={() => setShowAddModal(true)}
         className="bg-[#10175b] text-white px-8 py-4 rounded-xl font-bold hover:bg-[#1a2066] transition-colors shadow-sm whitespace-nowrap"
       >
-        Add New Book
+        Add New
       </button>
 
       {showAddModal && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowAddModal(false)}></div>
           <div className="relative z-10 w-full max-w-[95%] md:max-w-2xl lg:max-w-3xl animate-in fade-in zoom-in-95 duration-200">
-             <CreateBookModal onSuccess={() => setShowAddModal(false)} />
+             <CreateBookModal onSuccess={() => setShowAddModal(false)} isResearcher={isResearcher} />
           </div>
         </div>
       )}

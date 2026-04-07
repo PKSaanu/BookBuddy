@@ -3,7 +3,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { logout } from '@/actions/auth';
-import { IconLayoutDashboard, IconBook2, IconSettings, IconLogout, IconX, IconCircles, IconInfoCircle } from '@tabler/icons-react';
+import { getUserSessionInfo } from '@/actions/session';
+import { IconLayoutDashboard, IconBook2, IconSettings, IconLogout, IconX, IconCircles, IconInfoCircle, IconFlask } from '@tabler/icons-react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -81,6 +83,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               <IconBook2 size={20} className={(pathname === '/library' || pathname.startsWith('/books/')) ? 'text-[#10175b]' : 'text-slate-400'} />
               My Library
             </Link>
+
+
 
             <Link 
               href="/word-pool" 

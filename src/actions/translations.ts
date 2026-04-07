@@ -28,16 +28,17 @@ export async function saveTranslation(
   }
 
   try {
-    await db.insert(translations).values({
+    const [newTranslation] = await db.insert(translations).values({
       bookId,
+      userId: session.id as string,
       originalText,
       translatedText,
       language,
       pageNumber
-    });
+    }).returning();
     
     revalidatePath(`/books/${bookId}`);
-    return { success: true };
+    return { success: true, translation: newTranslation };
   } catch (error) {
     console.error(error);
     return { error: 'Failed to save translation' };
@@ -53,7 +54,13 @@ export async function deleteTranslation(id: string, bookId: string) {
     const [book] = await db.select().from(books).where(and(eq(books.id, bookId), eq(books.userId, session.id as string)));
     if (!book) return { error: 'Unauthorized' };
 
-    await db.delete(translations).where(and(eq(translations.id, id), eq(translations.bookId, bookId)));
+    await db.delete(translations).where(
+      and(
+        eq(translations.id, id), 
+        eq(translations.bookId, bookId),
+        eq(translations.userId, session.id as string)
+      )
+    );
     revalidatePath(`/books/${bookId}`);
     return { success: true };
   } catch (error) {
@@ -68,7 +75,12 @@ export async function getLatestTranslations(bookId: string, limit = 10) {
   try {
     const history = await db.select()
       .from(translations)
-      .where(eq(translations.bookId, bookId))
+      .where(
+        and(
+          eq(translations.bookId, bookId),
+          eq(translations.userId, session.id as string)
+        )
+      )
       .orderBy(desc(translations.pageNumber), desc(translations.createdAt))
       .limit(limit);
 

@@ -32,27 +32,34 @@ export default function LibraryLoading() {
                     </div>
                 </div>
                 
-                <div className="shrink-0 mb-2">
-                    <div className="bg-[#10175b] text-white px-8 py-4 rounded-xl font-bold opacity-50 whitespace-nowrap">
-                        Add New Book
+                <div className="shrink-0 mb-6 md:mb-2">
+                    <div className="w-48 h-12 bg-[#10175b]/20 rounded-xl animate-pulse flex items-center justify-center">
+                      <div className="w-24 h-3 bg-[#10175b]/30 rounded-full"></div>
                     </div>
                 </div>
             </div>
 
-            {/* Book Grid Skeleton - Restored Vertical Layout */}
+            {/* Book Grid Skeleton - Matches Exact Page Design */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-6 md:gap-x-10 gap-y-12 md:gap-y-16">
                 {[...Array(10)].map((_, i) => (
-                    <div key={i} className="flex flex-col w-full">
-                        <div className="relative aspect-[2/3] mb-6 rounded-2xl bg-slate-200 animate-pulse w-full shadow-sm" />
+                    <div key={i} className="flex flex-col w-full animate-pulse">
+                        <div className="relative aspect-[2/3] mb-6 rounded-2xl bg-slate-200/60 shadow-inner overflow-hidden">
+                             {/* Mock Binding shadow */}
+                             <div className="absolute inset-y-0 left-0 w-3 bg-black/5" />
+                        </div>
                         
-                        {/* Text Metadata Skeleton */}
-                        <div className="flex flex-col space-y-3 px-1 animate-pulse">
+                        {/* Text Metadata Skeleton - Precision Aligned */}
+                        <div className="flex flex-col space-y-3 px-1">
                             <div className="flex items-center gap-2">
-                                <div className="h-[1px] w-4 bg-slate-200" />
-                                <div className="h-2 w-16 bg-slate-100 rounded-full"></div>
+                                <div className="h-[1px] w-4 bg-slate-300" />
+                                <div className="h-2 w-20 bg-slate-200 rounded-full"></div>
                             </div>
-                            <div className="h-5 w-full bg-slate-200 rounded-lg"></div>
-                            <div className="h-4 w-2/3 bg-slate-100 rounded-md"></div>
+                            <div className="h-5 w-full bg-slate-300/40 rounded-lg"></div>
+                            <div className="flex items-center gap-2">
+                              <div className="h-3 w-12 bg-slate-200 rounded-md"></div>
+                              <div className="w-1 h-1 bg-slate-100 rounded-full" />
+                              <div className="h-3 w-20 bg-slate-100 rounded-md"></div>
+                            </div>
                         </div>
                     </div>
                 ))}

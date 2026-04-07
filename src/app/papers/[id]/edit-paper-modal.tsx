@@ -1,25 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { updateBookDetails } from '@/actions/books';
+import { updatePaperDetails } from '@/actions/papers';
 import { IconLoader, IconCheck, IconChevronRight } from '@tabler/icons-react';
 import { motion } from 'framer-motion';
 
-interface Book {
+interface Paper {
   id: string;
   title: string;
   author: string | null;
   totalPages: number | null;
 }
 
-export function EditBookModal({ book, onClose, onUpdate }: { 
-  book: Book, 
+export function EditPaperModal({ paper, onClose, onUpdate }: { 
+  paper: Paper, 
   onClose: () => void, 
   onUpdate: (updatedTitle: string, updatedAuthor: string, updatedPages: number) => void 
 }) {
-  const [title, setTitle] = useState(book.title);
-  const [author, setAuthor] = useState(book.author || '');
-  const [totalPages, setTotalPages] = useState(String(book.totalPages || ''));
+  const [title, setTitle] = useState(paper.title);
+  const [author, setAuthor] = useState(paper.author || '');
+  const [totalPages, setTotalPages] = useState(String(paper.totalPages || ''));
   const [isUpdating, setIsUpdating] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +32,7 @@ export function EditBookModal({ book, onClose, onUpdate }: {
     setError(null);
 
     const pageCount = parseInt(totalPages, 10);
-    const result = await updateBookDetails(book.id, title, author, isNaN(pageCount) ? 0 : pageCount);
+    const result = await updatePaperDetails(paper.id, title, author, isNaN(pageCount) ? 0 : pageCount);
 
     if (result.error) {
       setError(result.error);
@@ -63,7 +63,7 @@ export function EditBookModal({ book, onClose, onUpdate }: {
           <div className="flex flex-col md:flex-row gap-6 mb-12 justify-between items-start md:items-end">
             <div className="flex flex-col gap-2">
               <h3 className="text-2xl md:text-3xl font-serif text-[#10175b] tracking-tight">Update Archive.</h3>
-              <p className="text-xs text-slate-500 font-medium italic opacity-70">Modify the reading record in your library.</p>
+              <p className="text-xs text-slate-500 font-medium italic opacity-70">Modify the research record in your library.</p>
             </div>
             <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -74,13 +74,13 @@ export function EditBookModal({ book, onClose, onUpdate }: {
             <div className="space-y-4">
               <div>
                 <label className="block text-[11px] font-mono font-bold uppercase tracking-[0.25em] text-[#10175b]/50 mb-3 ml-1">
-                  Subject Property: Title
+                  Subject Property: Research Title
                 </label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="The Alchemist"
+                  placeholder="Neural Machine Translation"
                   required
                   autoFocus
                   className="w-full px-4 py-3 bg-white/50 border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#10175b]/20 focus:border-[#10175b] text-base text-slate-900 placeholder-slate-300 font-serif transition-all"
@@ -90,26 +90,26 @@ export function EditBookModal({ book, onClose, onUpdate }: {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 <div>
                   <label className="block text-[11px] font-mono font-bold uppercase tracking-[0.25em] text-[#10175b]/50 mb-3 ml-1">
-                    Author Registry
+                    Research Lead(s)
                   </label>
                   <input
                     type="text"
                     value={author}
                     onChange={(e) => setAuthor(e.target.value)}
-                    placeholder="Paulo Coelho"
+                    placeholder="Bahdanau et al."
                     className="w-full px-4 py-3 bg-white/50 border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#10175b]/20 focus:border-[#10175b] text-base text-slate-900 placeholder-slate-300 font-serif transition-all"
                   />
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-mono font-bold uppercase tracking-[0.25em] text-[#10175b]/50 mb-3 ml-1">
-                    Archive Volume (Pages)
+                    Catalog Year
                   </label>
                   <input
                     type="number"
                     value={totalPages}
                     onChange={(e) => setTotalPages(e.target.value)}
-                    placeholder="208"
+                    placeholder="2014"
                     className="w-full px-4 py-3 bg-white/50 border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#10175b]/20 focus:border-[#10175b] text-base text-slate-900 placeholder-slate-300 font-serif transition-all"
                   />
                 </div>

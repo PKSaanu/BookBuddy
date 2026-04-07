@@ -35,6 +35,7 @@ export default async function SettingsPage() {
             <SettingsClient 
                 initialEmail={user.email} 
                 initialPreferredLanguage={user.preferredLanguage}
+                initialIsResearcher={user.isResearcher}
             />
         </div>
 

@@ -1,5 +1,5 @@
 import { db } from '@/db/db';
-import { books, translations } from '@/db/schema';
+import { books, translations, paperTranslations } from '@/db/schema';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { eq, desc, inArray } from 'drizzle-orm';
@@ -13,20 +13,12 @@ export default async function WordPoolPage() {
     redirect('/login');
   }
 
-  // Fetch all books for the user to get their IDs
-  const userBooks = await db.select({ id: books.id })
-    .from(books)
-    .where(eq(books.userId, session.id as string));
-
-  const bookIds = userBooks.map(b => b.id);
-
-  let userTranslations: any[] = [];
-  if (bookIds.length > 0) {
-    userTranslations = await db.select()
-      .from(translations)
-      .where(inArray(translations.bookId, bookIds))
-      .orderBy(desc(translations.createdAt));
-  }
+  const [bookTranslations, researchTranslations] = await Promise.all([
+    db.select().from(translations).where(eq(translations.userId, session.id as string)).orderBy(desc(translations.createdAt)),
+    db.select().from(paperTranslations).where(eq(paperTranslations.userId, session.id as string)).orderBy(desc(paperTranslations.createdAt))
+  ]);
+  
+  const userTranslations = [...bookTranslations, ...researchTranslations].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
   return (
     <LayoutWrapper>

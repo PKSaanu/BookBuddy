@@ -3,7 +3,8 @@ import Image from 'next/image';
 import { getSession } from '@/lib/auth';
 import { 
   IconBook2, IconLanguage, IconBrain, IconBookmarks, 
-  IconFileText, IconSparkles, IconArrowRight, IconCheck
+  IconFileText, IconSparkles, IconArrowRight, IconCheck,
+  IconFlask, IconFileExport
 } from '@tabler/icons-react';
 import LayoutWrapper from '@/components/layout-wrapper';
 
@@ -55,6 +56,20 @@ const features = [
     color: 'text-indigo-500',
     bg: 'bg-indigo-50',
   },
+  {
+    icon: IconFlask,
+    title: 'Researcher Mode',
+    description: 'A specialized workspace for academic research. Curate papers, track catalogs, and use AI to decode complex scientific literature alongside your books.',
+    color: 'text-fuchsia-600',
+    bg: 'bg-fuchsia-50',
+  },
+  {
+    icon: IconFileExport,
+    title: 'Archive Exporting',
+    description: 'Export your translated vocabulary and comprehensive reading notes into beautifully formatted PDFs, ready for offline review.',
+    color: 'text-teal-600',
+    bg: 'bg-teal-50',
+  },
 ];
 
 const journey = [
@@ -88,7 +103,7 @@ export default async function AboutPage() {
           </p>
           <div className="flex items-center gap-4 flex-wrap">
             {session ? (
-              <Link href="/dashboard" className="inline-flex items-center gap-2.5 px-7 py-3.5 bg-[#10175b] text-white rounded-2xl font-bold text-[14px] hover:bg-[#1a2066] transition-all shadow-lg shadow-[#10175b]/20 active:scale-[0.98]">
+              <Link href="/library" className="inline-flex items-center gap-2.5 px-7 py-3.5 bg-[#10175b] text-white rounded-2xl font-bold text-[14px] hover:bg-[#1a2066] transition-all shadow-lg shadow-[#10175b]/20 active:scale-[0.98]">
                 Go to My Library
                 <IconArrowRight size={16} strokeWidth={2.5} />
               </Link>
@@ -182,12 +197,12 @@ export default async function AboutPage() {
             <h2 className="text-3xl font-serif font-bold text-[#171717] mb-8">Built for South Asian readers</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-white rounded-2xl p-6 border border-slate-200">
-                <p className="text-3xl mb-3">தமிழ்</p>
+                <p className="text-3xl mb-3 font-bold">தமிழ்</p>
                 <h3 className="text-base font-bold text-[#171717] mb-1">Tamil</h3>
                 <p className="text-[13px] text-slate-500">Full translation and AI support for Tamil-speaking readers from Tamil Nadu, Sri Lanka, and beyond.</p>
               </div>
               <div className="bg-white rounded-2xl p-6 border border-slate-200">
-                <p className="text-3xl mb-3">සිංහල</p>
+                <p className="text-3xl mb-3 font-bold">සිංහල</p>
                 <h3 className="text-base font-bold text-[#171717] mb-1">Sinhala</h3>
                 <p className="text-[13px] text-slate-500">Full translation and AI support for Sinhalese readers — making English literature accessible to every Sri Lankan student.</p>
               </div>

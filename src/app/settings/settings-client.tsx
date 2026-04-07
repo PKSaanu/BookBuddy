@@ -1,24 +1,41 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { updateLanguage, updateEmail, updatePassword } from '@/actions/user';
+import { updateLanguage, updateEmail, updatePassword, updateResearcherMode } from '@/actions/user';
 import { IconLoader, IconCheck } from '@tabler/icons-react';
 
 interface SettingsClientProps {
     initialEmail: string;
     initialPreferredLanguage: string;
+    initialIsResearcher: boolean;
 }
 
-export default function SettingsClient({ initialEmail, initialPreferredLanguage }: SettingsClientProps) {
+export default function SettingsClient({ initialEmail, initialPreferredLanguage, initialIsResearcher }: SettingsClientProps) {
     const [preferredLanguage, setPreferredLanguage] = useState(initialPreferredLanguage);
+    const [isResearcher, setIsResearcher] = useState(initialIsResearcher);
     const [email, setEmail] = useState(initialEmail);
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     
     const [isPendingLang, startTransitionLang] = useTransition();
     const [isPendingSecurity, startTransitionSecurity] = useTransition();
+    const [isPendingResearcher, startTransitionResearcher] = useTransition();
     
     const [statusMessage, setStatusMessage] = useState<{type: 'success' | 'error', message: string} | null>(null);
+
+    const handleResearcherToggle = () => {
+        const newValue = !isResearcher;
+        setIsResearcher(newValue);
+        startTransitionResearcher(async () => {
+            const res = await updateResearcherMode(newValue);
+            if (res.error) {
+                setStatusMessage({ type: 'error', message: res.error });
+            } else {
+                setStatusMessage({ type: 'success', message: 'Researcher Mode updated' });
+                setTimeout(() => setStatusMessage(null), 3000);
+            }
+        });
+    };
 
     const handleLanguageSelect = (lang: string) => {
         setPreferredLanguage(lang);
@@ -211,6 +228,48 @@ export default function SettingsClient({ initialEmail, initialPreferredLanguage 
                         </div>
                     )}
                 </form>
+            </section>
+
+            {/* Divider */}
+            <div className="w-16 h-[2px] bg-slate-200 mt-16" />
+
+            {/* Section 3: Platform Features */}
+            <section className="bg-transparent mt-16">
+                <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-4xl font-serif text-[#10175b] font-normal tracking-tight">Platform Features</h2>
+                    <span className="text-[10px] font-black tracking-[0.2em] uppercase text-slate-400">Advanced</span>
+                </div>
+
+                <div className="bg-[#EBECEC] rounded-[24px] p-[40px] sm:p-[64px] border border-slate-200/50 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+                    {/* Disabled Overlay */}
+                    {isPendingResearcher && (
+                        <div className="absolute -inset-2 bg-[#EBECEC]/50 backdrop-blur-[2px] z-20 flex items-center justify-center rounded-[24px]">
+                            <div className="bg-white p-4 rounded-full shadow-xl">
+                                <IconLoader className="w-6 h-6 text-[#10175b] animate-spin" />
+                            </div>
+                        </div>
+                    )}
+                    <div className="max-w-md">
+                        <h3 className="text-2xl font-serif font-bold text-[#10175b] mb-3">Researcher Mode</h3>
+                        <p className="text-sm text-slate-600 leading-relaxed">
+                            Unlock a specialized workspace for reading and organizing research papers alongside your books. Add papers manually to your unified library.
+                        </p>
+                    </div>
+                    
+                    <button 
+                        onClick={handleResearcherToggle}
+                        disabled={isPendingResearcher}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent focus:outline-none transition-colors duration-200 ease-in-out ${isResearcher ? 'bg-[#10175b]' : 'bg-slate-300'}`}
+                        role="switch"
+                        aria-checked={isResearcher}
+                    >
+                        <span className="sr-only">Toggle Researcher Mode</span>
+                        <span
+                            aria-hidden="true"
+                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isResearcher ? 'translate-x-5' : 'translate-x-0'}`}
+                        />
+                    </button>
+                </div>
             </section>
         </>
     );
