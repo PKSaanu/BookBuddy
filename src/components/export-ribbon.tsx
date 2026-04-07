@@ -220,7 +220,7 @@ export default function ExportRibbon({ title, author, vocab, notes, isChatOpen }
   }, [isChatOpen]);
 
   return (
-    <div className="fixed right-0 top-44 z-40 flex items-center" ref={containerRef}>
+    <div className="fixed right-0 top-40 z-40 flex items-center" ref={containerRef}>
       <motion.div
         initial={false}
         animate={{ width: isOpen ? 144 : 48 }}

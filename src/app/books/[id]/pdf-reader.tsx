@@ -110,7 +110,11 @@ export default function PdfReader({
   }, [isResizing, sidebarWidth]);
 
   const toggleSplitMode = () => {
-     setIsSplitMode(!isSplitMode);
+    const nextSplitMode = !isSplitMode;
+    setIsSplitMode(nextSplitMode);
+    if (nextSplitMode) {
+      setIsSidebarOpen(true);
+    }
   };
 
 
@@ -436,7 +440,7 @@ export default function PdfReader({
           {/* Split Mode Toggle Button - Now on the right */}
           <button 
                 onClick={toggleSplitMode}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all text-xs font-sm uppercase tracking-wider h-10 ${isSplitMode ? 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-700 border border-transparent'}`}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all text-xs font-bold uppercase tracking-wider h-10 min-w-[140px] justify-center ${isSplitMode ? 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-700 border border-transparent'}`}
                 title={isSplitMode ? "Disable Split View" : "Enable Split View"}
           >
                 {isSplitMode ? <IconLayoutSidebarRightCollapse size={18} /> : <IconLayoutColumns size={18} />}

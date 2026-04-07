@@ -314,7 +314,7 @@ export default function BookContent({
             <IconMessageChatbot size={22} />
           </button>
         </motion.div>
-      )}
+      )}    
 
       {/* Export Archive Ribbon */}
       <ExportRibbon 
