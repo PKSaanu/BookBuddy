@@ -29,21 +29,33 @@ export function PronunciationButton({
         const voices = window.speechSynthesis.getVoices();
         let selectedVoice: SpeechSynthesisVoice | undefined;
 
-        // 1. Try exact match from preferences
-        if (voiceName) {
-            selectedVoice = voices.find(v => v.name === voiceName);
-        }
-
-        // 2. Fallback to gender-based preferred lists if English
-        if (!selectedVoice && lang.startsWith('en')) {
-            const preferredMale = ['Google UK English Male', 'Alex', 'Microsoft David', 'Daniel'];
-            const preferredFemale = ['Google US English', 'Google UK English Female', 'Samantha', 'Microsoft Zira'];
+        // 1. If English, use preferred lists or specifically selected voice
+        if (lang.startsWith('en')) {
+            if (voiceName) {
+                selectedVoice = voices.find(v => v.name === voiceName);
+            }
             
-            const preferred = voiceGender === 'male' ? preferredMale : preferredFemale;
+            if (!selectedVoice) {
+                const preferredMale = ['Google UK English Male', 'Alex', 'Microsoft David', 'Daniel'];
+                const preferredFemale = ['Google US English', 'Google UK English Female', 'Samantha', 'Microsoft Zira'];
+                
+                const preferred = voiceGender === 'male' ? preferredMale : preferredFemale;
+                
+                selectedVoice = preferred
+                    .map(v => voices.find(voice => voice.name.includes(v)))
+                    .find(v => !!v);
+            }
+        } else {
+            // 2. For non-English (Tamil, Sinhala), find voices matching the language
+            const langVoices = voices.filter(v => 
+                v.lang.toLowerCase().replace('_', '-') === lang.toLowerCase() || 
+                v.lang.toLowerCase().startsWith(lang.toLowerCase().split('-')[0])
+            );
             
-            selectedVoice = preferred
-                .map(v => voices.find(voice => voice.name.includes(v)))
-                .find(v => !!v);
+            if (langVoices.length > 0) {
+                // Try to match gender if possible (most non-English voices don't specify gender in metadata consistently)
+                selectedVoice = langVoices.find(v => (v as any).gender === voiceGender) || langVoices[0];
+            }
         }
 
         if (selectedVoice) {
