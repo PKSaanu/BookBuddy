@@ -15,7 +15,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'BookBudddy <onboarding@resend.dev>',
+      from: 'BookBudddy <no-reply@bookbudddy.xyz>',
       to: [email],
       subject: 'Reset your BookBudddy password',
       html: `
@@ -109,7 +109,7 @@ export async function sendEmailVerificationEmail(email: string, token: string) {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'BookBudddy <onboarding@resend.dev>',
+      from: 'BookBudddy <no-reply@bookbudddy.xyz>',
       to: [email],
       subject: 'Verify your BookBudddy account',
       html: `
