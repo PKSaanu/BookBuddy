@@ -42,7 +42,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               <div className="flex items-center gap-3">
                 <Image 
                   src="/logo.png" 
-                  alt="BookBuddy" 
+                  alt="BookBudddy" 
                   width={120} 
                   height={30} 
                   priority 

@@ -5,6 +5,145 @@ import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { hashPassword, verifyPassword, createToken, setAuthCookie, removeAuthCookie } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import crypto from 'crypto';
+import { sendPasswordResetEmail } from '@/lib/email';
+import { and, gte } from 'drizzle-orm';
+
+export async function requestPasswordReset(prevState: any, formData: FormData) {
+  const email = formData.get('email') as string;
+  if (!email) return { error: 'Email is required' };
+
+  try {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    
+    // For security, always return success even if email not found
+    if (!user) {
+      return { success: true, message: 'If an account exists with that email, a reset link has been sent.' };
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const resetTokenHash = await hashPassword(token); // Hash the token for storage
+    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
+
+    await db.update(users)
+      .set({ resetToken: resetTokenHash, resetTokenExpiry })
+      .where(eq(users.id, user.id));
+
+    await sendPasswordResetEmail(email, token);
+
+    return { success: true, message: 'If an account exists with that email, a reset link has been sent.' };
+  } catch (error) {
+    console.error('Reset request error:', error);
+    return { error: 'Something went wrong. Please try again later.' };
+  }
+}
+
+export async function verifyEmail(token: string) {
+  try {
+    const allUsers = await db.select().from(users).where(gte(users.verificationTokenExpiry, new Date()));
+    
+    let targetUser = null;
+    for (const user of allUsers) {
+      if (user.verificationToken && await verifyPassword(token, user.verificationToken)) {
+        targetUser = user;
+        break;
+      }
+    }
+
+    if (!targetUser) {
+      return { error: 'Invalid or expired verification link' };
+    }
+
+    await db.update(users)
+      .set({ 
+        emailVerified: true, 
+        verificationToken: null, 
+        verificationTokenExpiry: null 
+      })
+      .where(eq(users.id, targetUser.id));
+
+    // Auto-login after verification
+    const tokenStr = await createToken({ 
+      id: targetUser.id, 
+      name: targetUser.name, 
+      email: targetUser.email, 
+      preferredLanguage: targetUser.preferredLanguage,
+      gender: targetUser.gender
+    });
+    await setAuthCookie(tokenStr);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Verification error:', error);
+    return { error: 'Failed to verify email' };
+  }
+}
+
+export async function resendVerificationEmail(email: string) {
+  try {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    
+    if (!user || user.emailVerified) {
+      return { success: true }; // Silent success
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationTokenHash = await hashPassword(verificationToken);
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 3600000);
+
+    await db.update(users)
+      .set({ 
+        verificationToken: verificationTokenHash, 
+        verificationTokenExpiry 
+      })
+      .where(eq(users.id, user.id));
+
+    const { sendEmailVerificationEmail } = await import('@/lib/email');
+    await sendEmailVerificationEmail(email, verificationToken);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Resend error:', error);
+    return { error: 'Failed to resend verification email' };
+  }
+}
+
+export async function resetPassword(prevState: any, formData: FormData) {
+  const token = formData.get('token') as string;
+  const password = formData.get('password') as string;
+
+  if (!token || !password) return { error: 'Missing required fields' };
+
+  try {
+    const allUsers = await db.select().from(users).where(gte(users.resetTokenExpiry, new Date()));
+    
+    let targetUser = null;
+    for (const user of allUsers) {
+      if (user.resetToken && await verifyPassword(token, user.resetToken)) {
+        targetUser = user;
+        break;
+      }
+    }
+
+    if (!targetUser) {
+      return { error: 'Invalid or expired reset token' };
+    }
+
+    const passwordHash = await hashPassword(password);
+    await db.update(users)
+      .set({ 
+        passwordHash, 
+        resetToken: null, 
+        resetTokenExpiry: null 
+      })
+      .where(eq(users.id, targetUser.id));
+
+    return { success: true };
+  } catch (error) {
+    console.error('Password reset error:', error);
+    return { error: 'Failed to reset password. Please try again.' };
+  }
+}
 
 export async function register(prevState: any, formData: FormData) {
   const name = formData.get('name') as string;
@@ -31,20 +170,26 @@ export async function register(prevState: any, formData: FormData) {
         preferredLanguage,
     }).returning();
 
-    const token = await createToken({ 
-      id: newUser.id, 
-      name: newUser.name, 
-      email: newUser.email, 
-      preferredLanguage: newUser.preferredLanguage,
-      gender: newUser.gender
-    });
-    await setAuthCookie(token);
-    
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationTokenHash = await hashPassword(verificationToken);
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 3600000); // 24 hours
+
+    await db.update(users)
+      .set({ 
+        verificationToken: verificationTokenHash, 
+        verificationTokenExpiry 
+      })
+      .where(eq(users.id, newUser.id));
+
+    const { sendEmailVerificationEmail } = await import('@/lib/email');
+    await sendEmailVerificationEmail(email, verificationToken);
+
+    redirect('/verify-email/pending');
   } catch (error: any) {
+    if (error.message === 'NEXT_REDIRECT') throw error;
+    console.error('Registration error:', error);
     return { error: 'Something went wrong during registration.' };
   }
-
-  redirect('/dashboard');
 }
 
 export async function login(prevState: any, formData: FormData) {
@@ -65,6 +210,14 @@ export async function login(prevState: any, formData: FormData) {
     const isValid = await verifyPassword(password, user.passwordHash);
     if (!isValid) {
       return { error: 'Invalid email or password' };
+    }
+
+    if (!user.emailVerified) {
+      return { 
+        error: 'Please verify your email address before logging in.',
+        unverified: true,
+        email: user.email 
+      };
     }
 
     const token = await createToken({ 

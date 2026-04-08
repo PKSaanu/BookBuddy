@@ -25,7 +25,7 @@ export function AuthFormSection({ mode, onToggleMode }: AuthFormSectionProps) {
 
       <div className="mt-8 text-center">
         <p className="text-[15px] font-medium text-slate-500">
-          {mode === 'login' ? 'New to BookBuddy?' : 'Already a member?'}
+          {mode === 'login' ? 'New to BookBudddy?' : 'Already a member?'}
           {' '}
           <button 
             onClick={onToggleMode}

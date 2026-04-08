@@ -10,7 +10,7 @@ export default function Navbar() {
           <div className="flex items-center">
             <Link href="/dashboard" className="flex items-center gap-2">
               <IconBook2 className="w-8 h-8 text-indigo-600" />
-              <span className="font-bold text-xl text-gray-900 tracking-tight">BookBuddy</span>
+              <h1 className="text-xl font-serif font-black text-[#10175b] tracking-tight">BookBudddy</h1>
             </Link>
           </div>
           <div className="flex items-center gap-4">

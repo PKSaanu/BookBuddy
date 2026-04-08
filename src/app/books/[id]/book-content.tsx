@@ -162,8 +162,17 @@ export default function BookContent({
       {/* Main Content Area */}
       <motion.div 
         layout
-        className="flex-1 h-full overflow-y-auto px-5 py-8 md:px-12 md:py-10 xl:px-16 xl:py-12"
+        className="flex-1 h-full overflow-y-auto px-5 py-8 md:px-12 md:py-10 xl:px-16 xl:py-12 relative"
       >
+        {/* Export Archive Ribbon - Now inside scrollable area */}
+        <ExportRibbon 
+          title={currentBook.title}
+          author={currentBook.author}
+          vocab={vocab}
+          notes={fetchedNotes}
+          isChatOpen={isChatOpen}
+        />
+
         <div className="max-w-[900px] mx-auto">
           {/* Header */}
           <div className="mb-8">
@@ -321,15 +330,6 @@ export default function BookContent({
           </button>
         </motion.div>
       )}    
-
-      {/* Export Archive Ribbon */}
-      <ExportRibbon 
-        title={currentBook.title}
-        author={currentBook.author}
-        vocab={vocab}
-        notes={fetchedNotes}
-        isChatOpen={isChatOpen}
-      />
 
       {/* Modals & Panels */}
       {isEditModalOpen && (

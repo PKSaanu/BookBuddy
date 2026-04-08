@@ -11,7 +11,7 @@ export function AuthBrandSection({ mode }: AuthBrandSectionProps) {
       <div className="mb-6">
         <Image 
             src="/logo.png" 
-            alt="BookBuddy" 
+            alt="BookBudddy" 
             width={400} 
             height={100} 
             priority 

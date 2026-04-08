@@ -3,6 +3,7 @@
 import { useActionState } from 'react';
 import { login } from '@/actions/auth';
 import { SubmitButton } from '@/components/submit-button';
+import Link from 'next/link';
 
 export function LoginForm() {
   const [state, formAction] = useActionState(login, null);
@@ -10,8 +11,21 @@ export function LoginForm() {
   return (
     <form action={formAction} className="space-y-6">
       {state?.error && (
-        <div className="bg-red-50 border border-red-100 text-red-600 px-5 py-4 rounded-2xl text-sm font-bold animate-in fade-in slide-in-from-top-2 duration-300">
-          {state.error}
+        <div className="bg-red-50 border border-red-100 text-red-600 px-5 py-4 rounded-2xl text-sm font-medium animate-in fade-in slide-in-from-top-2 duration-300">
+          <p>{state.error}</p>
+          {state.unverified && (
+            <button 
+              type="button"
+              onClick={async () => {
+                const { resendVerificationEmail } = await import('@/actions/auth');
+                await resendVerificationEmail(state.email);
+                alert('Verification email resent! Please check your inbox.');
+              }}
+              className="mt-2 block text-[11px] uppercase tracking-widest text-[#283593] hover:underline font-bold"
+            >
+              Resend Verification Link
+            </button>
+          )}
         </div>
       )}
 
@@ -30,9 +44,17 @@ export function LoginForm() {
       </div>
 
       <div className="space-y-2 group">
-        <label htmlFor="password" className="block text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1 group-focus-within:text-[#283593] transition-colors">
-          Password
-        </label>
+        <div className="flex items-center justify-between ml-1">
+          <label htmlFor="password" className="block text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 group-focus-within:text-[#283593] transition-colors">
+            Password
+          </label>
+          <Link 
+            href="/forgot-password" 
+            className="text-[10px] font-bold uppercase tracking-widest text-[#283593] hover:text-[#10175b] transition-colors"
+          >
+            Forgot?
+          </Link>
+        </div>
         <input
           id="password"
           name="password"

@@ -566,7 +566,7 @@ export default function PdfReader({
               </div>
 
               <div className="mt-8 text-slate-500/40 font-serif italic text-xs select-none">
-                 BookBuddy Study Reader • {Math.round(scale * 100)}% view
+                 BookBudddy Study Reader • {Math.round(scale * 100)}% view
               </div>
           </div>
         </div>

@@ -9,15 +9,15 @@ import {
 import LayoutWrapper from '@/components/layout-wrapper';
 
 export const metadata = {
-  title: 'About | BookBuddy',
-  description: 'Learn how BookBuddy helps you read English books and master vocabulary in your native language — Tamil or Sinhala.',
+  title: 'About | BookBudddy',
+  description: 'Learn how BookBudddy helps you read English books and master vocabulary in your native language — Tamil or Sinhala.',
 };
 
 const features = [
   {
     icon: IconFileText,
     title: 'In-App PDF Reader',
-    description: 'Read your books directly inside BookBuddy. No external apps needed — your reading and studying happen in one place.',
+    description: 'Read your books directly inside BookBudddy. No external apps needed — your reading and studying happen in one place.',
     color: 'text-violet-500',
     bg: 'bg-violet-50',
   },
@@ -52,7 +52,7 @@ const features = [
   {
     icon: IconBook2,
     title: 'Progress Tracking',
-    description: 'Track how far you\'ve read across your library. BookBuddy remembers your current page and gives you a progress overview for every book.',
+    description: 'Track how far you\'ve read across your library. BookBudddy remembers your current page and gives you a progress overview for every book.',
     color: 'text-indigo-500',
     bg: 'bg-indigo-50',
   },
@@ -73,7 +73,7 @@ const features = [
 ];
 
 const journey = [
-  { step: '01', title: 'Add a Book', body: 'Search for a book by title or author. BookBuddy pulls in cover art, author details, and page count from the catalog.' },
+  { step: '01', title: 'Add a Book', body: 'Search for a book by title or author. BookBudddy pulls in cover art, author details, and page count from the catalog.' },
   { step: '02', title: 'Upload Your PDF', body: 'Attach your own PDF copy to the book. It\'s securely stored and instantly accessible in the in-app reader.' },
   { step: '03', title: 'Read & Highlight', body: 'Open the reader, read at your pace, and select any text to translate it instantly into Tamil or Sinhala.' },
   { step: '04', title: 'Save & Curate', body: 'Save the translations you want to keep. They\'re stored by page number and searchable anytime.' },
@@ -91,7 +91,7 @@ export default async function AboutPage() {
         <section className="max-w-[900px] mx-auto px-6 pt-24 pb-20">
           <div className="mb-6">
             <span className="inline-block text-[10px] font-black font-sans uppercase tracking-[0.3em] text-[#10175b]/40 bg-[#10175b]/5 px-4 py-1.5 rounded-full">
-              About BookBuddy
+              About BookBudddy
             </span>
           </div>
           <h1 className="text-5xl sm:text-6xl md:text-7xl font-serif font-bold text-[#171717] tracking-tight leading-[1.1] mb-6">
@@ -99,7 +99,7 @@ export default async function AboutPage() {
             <span className="text-[#10175b]">Understand Deeply.</span>
           </h1>
           <p className="text-lg sm:text-xl text-slate-500 font-serif leading-relaxed max-w-2xl mb-10">
-            BookBuddy was built for readers who love English literature but think and feel in Tamil or Sinhala. It bridges the gap between reading a word and truly understanding it — in the language that lives inside you.
+            BookBudddy was built for readers who love English literature but think and feel in Tamil or Sinhala. It bridges the gap between reading a word and truly understanding it — in the language that lives inside you.
           </p>
           <div className="flex items-center gap-4 flex-wrap">
             {session ? (
@@ -121,7 +121,7 @@ export default async function AboutPage() {
           </div>
         </section>
 
-        {/* ─── What is BookBuddy ─── */}
+        {/* ─── What is BookBudddy ─── */}
         <section className="max-w-[900px] mx-auto px-6 pb-20">
           <div className="bg-[#10175b] rounded-[32px] p-10 sm:p-14 text-white relative overflow-hidden">
             <div className="absolute -top-10 -right-10 w-64 h-64 bg-white/5 rounded-full pointer-events-none" />
@@ -132,7 +132,7 @@ export default async function AboutPage() {
                 Language should never be a wall between you and a great story.
               </h2>
               <p className="text-white/70 text-base leading-relaxed">
-                Millions of students across Sri Lanka and South India read academic and literary texts in English every day — but storing, recalling, and internalizing that knowledge is harder when it isn't expressed in your mother tongue. BookBuddy changes that by making translation, curation, and AI-assisted comprehension a seamless part of the reading experience.
+                Millions of students across Sri Lanka and South India read academic and literary texts in English every day — but storing, recalling, and internalizing that knowledge is harder when it isn't expressed in your mother tongue. BookBudddy changes that by making translation, curation, and AI-assisted comprehension a seamless part of the reading experience.
               </p>
             </div>
           </div>
@@ -230,14 +230,14 @@ export default async function AboutPage() {
             <div className="flex items-center">
               <Image 
                 src="/footer.png" 
-                alt="BookBuddy" 
+                alt="BookBudddy" 
                 width={140} 
                 height={30} 
                 className="object-contain h-8 w-auto"
               />
             </div>
             <p className="text-[11px] font-sans text-slate-400">
-              © {new Date().getFullYear()} BookBuddy. Built by P.K. Saanu.
+              © {new Date().getFullYear()} BookBudddy. Built by P.K. Saanu.
             </p>
           </div>
         </footer>

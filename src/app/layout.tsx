@@ -14,7 +14,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "BookBuddy | Premium Reading Companion",
+  title: "BookBudddy | Premium Reading Companion",
   description: "Your premium reading and vocabulary companion. Master new languages as you read.",
 };
 

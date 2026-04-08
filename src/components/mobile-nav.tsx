@@ -14,7 +14,7 @@ export default function MobileNav({ onOpenMenu }: MobileNavProps) {
       <Link href="/dashboard" className="block">
         <Image 
           src="/logo.png" 
-          alt="BookBuddy" 
+          alt="BookBudddy" 
           width={80} 
           height={12} 
           priority 

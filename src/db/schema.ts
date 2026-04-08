@@ -10,6 +10,11 @@ export const users = pgTable('users', {
   voiceRate: varchar('voice_rate', { length: 10 }).notNull().default('0.8'), // Speed multiplier like '0.8' or '1.0'
   voiceName: varchar('voice_name', { length: 100 }), // Specific voice name like 'Alex' or 'Samantha'
   isResearcher: boolean('is_researcher').default(false).notNull(),
+  resetToken: text('reset_token'),
+  resetTokenExpiry: timestamp('reset_token_expiry'),
+  emailVerified: boolean('email_verified').default(false).notNull(),
+  verificationToken: text('verification_token'),
+  verificationTokenExpiry: timestamp('verification_token_expiry'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
