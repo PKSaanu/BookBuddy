@@ -52,6 +52,7 @@ export default async function Library() {
       author: item.author || null,
       coverImage: item.coverImage || null,
       totalPages: item.totalPages || null,
+      pdfPageCount: item.pdfPageCount || null,
       year: item.year || null,
       type: item.type as 'book' | 'paper',
       translationCount: itemTranslations.length,

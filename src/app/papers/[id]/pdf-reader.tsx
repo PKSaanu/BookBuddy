@@ -381,62 +381,62 @@ export default function PdfReader({
     >
       {/* Top Bar Navigation - Only show when loaded */}
       {numPages !== null && (
-        <div className="h-16 bg-slate-800 border-b border-slate-700 flex items-center justify-between px-6 shrink-0 z-50">
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={onClose}
-            className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
-          >
-            <IconX size={24} />
-          </button>
-          <span className="text-white font-serif font-bold text-sm hidden sm:block truncate max-w-[400px] italic">
-            Reading: {paperTitle}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="hidden sm:flex items-center gap-4 bg-slate-900/50 px-4 py-1.5 rounded-full border border-slate-700 shadow-inner">
+        <div className="h-16 bg-slate-800 border-b border-slate-700 flex items-center px-6 shrink-0 z-50 relative">
+          {/* Left: Branding & Title */}
+          <div className="flex items-center gap-4 flex-1 min-w-0">
             <button 
-              disabled={pageNumber <= 1}
-              onClick={() => setPageNumber((prev: number) => Math.max(1, prev - 1))}
-              className="p-1 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              onClick={onClose}
+              className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors shrink-0"
             >
-
-              <IconChevronLeft size={20} />
+              <IconX size={24} />
             </button>
-            <form onSubmit={handleJumpPage} className="flex items-center gap-2 font-mono text-[13px] text-white select-none group">
-              <input 
-                type="text"
-                value={jumpPage}
-                onChange={(e) => setJumpPage(e.target.value)}
-                onBlur={handleJumpPage}
-                className="w-10 bg-slate-700/50 border border-slate-600 rounded text-center text-indigo-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-bold"
-              />
-              <span className="text-slate-600">/</span>
-              <span className="text-slate-400">{numPages || '...'}</span>
-            </form>
-            <button 
-              disabled={numPages === null || pageNumber >= numPages}
-              onClick={() => setNumPages === null ? null : setPageNumber((prev: number) => Math.min(numPages!, prev + 1))}
-              className="p-1 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
+            <span className="text-white font-serif font-bold text-sm hidden sm:block truncate italic pr-4">
+              Reading: {paperTitle}
+            </span>
+          </div>
 
-              <IconChevronRight size={20} />
+          {/* Center: Navigation (Strictly Centered) */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-4 z-10">
+            <div className="flex items-center gap-4 bg-slate-900/50 px-4 py-1.5 rounded-full border border-slate-700 shadow-inner">
+              <button 
+                disabled={pageNumber <= 1}
+                onClick={() => setPageNumber((prev: number) => Math.max(1, prev - 1))}
+                className="p-1 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <IconChevronLeft size={20} />
+              </button>
+              <form onSubmit={handleJumpPage} className="flex items-center gap-2 font-mono text-[13px] text-white select-none group">
+                <input 
+                  type="text"
+                  value={jumpPage}
+                  onChange={(e) => setJumpPage(e.target.value)}
+                  onBlur={handleJumpPage}
+                  className="w-10 bg-slate-700/50 border border-slate-600 rounded text-center text-indigo-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-bold"
+                />
+                <span className="text-slate-600">/</span>
+                <span className="text-slate-400">{numPages || '...'}</span>
+              </form>
+              <button 
+                disabled={numPages === null || pageNumber >= numPages}
+                onClick={() => setNumPages === null ? null : setPageNumber((prev: number) => Math.min(numPages!, prev + 1))}
+                className="p-1 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <IconChevronRight size={20} />
+              </button>
+            </div>
+            
+            <button 
+              onClick={() => setShowDiscardModal(true)}
+              className="p-2 text-slate-400 hover:text-red-400 transition-all group relative hidden md:block"
+              title="Discard PDF"
+            >
+              <IconTrash size={20} className="group-hover:scale-110 transition-transform" />
+              <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-slate-700">Discard PDF</span>
             </button>
           </div>
-          
-          <button 
-            onClick={() => setShowDiscardModal(true)}
-            className="p-2 text-slate-400 hover:text-red-400 transition-all group relative"
-            title="Discard PDF"
-          >
-            <IconTrash size={20} className="group-hover:scale-110 transition-transform" />
-            <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-slate-700">Discard PDF</span>
-          </button>
-        </div>
 
-
-        <div className="flex items-center gap-4">
+          {/* Right: Controls */}
+          <div className="flex items-center gap-4 flex-1 justify-end">
           {/* Split Mode Toggle Button - Now on the right */}
           <button 
                 onClick={toggleSplitMode}

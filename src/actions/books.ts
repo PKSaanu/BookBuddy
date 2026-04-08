@@ -200,7 +200,7 @@ export async function removeBookFile(bookId: string) {
 
     // 3. Clear from Database
     await db.update(books)
-      .set({ fileUrl: null, currentPage: 1 })
+      .set({ fileUrl: null, currentPage: 1, pdfPageCount: null })
       .where(
         and(
           eq(books.id, bookId),

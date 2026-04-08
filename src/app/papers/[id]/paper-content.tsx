@@ -32,6 +32,7 @@ interface PaperContentProps {
     author?: string | null;
     coverImage?: string | null;
     totalPages?: number | null;
+    pdfPageCount?: number | null;
     userId: string;
     fileUrl?: string | null;
     currentPage?: number | null;
@@ -95,6 +96,9 @@ export default function PaperContent({
       const data = await res.json();
       if (data.fileUrl) {
         setLocalFileUrl(data.fileUrl);
+        if (data.pdfPageCount) {
+          setCurrentBook(prev => ({ ...prev, pdfPageCount: data.pdfPageCount }));
+        }
       } else {
         alert(data.error || 'Upload failed');
       }
@@ -112,6 +116,7 @@ export default function PaperContent({
     if (res.success) {
       setLocalFileUrl(null);
       setLocalCurrentPage(1);
+      setCurrentBook(prev => ({ ...prev, pdfPageCount: null }));
     } else {
       alert(res.error || 'Failed to remove PDF');
     }
@@ -135,9 +140,12 @@ export default function PaperContent({
 
   // Re-calculate progress if paper details change
   const maxPage = vocab.reduce((max, t) => Math.max(max, t.pageNumber || 0), 0);
-  const progressPercentValue = currentPaper.totalPages 
-    ? Math.round((maxPage / currentPaper.totalPages) * 100) 
+  const effectiveTotalPages = currentPaper.pdfPageCount || currentPaper.totalPages;
+  const progressPercentValue = effectiveTotalPages 
+    ? Math.round((maxPage / effectiveTotalPages) * 100) 
     : 0;
+  
+  const showProgress = !!currentPaper.pdfPageCount;
 
   return (
     <div className="flex h-[calc(100vh-64px)] md:h-screen w-full overflow-hidden relative">
@@ -174,9 +182,11 @@ export default function PaperContent({
                 
                 <DeletePaperButton paperId={paper.id} paperTitle={currentPaper.title} />
                 
-                <div className="bg-[#0f766e] text-white text-[9px] md:text-[11px] font-bold tracking-[0.1em] uppercase px-3 md:px-4 py-1.5 rounded-full shadow-sm">
-                  {progressPercentValue}%
-                </div>
+                {showProgress && (
+                  <div className="bg-[#0f766e] text-white text-[9px] md:text-[11px] font-bold tracking-[0.1em] uppercase px-3 md:px-4 py-1.5 rounded-full shadow-sm">
+                    {progressPercentValue}%
+                  </div>
+                )}
 
                 {/* PDF Control Buttons - Desktop Only */}
                 <div className="hidden md:flex items-center gap-3">
@@ -226,7 +236,7 @@ export default function PaperContent({
                 <div className="flex items-center gap-3">
                   <span className="hidden sm:inline text-slate-300 font-sans font-normal">•</span>
                   <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[#10175b] bg-[#10175b]/5 sm:bg-transparent px-2 sm:px-0 py-0.5 sm:py-0 rounded-md">
-                    {currentPaper.totalPages ? `${currentPaper.totalPages} Total Pages` : 'Page tracking enabled'}
+                    {currentPaper.pdfPageCount ? `${currentPaper.pdfPageCount} Total Pages` : 'Research Document'}
                   </p>
                 </div>
               </div>
@@ -366,6 +376,7 @@ export default function PaperContent({
             onFileRemoved={() => {
               setLocalFileUrl(null);
               setLocalCurrentPage(1);
+              setCurrentBook(prev => ({ ...prev, pdfPageCount: null }));
             }}
             onTranslate={(text, page) => {
               setSelectedText(text);

@@ -32,6 +32,7 @@ interface BookContentProps {
     author?: string | null;
     coverImage?: string | null;
     totalPages?: number | null;
+    pdfPageCount?: number | null;
     userId: string;
     fileUrl?: string | null;
     currentPage?: number | null;
@@ -107,6 +108,9 @@ export default function BookContent({
       const data = await res.json();
       if (data.fileUrl) {
         setLocalFileUrl(data.fileUrl);
+        if (data.pdfPageCount) {
+          setCurrentBook(prev => ({ ...prev, pdfPageCount: data.pdfPageCount }));
+        }
       } else {
         alert(data.error || 'Upload failed');
       }
@@ -124,6 +128,7 @@ export default function BookContent({
     if (res.success) {
       setLocalFileUrl(null);
       setLocalCurrentPage(1);
+      setCurrentBook(prev => ({ ...prev, pdfPageCount: null }));
     } else {
       alert(res.error || 'Failed to remove PDF');
     }
@@ -147,8 +152,9 @@ export default function BookContent({
 
   // Re-calculate progress if book details change
   const maxPage = vocab.reduce((max, t) => Math.max(max, t.pageNumber || 0), 0);
-  const progressPercentValue = currentBook.totalPages 
-    ? Math.round((maxPage / currentBook.totalPages) * 100) 
+  const effectiveTotalPages = currentBook.pdfPageCount || currentBook.totalPages;
+  const progressPercentValue = effectiveTotalPages 
+    ? Math.round((maxPage / effectiveTotalPages) * 100) 
     : 0;
 
   return (
@@ -238,7 +244,7 @@ export default function BookContent({
                 <div className="flex items-center gap-3">
                   <span className="hidden sm:inline text-slate-300 font-sans font-normal">•</span>
                   <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[#10175b] bg-[#10175b]/5 sm:bg-transparent px-2 sm:px-0 py-0.5 sm:py-0 rounded-md">
-                    {currentBook.totalPages ? `${currentBook.totalPages} Total Pages` : 'Page tracking enabled'}
+                    {effectiveTotalPages ? `${effectiveTotalPages} Total Pages` : 'Page tracking enabled'}
                   </p>
                 </div>
               </div>
@@ -378,6 +384,7 @@ export default function BookContent({
             onFileRemoved={() => {
               setLocalFileUrl(null);
               setLocalCurrentPage(1);
+              setCurrentBook(prev => ({ ...prev, pdfPageCount: null }));
             }}
             onTranslate={(text, page) => {
               setSelectedText(text);

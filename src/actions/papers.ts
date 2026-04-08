@@ -86,7 +86,7 @@ export async function removePaperFile(paperId: string) {
     }
 
     await db.update(papers)
-      .set({ fileUrl: null, currentPage: 1 })
+      .set({ fileUrl: null, currentPage: 1, pdfPageCount: null })
       .where(eq(papers.id, paperId));
 
     revalidatePath(`/papers/${paperId}`);

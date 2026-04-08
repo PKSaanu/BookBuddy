@@ -13,6 +13,7 @@ interface LibraryItem {
   author: string | null;
   coverImage?: string | null;
   totalPages?: number | null;
+  pdfPageCount?: number | null;
   year?: number | null;
   type: 'book' | 'paper';
   translationCount: number;
@@ -113,7 +114,10 @@ export function LibraryClient({ isResearcher, books, papers, combinedItems }: Li
                 <div className="flex items-center gap-2">
                   <span className={`h-[1px] w-4 ${item.type === 'book' ? 'bg-slate-300' : 'bg-rose-300'} transition-all duration-300 group-hover:w-8 ${item.type === 'book' ? 'group-hover:bg-[#10175b]' : 'group-hover:bg-rose-700'}`} />
                   <p className={`text-[9px] font-black uppercase tracking-[0.2em] ${item.type === 'book' ? 'text-[#10175b]/40' : 'text-rose-700/60'} whitespace-nowrap`}>
-                    {item.totalPages ? `PAGE ${item.maxPage} / ${item.totalPages}` : item.year ? `YEAR ${item.year}` : 'NEW ARCHIVE'}
+                    {item.type === 'book' 
+                      ? ((item.pdfPageCount || item.totalPages) ? `PAGE ${item.maxPage} / ${item.pdfPageCount || item.totalPages}` : 'NEW ARCHIVE')
+                      : (item.pdfPageCount ? `PAGE ${item.maxPage} / ${item.pdfPageCount}` : (item.year ? `YEAR ${item.year}` : 'NEW ARCHIVE'))
+                    }
                   </p>
                 </div>
                 <h3 className={`text-base md:text-lg font-serif font-bold text-slate-800 leading-tight ${item.type === 'book' ? 'group-hover:text-[#10175b]' : 'group-hover:text-rose-700'} transition-colors line-clamp-2`}>
