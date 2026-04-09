@@ -8,3 +8,19 @@ export const coverBackgrounds = [
   "from-[#065f46] via-[#064e3b] to-[#022c22]",
   "from-[#334155] via-[#1e293b] to-[#0f172a]",
 ];
+
+export const PREFERRED_FEMALE_VOICES = [
+  'Samantha',
+  'Victoria',
+  'Microsoft Zira',
+  'Siri',
+  'Google UK English Female'
+];
+
+export const PREFERRED_MALE_VOICES = [
+  'Daniel',
+  'Alex',
+  'Microsoft David',
+  'Fred',
+  'Google UK English Male'
+];

@@ -3,6 +3,9 @@
 import { useState, useTransition, useEffect } from 'react';
 import { updateLanguage, updateEmail, updatePassword, updateResearcherMode, updateAudioSettings } from '@/actions/user';
 import { IconLoader, IconCheck } from '@tabler/icons-react';
+import { useRouter } from 'next/navigation';
+import { PREFERRED_FEMALE_VOICES, PREFERRED_MALE_VOICES } from '@/lib/constants';
+import { selectBestVoice } from '@/lib/audio';
 
 interface SettingsClientProps {
     initialEmail: string;
@@ -21,6 +24,7 @@ export default function SettingsClient({
     initialVoiceGender,
     initialVoiceName
 }: SettingsClientProps) {
+    const router = useRouter();
     const [preferredLanguage, setPreferredLanguage] = useState(initialPreferredLanguage);
     const [isResearcher, setIsResearcher] = useState(initialIsResearcher);
     const [email, setEmail] = useState(initialEmail);
@@ -64,19 +68,7 @@ export default function SettingsClient({
         utterance.rate = parseFloat(pace);
         
         const voices = window.speechSynthesis.getVoices();
-        const preferredFemale = ['Google US English', 'Google UK English Female', 'Samantha', 'Microsoft Zira'];
-        const preferredMale = ['Google UK English Male', 'Alex', 'Microsoft David', 'Daniel'];
-        
-        let selectedVoice: SpeechSynthesisVoice | undefined;
-
-        if (specificVoiceName) {
-            selectedVoice = voices.find(v => v.name === specificVoiceName);
-        }
-
-        if (!selectedVoice) {
-            const targetList = gender === 'female' ? preferredFemale : preferredMale;
-            selectedVoice = targetList.map(v => voices.find(voice => voice.name.includes(v))).find(v => !!v);
-        }
+        const selectedVoice = selectBestVoice(voices, 'en-US', gender, specificVoiceName);
         
         if (selectedVoice) utterance.voice = selectedVoice;
         window.speechSynthesis.speak(utterance);
@@ -90,6 +82,7 @@ export default function SettingsClient({
             } else {
                 setHasUnsavedAudio(false);
                 setStatusMessage({ type: 'success', message: 'Audio styling saved successfully' });
+                router.refresh(); // Sync all components with new DB state
                 setTimeout(() => setStatusMessage(null), 3000);
             }
         });
@@ -299,13 +292,13 @@ export default function SettingsClient({
                         </div>
 
                         {/* Specific Voice Selection */}
-                        <div className="bg-white/50 p-6 rounded-[20px] border border-slate-200/50">
-                            <h3 className="text-[11px] font-black uppercase tracking-widest text-[#10175b]/60 mb-4">Specific Voice Choice</h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-4">
+                            <label className="block text-[11px] font-black uppercase tracking-widest text-[#10175b]/60">Specific Voice Choice</label>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl">
                                 {(voiceGender === 'female' 
-                                    ? ['Google US English', 'Google UK English Female', 'Samantha', 'Microsoft Zira']
-                                    : ['Google UK English Male', 'Alex', 'Microsoft David', 'Daniel']
-                                ).map((prefName) => {
+                                    ? PREFERRED_FEMALE_VOICES 
+                                    : PREFERRED_MALE_VOICES
+                                ).slice(1).map((prefName) => {
                                     const actualVoice = availableVoices.find(v => v.name.includes(prefName));
                                     if (!actualVoice) return null;
                                     
@@ -345,18 +338,18 @@ export default function SettingsClient({
                                         handleAudioPreview(voicePace, voiceGender);
                                     }}
                                     className={`p-4 rounded-xl text-left border-2 transition-all flex items-center justify-between ${
-                                        voiceName === '' 
+                                        (voiceName === '' || voiceName === (voiceGender === 'female' ? PREFERRED_FEMALE_VOICES[0] : PREFERRED_MALE_VOICES[0]))
                                         ? 'bg-[#10175b] border-[#10175b] text-white shadow-lg' 
                                         : 'bg-white border-slate-100 text-slate-700 hover:border-slate-300'
                                     }`}
                                 >
                                     <div className="flex flex-col">
                                         <span className="text-sm font-bold">Auto Selection</span>
-                                        <span className={`text-[10px] ${voiceName === '' ? 'text-blue-100' : 'text-slate-400'}`}>
-                                            Best available for {voiceGender}
+                                        <span className={`text-[10px] ${(voiceName === '' || voiceName === (voiceGender === 'female' ? PREFERRED_FEMALE_VOICES[0] : PREFERRED_MALE_VOICES[0])) ? 'text-blue-100' : 'text-slate-400'}`}>
+                                            Default: {voiceGender === 'female' ? PREFERRED_FEMALE_VOICES[0] : PREFERRED_MALE_VOICES[0]}
                                         </span>
                                     </div>
-                                    {voiceName === '' && (
+                                    {(voiceName === '' || voiceName === (voiceGender === 'female' ? PREFERRED_FEMALE_VOICES[0] : PREFERRED_MALE_VOICES[0])) && (
                                         <IconCheck className="w-4 h-4" />
                                     )}
                                 </button>

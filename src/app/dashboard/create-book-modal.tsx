@@ -6,6 +6,7 @@ import { createPaper } from '@/actions/papers';
 import { IconPlus, IconLoader, IconBook, IconFlask, IconChevronRight, IconSearch } from '@tabler/icons-react';
 import { useFormStatus } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 
 function SubmitBtn() {
   const { pending } = useFormStatus();
@@ -35,6 +36,7 @@ interface OpenLibraryDoc {
 }
 
 export function CreateBookModal({ onSuccess, isResearcher }: { onSuccess?: () => void, isResearcher?: boolean }) {
+  const router = useRouter();
   const [type, setType] = useState<'book' | 'paper'>('book');
   
   // We use two different states because the actions have different signatures or roles
@@ -62,17 +64,7 @@ export function CreateBookModal({ onSuccess, isResearcher }: { onSuccess?: () =>
 
   const [suggestedCorrection, setSuggestedCorrection] = useState<OpenLibraryDoc | null>(null);
 
-  useEffect(() => {
-    if (state?.success) {
-      formRef.current?.reset();
-      setTitle('');
-      setAuthor('');
-      setCoverImage('');
-      setTotalPages('');
-      setSuggestedCorrection(null);
-      if (onSuccess) onSuccess();
-    }
-  }, [state, onSuccess]);
+
 
   useEffect(() => {
     const controller = new AbortController();

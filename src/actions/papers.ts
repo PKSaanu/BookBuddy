@@ -4,6 +4,7 @@ import { db } from '@/db/db';
 import { papers } from '@/db/schema';
 import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { eq } from 'drizzle-orm';
 
 export async function createPaper(prevState: any, formData: FormData) {
@@ -32,8 +33,9 @@ export async function createPaper(prevState: any, formData: FormData) {
 
     revalidatePath('/dashboard');
     revalidatePath('/library');
-    return { success: true, paperId: paper.id };
+    redirect('/library');
   } catch (error) {
+    if ((error as any).digest?.startsWith('NEXT_REDIRECT')) throw error;
     console.error('Failed to save paper:', error);
     return { error: 'Failed to create paper' };
   }

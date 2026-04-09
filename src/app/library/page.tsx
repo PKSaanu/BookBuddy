@@ -24,8 +24,10 @@ export default async function Library() {
   const isResearcher = user[0]?.isResearcher ?? false;
 
   const [allBookTranslations, allPaperTranslations] = await Promise.all([
-    db.select().from(translations).where(eq(translations.userId, session.id as string)),
-    db.select().from(paperTranslations).where(eq(paperTranslations.userId, session.id as string))
+    db.select({ id: translations.id, bookId: translations.bookId, pageNumber: translations.pageNumber })
+      .from(translations).where(eq(translations.userId, session.id as string)),
+    db.select({ id: paperTranslations.id, paperId: paperTranslations.paperId, pageNumber: paperTranslations.pageNumber })
+      .from(paperTranslations).where(eq(paperTranslations.userId, session.id as string))
   ]);
 
   // Combine items for the default "unified" view

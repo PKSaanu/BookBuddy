@@ -6,7 +6,8 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 255 }).notNull().unique(),
   passwordHash: text('password_hash').notNull(),
   preferredLanguage: varchar('preferred_language', { length: 50 }).notNull().default('Tamil'), // 'Tamil' or 'Sinhala'
-  gender: varchar('gender', { length: 50 }).notNull().default('female'), // 'male' or 'female'
+  gender: varchar('gender', { length: 50 }).notNull().default('male'), // Profile avatar gender: 'male' or 'female'
+  voiceGender: varchar('voice_gender', { length: 50 }).notNull().default('female'), // Preferred voice gender: 'male' or 'female'
   voiceRate: varchar('voice_rate', { length: 10 }).notNull().default('0.8'), // Speed multiplier like '0.8' or '1.0'
   voiceName: varchar('voice_name', { length: 100 }), // Specific voice name like 'Alex' or 'Samantha'
   isResearcher: boolean('is_researcher').default(false).notNull(),

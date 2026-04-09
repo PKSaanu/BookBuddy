@@ -53,8 +53,10 @@ export async function createBook(prevState: any, formData: FormData) {
     });
     
     revalidatePath('/dashboard');
-    return { success: true };
+    revalidatePath('/library');
+    redirect('/library');
   } catch (error) {
+    if ((error as any).digest?.startsWith('NEXT_REDIRECT')) throw error;
     return { error: 'Failed to create book' };
   }
 }
@@ -66,12 +68,30 @@ export async function deleteBook(id: string) {
   }
 
   try {
+    const [book] = await db.select({ fileUrl: books.fileUrl })
+      .from(books)
+      .where(
+        and(
+          eq(books.id, id),
+          eq(books.userId, session.id as string)
+        )
+      );
+
+    if (book?.fileUrl) {
+      try {
+        await del(book.fileUrl);
+      } catch (e) {
+        console.error('Failed to delete blob from Vercel during book deletion:', e);
+      }
+    }
+
     await db.delete(books).where(
       and(
         eq(books.id, id),
         eq(books.userId, session.id as string)
       )
     );
+    
     revalidatePath('/dashboard');
     revalidatePath('/library');
     return { success: true };

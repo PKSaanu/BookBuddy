@@ -96,7 +96,8 @@ export async function verifyEmail(token: string) {
       name: targetUser.name, 
       email: targetUser.email, 
       preferredLanguage: targetUser.preferredLanguage,
-      gender: targetUser.gender
+      gender: targetUser.gender,
+      voiceGender: targetUser.voiceGender
     });
     await setAuthCookie(tokenStr);
 
@@ -275,7 +276,8 @@ export async function login(prevState: any, formData: FormData) {
       name: user.name, 
       email: user.email, 
       preferredLanguage: user.preferredLanguage,
-      gender: user.gender
+      gender: user.gender,
+      voiceGender: user.voiceGender
     });
     await setAuthCookie(token);
 
@@ -302,7 +304,7 @@ export async function updateUserGender(gender: string) {
       .set({ gender })
       .where(eq(users.id, session.id as string));
 
-    // Update the session token with the new gender
+    // Update the session token with the new gender, while preserving other settings
     const newToken = await createToken({
       ...session,
       gender

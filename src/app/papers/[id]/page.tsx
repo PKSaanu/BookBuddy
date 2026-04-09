@@ -31,6 +31,7 @@ export default async function PaperPage({ params }: { params: { id: string } }) 
   const [user] = await db.select({
       preferredLanguage: users.preferredLanguage,
       gender: users.gender,
+      voiceGender: users.voiceGender,
       voiceRate: users.voiceRate,
       voiceName: users.voiceName,
     })
@@ -38,7 +39,7 @@ export default async function PaperPage({ params }: { params: { id: string } }) 
     .where(eq(users.id, session.id as string));
 
   const preferredLanguage = user?.preferredLanguage || 'Tamil';
-  const voiceGender = user?.gender || 'female';
+  const voiceGender = user?.voiceGender || 'female';
   const voiceRate = user?.voiceRate || '0.8';
   const voiceName = user?.voiceName || '';
 

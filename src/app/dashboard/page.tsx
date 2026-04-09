@@ -15,10 +15,11 @@ export default async function DashboardPage() {
   const [userBooks, userPapers, user] = await Promise.all([
     db.select().from(books).where(eq(books.userId, session.id as string)).orderBy(desc(books.createdAt)),
     db.select().from(papers).where(eq(papers.userId, session.id as string)).orderBy(desc(papers.createdAt)),
-    db.select({ isResearcher: users.isResearcher }).from(users).where(eq(users.id, session.id as string)).limit(1)
+    db.select({ isResearcher: users.isResearcher, name: users.name }).from(users).where(eq(users.id, session.id as string)).limit(1)
   ]);
 
   const isResearcher = user[0]?.isResearcher ?? false;
+  const userName = user[0]?.name || '';
 
   // Merge and sort
   const combinedItems = [
@@ -55,6 +56,7 @@ export default async function DashboardPage() {
 
   return (
     <DashboardClient 
+      userName={userName}
       items={combinedItems}
       userVocabCount={userVocabCount}
       recentItem={recentItem}
