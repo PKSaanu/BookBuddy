@@ -3,12 +3,13 @@ import { login } from '@/actions/auth';
 import { SubmitButton } from '@/components/submit-button';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IconCircleCheck, IconCircleX, IconLoader2 } from '@tabler/icons-react';
+import { IconCircleCheck, IconCircleX, IconLoader2, IconEye, IconEyeOff } from '@tabler/icons-react';
 
 export function LoginForm() {
   const [state, formAction] = useActionState(login, null);
   const [isResending, setIsResending] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleResend = async () => {
     if (!state?.email) return;
@@ -75,14 +76,27 @@ export function LoginForm() {
               Forgot?
             </Link>
           </div>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            required
-            placeholder="••••••••"
-            className="block w-full px-5 py-4 bg-slate-50 border-2 border-transparent rounded-2xl placeholder-slate-300 focus:outline-none focus:border-[#283593] focus:bg-white transition-all text-slate-900 font-semibold"
-          />
+          <div className="relative group">
+            <input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              required
+              placeholder="••••••••"
+              className="block w-full px-5 py-4 bg-slate-50 placeholder-slate-300 focus:outline-none focus:bg-white transition-all text-slate-900 font-semibold pr-14"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-[#283593] transition-colors"
+              tabIndex={-1}
+            >
+              {showPassword ? <IconEyeOff size={20} /> : <IconEye size={20} />}
+            </button>
+          </div>
+          <p className="text-[10px] text-slate-400/80 font-medium ml-1">
+            Minimum 8 characters
+          </p>
         </div>
 
         <div className="pt-2">

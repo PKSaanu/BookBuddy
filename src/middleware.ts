@@ -5,7 +5,12 @@ import { verifyToken } from './lib/auth';
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get('auth_token')?.value;
   
-  const isAuthPage = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/register');
+  const isAuthPage = 
+    request.nextUrl.pathname.startsWith('/login') || 
+    request.nextUrl.pathname.startsWith('/register') ||
+    request.nextUrl.pathname.startsWith('/forgot-password') ||
+    request.nextUrl.pathname.startsWith('/reset-password') ||
+    request.nextUrl.pathname.startsWith('/verify-email');
   const isProtectedPage = request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname.startsWith('/books');
 
   if (isAuthPage) {
@@ -39,5 +44,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/books/:path*', '/login', '/register'],
+  matcher: ['/dashboard/:path*', '/books/:path*', '/login', '/register', '/forgot-password', '/reset-password', '/verify-email/:path*'],
 };
+
+

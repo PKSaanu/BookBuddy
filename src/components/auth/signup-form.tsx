@@ -4,16 +4,25 @@ import { useActionState, useState } from 'react';
 import { register } from '@/actions/auth';
 import { SubmitButton } from '@/components/submit-button';
 import { motion } from 'framer-motion';
+import { IconEye, IconEyeOff } from '@tabler/icons-react';
+import Link from 'next/link';
 
 export function SignupForm() {
   const [state, formAction] = useActionState(register, null);
   const [clientError, setClientError] = useState<string | null>(null);
   const [preferredLanguage, setPreferredLanguage] = useState<'Tamil' | 'Sinhala'>('Tamil');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSubmit = (formData: FormData) => {
-    const password = formData.get('password');
-    const confirmPassword = formData.get('confirmPassword');
+    const password = formData.get('password') as string;
+    const confirmPassword = formData.get('confirmPassword') as string;
     
+    if (password.length < 8) {
+      setClientError("Password must be at least 8 characters");
+      return;
+    }
+
     if (password !== confirmPassword) {
       setClientError("Passwords do not match");
       return;
@@ -92,28 +101,51 @@ export function SignupForm() {
             <label htmlFor="password" className="block text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1 group-focus-within:text-[#283593] transition-colors">
               Password
             </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              placeholder="••••••••"
-              className="block w-full px-5 py-3 bg-slate-50 border-2 border-transparent rounded-2xl placeholder-slate-300 focus:outline-none focus:border-[#283593] focus:bg-white transition-all text-slate-900 font-semibold"
-            />
+            <div className="relative">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                required
+                placeholder="••••••••"
+                className="block w-full px-5 py-3 bg-slate-50 placeholder-slate-300 focus:outline-none focus:bg-white transition-all text-slate-900 font-semibold pr-14"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-[#283593] transition-colors"
+                tabIndex={-1}
+              >
+                {showPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
+              </button>
+            </div>
+            <p className="text-[10px] text-slate-400/80 font-medium ml-1 mt-1">
+              Minimum 8 characters
+            </p>
           </div>
           
           <div className="space-y-1.5 group">
             <label htmlFor="confirmPassword" className="block text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1 group-focus-within:text-[#283593] transition-colors">
               Confirm Password
             </label>
-            <input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              required
-              placeholder="••••••••"
-              className="block w-full px-5 py-3 bg-slate-50 border-2 border-transparent rounded-2xl placeholder-slate-300 focus:outline-none focus:border-[#283593] focus:bg-white transition-all text-slate-900 font-semibold"
-            />
+            <div className="relative">
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                required
+                placeholder="••••••••"
+                className="block w-full px-5 py-3 bg-slate-50 placeholder-slate-300 focus:outline-none focus:bg-white transition-all text-slate-900 font-semibold pr-14"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-[#283593] transition-colors"
+                tabIndex={-1}
+              >
+                {showConfirmPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
+              </button>
+            </div>
           </div>
       </div>
 
@@ -122,6 +154,12 @@ export function SignupForm() {
         <SubmitButton className="w-full bg-[#283593] hover:bg-[#1a237e] text-white py-4 rounded-2xl font-bold text-[15px] shadow-lg shadow-[#283593]/20 transition-all active:scale-[0.98]">
           Create Account
         </SubmitButton>
+        <p className="text-center text-[10px] text-slate-400 font-medium mt-3 leading-relaxed px-2">
+          By clicking Create Account, you agree to our{' '}
+          <Link href="/terms" className="text-[#283593] hover:underline underline-offset-2 font-bold">Terms of Service</Link>
+          {' '}and{' '}
+          <Link href="/privacy" className="text-[#283593] hover:underline underline-offset-2 font-bold">Privacy Policy</Link>.
+        </p>
       </div>
     </form>
   );
