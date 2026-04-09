@@ -13,6 +13,7 @@ export const users = pgTable('users', {
   resetToken: text('reset_token'),
   resetTokenExpiry: timestamp('reset_token_expiry'),
   emailVerified: boolean('email_verified').default(false).notNull(),
+  emailBounced: boolean('email_bounced').default(false).notNull(),
   verificationToken: text('verification_token'),
   verificationTokenExpiry: timestamp('verification_token_expiry'),
   createdAt: timestamp('created_at').defaultNow().notNull(),

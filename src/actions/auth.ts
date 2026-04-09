@@ -8,8 +8,36 @@ import { redirect } from 'next/navigation';
 import crypto from 'crypto';
 import { sendPasswordResetEmail } from '@/lib/email';
 import { and, gte } from 'drizzle-orm';
+import { isEmailDeliverable } from '@/lib/dns';
+import { loginRatelimit, signupRatelimit, resetRatelimit } from '@/lib/ratelimit';
+import { headers } from 'next/headers';
+
+async function getIP(): Promise<string> {
+  const headersList = await headers();
+  return (
+    headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    headersList.get('x-real-ip') ??
+    '127.0.0.1'
+  );
+}
+
+// Fail-safe wrapper: if Redis is unavailable, allow the request through
+async function isRateLimited(limiter: typeof loginRatelimit, ip: string): Promise<boolean> {
+  try {
+    const { success } = await limiter.limit(ip);
+    return !success;
+  } catch (err) {
+    console.warn('[RateLimit] Redis unavailable, skipping rate limit check:', err);
+    return false; // Allow through if Redis is down
+  }
+}
 
 export async function requestPasswordReset(prevState: any, formData: FormData) {
+  const ip = await getIP();
+  if (await isRateLimited(resetRatelimit, ip)) {
+    return { error: 'Too many requests. Please wait a few minutes before trying again.' };
+  }
+
   const email = formData.get('email') as string;
   if (!email) return { error: 'Email is required' };
 
@@ -155,10 +183,26 @@ export async function register(prevState: any, formData: FormData) {
     return { error: 'Missing required fields' };
   }
 
+  const ip = await getIP();
+  if (await isRateLimited(signupRatelimit, ip)) {
+    return { error: 'Too many signup attempts. Please wait 10 minutes before trying again.' };
+  }
+
+  // 1. MX record check — block fake/non-existent domains before touching the DB
+  const deliverable = await isEmailDeliverable(email);
+  if (!deliverable) {
+    return { error: 'Please enter a valid email address. We couldn\'t verify this domain.' };
+  }
+
   try {
-    const existing = await db.select().from(users).where(eq(users.email, email));
-    if (existing.length > 0) {
-      return { error: 'Email already exists' };
+    const [existing] = await db.select().from(users).where(eq(users.email, email));
+
+    if (existing) {
+      // 2. Bounce check — block re-registration with a hard-bounced address
+      if (existing.emailBounced) {
+        return { error: 'This email address is not deliverable. Please use a different email.' };
+      }
+      return { error: 'An account with this email already exists.' };
     }
 
     const passwordHash = await hashPassword(password);
@@ -192,12 +236,18 @@ export async function register(prevState: any, formData: FormData) {
   }
 }
 
+
 export async function login(prevState: any, formData: FormData) {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
 
   if (!email || !password) {
     return { error: 'Missing required fields' };
+  }
+
+  const ip = await getIP();
+  if (await isRateLimited(loginRatelimit, ip)) {
+    return { error: 'Too many login attempts. Please wait 1 minute before trying again.' };
   }
 
   try {
@@ -230,7 +280,9 @@ export async function login(prevState: any, formData: FormData) {
     await setAuthCookie(token);
 
   } catch (error: any) {
-    if (error.message === 'NEXT_REDIRECT') throw error; // Allow redirect to bubble up
+    if (error?.digest?.startsWith('NEXT_REDIRECT')) throw error;
+    if (error?.message === 'NEXT_REDIRECT') throw error;
+    console.error('[Login] Error:', error?.message, error?.stack);
     return { error: 'Something went wrong during login.' };
   }
 
