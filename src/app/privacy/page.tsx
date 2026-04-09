@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { IconArrowLeft } from '@tabler/icons-react';
+import { CloseTabButton } from '@/components/close-tab-button';
 
 export const metadata = {
   title: 'Privacy Policy — BookBudddy',
@@ -10,13 +10,7 @@ export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
       <div className="max-w-3xl mx-auto px-6 py-16">
-        <Link
-          href="/login"
-          className="inline-flex items-center gap-2 text-slate-400 hover:text-[#10175b] transition-colors mb-10 group text-[10px] font-bold uppercase tracking-widest"
-        >
-          <IconArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-          Back
-        </Link>
+        <CloseTabButton />
 
         <h1 className="text-4xl font-serif font-black text-[#10175b] tracking-tight mb-2">Privacy Policy</h1>
         <p className="text-slate-400 text-sm font-medium mb-12">Last updated: April 2026</p>

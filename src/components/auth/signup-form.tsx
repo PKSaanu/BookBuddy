@@ -1,11 +1,13 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useState, useEffect } from 'react';
 import { register } from '@/actions/auth';
 import { SubmitButton } from '@/components/submit-button';
 import { motion } from 'framer-motion';
 import { IconEye, IconEyeOff } from '@tabler/icons-react';
 import Link from 'next/link';
+
+const STORAGE_KEY = 'signup_draft';
 
 export function SignupForm() {
   const [state, formAction] = useActionState(register, null);
@@ -13,6 +15,29 @@ export function SignupForm() {
   const [preferredLanguage, setPreferredLanguage] = useState<'Tamil' | 'Sinhala'>('Tamil');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+
+  // Restore saved draft on mount
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const draft = JSON.parse(saved);
+        if (draft.name) setName(draft.name);
+        if (draft.email) setEmail(draft.email);
+        if (draft.preferredLanguage) setPreferredLanguage(draft.preferredLanguage);
+      }
+    } catch {}
+  }, []);
+
+  // Persist draft whenever fields change
+  const saveDraft = (updates: Partial<{ name: string; email: string; preferredLanguage: string }>) => {
+    try {
+      const existing = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '{}');
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ ...existing, ...updates }));
+    } catch {}
+  };
 
   const handleSubmit = (formData: FormData) => {
     const password = formData.get('password') as string;
@@ -28,6 +53,8 @@ export function SignupForm() {
       return;
     }
     setClientError(null);
+    // Clear draft on submit
+    try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
     formAction(formData);
   };
 
@@ -49,6 +76,8 @@ export function SignupForm() {
           type="text"
           required
           placeholder="Saanusan"
+          value={name}
+          onChange={(e) => { setName(e.target.value); saveDraft({ name: e.target.value }); }}
           className="block w-full px-5 py-3 bg-slate-50 border-2 border-transparent rounded-2xl placeholder-slate-300 focus:outline-none focus:border-[#283593] focus:bg-white transition-all text-slate-900 font-semibold"
         />
       </div>
@@ -63,6 +92,8 @@ export function SignupForm() {
           type="email"
           required
           placeholder="you@example.com"
+          value={email}
+          onChange={(e) => { setEmail(e.target.value); saveDraft({ email: e.target.value }); }}
           className="block w-full px-5 py-3 bg-slate-50 border-2 border-transparent rounded-2xl placeholder-slate-300 focus:outline-none focus:border-[#283593] focus:bg-white transition-all text-slate-900 font-semibold"
         />
       </div>
@@ -78,7 +109,7 @@ export function SignupForm() {
             <button
               key={lang}
               type="button"
-              onClick={() => setPreferredLanguage(lang as 'Tamil' | 'Sinhala')}
+              onClick={() => { setPreferredLanguage(lang as 'Tamil' | 'Sinhala'); saveDraft({ preferredLanguage: lang }); }}
               className={`relative flex-1 flex items-center justify-center rounded-xl text-sm font-bold outline-none z-10 transition-colors ${
                 preferredLanguage === lang ? 'text-[#283593]' : 'text-slate-500 hover:text-slate-700'
               }`}
@@ -156,9 +187,9 @@ export function SignupForm() {
         </SubmitButton>
         <p className="text-center text-[10px] text-slate-400 font-medium mt-3 leading-relaxed px-2">
           By clicking Create Account, you agree to our{' '}
-          <Link href="/terms" className="text-[#283593] hover:underline underline-offset-2 font-bold">Terms of Service</Link>
+          <Link href="/terms?from=signup" className="text-[#283593] hover:underline underline-offset-2 font-bold">Terms of Service</Link>
           {' '}and{' '}
-          <Link href="/privacy" className="text-[#283593] hover:underline underline-offset-2 font-bold">Privacy Policy</Link>.
+          <Link href="/privacy?from=signup" className="text-[#283593] hover:underline underline-offset-2 font-bold">Privacy Policy</Link>.
         </p>
       </div>
     </form>
