@@ -9,9 +9,10 @@ interface BookNotesProps {
   initialNotes: string | null;
   isLoading?: boolean;
   onClose?: () => void;
+  onSave?: (notes: string) => void;
 }
 
-export default function BookNotes({ bookId, initialNotes, isLoading = false, onClose }: BookNotesProps) {
+export default function BookNotes({ bookId, initialNotes, isLoading = false, onClose, onSave }: BookNotesProps) {
   const [notes, setNotes] = useState(initialNotes || '');
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -32,7 +33,19 @@ export default function BookNotes({ bookId, initialNotes, isLoading = false, onC
     };
   }, []);
 
-
+  // Autofocus and place cursor at the end when loading finishes
+  useEffect(() => {
+    if (!isLoading && textareaRef.current) {
+      const timer = setTimeout(() => {
+        if (textareaRef.current) {
+          const length = textareaRef.current.value.length;
+          textareaRef.current.setSelectionRange(length, length);
+          textareaRef.current.focus();
+        }
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -43,6 +56,9 @@ export default function BookNotes({ bookId, initialNotes, isLoading = false, onC
     if (result.success) {
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2000);
+      if (onSave) {
+        onSave(notes);
+      }
     } else {
       setSaveStatus('error');
     }
@@ -113,7 +129,7 @@ export default function BookNotes({ bookId, initialNotes, isLoading = false, onC
   return (
     <div className="flex flex-col h-full bg-white border-l border-slate-200 shadow-[20px_0_60px_-15px_rgba(0,0,0,0.1)]">
       {/* Header */}
-      <div className="px-4 py-4 md:px-6 md:py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
+      <div className="shrink-0 px-4 py-4 md:px-6 md:py-6 border-b border-slate-100 flex items-center justify-between bg-white z-10">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-[#10175b]/5 flex items-center justify-center">
             <IconNotes size={16} className="text-[#10175b]" />
@@ -153,7 +169,7 @@ export default function BookNotes({ bookId, initialNotes, isLoading = false, onC
       </div>
 
       {/* Toolbar */}
-      <div className="px-4 py-2 md:px-6 md:py-3 border-b border-slate-50 flex items-center gap-3 md:gap-4 bg-[#FBFBFC]">
+      <div className="shrink-0 px-4 py-2 md:px-6 md:py-3 border-b border-slate-50 flex items-center gap-3 md:gap-4 bg-[#FBFBFC]">
         <button 
           onClick={() => insertSymbol('• ')}
           disabled={isLoading}
@@ -167,7 +183,7 @@ export default function BookNotes({ bookId, initialNotes, isLoading = false, onC
       
       {/* Editor Area */}
       <div 
-        className="flex-1 p-4 md:p-8 overflow-y-auto bg-[#FCF9F0] cursor-text relative"
+        className="flex-1 p-4 md:p-8 bg-[#FCF9F0] cursor-text relative flex flex-col min-h-0"
         onClick={() => textareaRef.current?.focus()}
       >
         {isLoading ? (
@@ -184,13 +200,13 @@ export default function BookNotes({ bookId, initialNotes, isLoading = false, onC
             onChange={(e) => setNotes(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Reflect on your reading..."
-            className="w-full h-full bg-transparent border-none focus:ring-0 focus:outline-none outline-none resize-none text-base md:text-lg font-serif text-[#10175b] placeholder:text-slate-300 leading-relaxed relative z-10 animate-in fade-in duration-500"
+            className="flex-1 w-full bg-transparent border-none focus:ring-0 focus:outline-none outline-none resize-none text-base md:text-lg font-serif text-[#10175b] placeholder:text-slate-300 leading-relaxed relative z-10 animate-in fade-in duration-500"
             autoFocus
           />
         )}
       </div>
 
-      <div className="px-4 py-3 md:px-6 md:py-4 bg-[#F8F9FA] border-t border-slate-100 italic text-[9px] md:text-[10px] text-slate-400 text-center uppercase tracking-wider font-bold opacity-60">
+      <div className="shrink-0 px-4 py-3 md:px-6 md:py-4 bg-[#F8F9FA] border-t border-slate-100 italic text-[9px] md:text-[10px] text-slate-400 text-center uppercase tracking-wider font-bold opacity-60">
         Enter continues lists automatically.
       </div>
     </div>

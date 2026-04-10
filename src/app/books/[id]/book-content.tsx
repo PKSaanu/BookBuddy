@@ -390,13 +390,14 @@ export default function BookContent({
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed top-0 right-0 w-[92%] md:w-[60%] lg:w-[50%] xl:w-[45%] h-full z-[101]"
+              className="fixed top-0 right-0 w-[92%] md:w-[60%] lg:w-[50%] xl:w-[45%] h-[100dvh] z-[101]"
             >
               <BookNotes 
                 bookId={book.id} 
                 initialNotes={fetchedNotes} 
                 isLoading={isLoadingNotes}
                 onClose={() => setIsNotesOpen(false)}
+                onSave={(newNotes) => setFetchedNotes(newNotes)}
               />
             </motion.div>
           </>
