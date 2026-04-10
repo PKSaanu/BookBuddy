@@ -21,6 +21,7 @@ export default async function BookPage({ params }: { params: { id: string } }) {
       author: books.author,
       coverImage: books.coverImage,
       totalPages: books.totalPages,
+      pdfPageCount: books.pdfPageCount,
       userId: books.userId,
       fileUrl: books.fileUrl,
       currentPage: books.currentPage,

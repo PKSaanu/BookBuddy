@@ -153,6 +153,7 @@ export default function BookContent({
   // Re-calculate progress if book details change
   const maxPage = vocab.reduce((max, t) => Math.max(max, t.pageNumber || 0), 0);
   const effectiveTotalPages = currentBook.pdfPageCount || currentBook.totalPages;
+  console.log(effectiveTotalPages)
   const progressPercentValue = effectiveTotalPages 
     ? Math.round((maxPage / effectiveTotalPages) * 100) 
     : 0;

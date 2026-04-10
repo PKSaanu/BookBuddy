@@ -20,6 +20,8 @@ export default async function PaperPage({ params }: { params: { id: string } }) 
       title: papers.title,
       author: papers.authors,
       year: papers.year,
+      totalPages: papers.totalPages,
+      pdfPageCount: papers.pdfPageCount,
       userId: papers.userId,
       fileUrl: papers.fileUrl,
       currentPage: papers.currentPage,
