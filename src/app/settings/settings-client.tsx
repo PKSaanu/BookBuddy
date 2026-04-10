@@ -62,28 +62,25 @@ export default function SettingsClient({
 
     const handleSecurityUpdate = (e: React.FormEvent) => {
         e.preventDefault();
-        startTransitionSecurity(async () => {
-            if (email !== initialEmail) {
-                const res = await updateEmail(email);
-                if (res.error) {
-                     setStatusMessage({ type: 'error', message: res.error });
-                     return;
-                }
+        
+        if (currentPassword && newPassword) {
+            if (newPassword.length < 8) {
+                setStatusMessage({ type: 'error', message: 'Password must be at least 8 characters' });
+                return;
             }
-
-            if (currentPassword && newPassword) {
+            
+            startTransitionSecurity(async () => {
                 const res = await updatePassword(currentPassword, newPassword);
-                 if (res.error) {
-                     setStatusMessage({ type: 'error', message: res.error });
-                     return;
+                if (res.error) {
+                    setStatusMessage({ type: 'error', message: res.error });
+                    return;
                 }
                 setCurrentPassword('');
                 setNewPassword('');
-            }
-            
-            setStatusMessage({ type: 'success', message: 'Credentials updated successfully' });
-            setTimeout(() => setStatusMessage(null), 3000);
-        });
+                setStatusMessage({ type: 'success', message: 'Password updated successfully' });
+                setTimeout(() => setStatusMessage(null), 3000);
+            });
+        }
     };
 
     return (
@@ -182,15 +179,14 @@ export default function SettingsClient({
                     {/* Email Field */}
                     <div className="space-y-3">
                         <label className="block text-[11px] font-black uppercase tracking-widest text-[#10175b]/60">Email Address</label>
-                        <div className="relative group">
+                        <div className="relative group opacity-80 cursor-not-allowed">
                             <input 
                                 type="email" 
                                 value={email}
                                 autoComplete="email"
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="w-full bg-[#EBECEC] border border-slate-300/50 text-[#10175b] text-lg font-serif font-bold px-6 py-5 rounded-none outline-none focus:border-[#10175b] focus:ring-1 focus:ring-[#10175b] transition-all"
+                                readOnly
+                                className="w-full bg-[#EBECEC] border border-slate-300/50 text-[#10175b] text-lg font-serif font-bold px-6 py-5 rounded-none outline-none cursor-not-allowed"
                             />
-
                         </div>
                     </div>
 
@@ -220,13 +216,15 @@ export default function SettingsClient({
                                     onChange={(e) => setNewPassword(e.target.value)}
                                     className="w-full bg-[#EBECEC] border border-slate-300/50 text-[#10175b] text-lg font-bold px-6 py-5 rounded-none outline-none focus:border-[#10175b] focus:ring-1 focus:ring-[#10175b] transition-all"
                                 />
-
+                                <p className="text-[10px] text-slate-400 font-medium ml-1">
+                                    Minimum 8 characters
+                                </p>
                             </div>
                         )}
                     </div>
 
                     {/* Submit Button for Security Changes */}
-                     {(email !== initialEmail || (currentPassword && newPassword)) && (
+                     {(currentPassword && newPassword) && (
                         <div className="pt-4 flex justify-end animate-in fade-in">
                             <button 
                                 type="submit"
@@ -234,7 +232,7 @@ export default function SettingsClient({
                                 className="font-black text-[12px] uppercase tracking-widest text-white tracking-widest bg-[#10175b] py-5 px-10 rounded-none hover:bg-[#0a0f44] transition-all shadow-lg hover:shadow-xl active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-3"
                             >
                                 {isPendingSecurity ? <IconLoader className="w-4 h-4 animate-spin" /> : null}
-                                {isPendingSecurity ? 'Updating...' : 'Save Changes'}
+                                {isPendingSecurity ? 'Updating...' : 'Update Password'}
                             </button>
                         </div>
                     )}

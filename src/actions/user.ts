@@ -72,6 +72,10 @@ export async function updatePassword(currentPassword: string, newPassword: strin
         const isValid = await verifyPassword(currentPassword, user.passwordHash);
         if (!isValid) return { error: 'Incorrect current password' };
 
+        if (newPassword.length < 8) {
+            return { error: 'New password must be at least 8 characters' };
+        }
+
         const newHash = await hashPassword(newPassword);
         await db.update(users)
             .set({ passwordHash: newHash })
