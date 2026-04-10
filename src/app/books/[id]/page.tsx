@@ -42,6 +42,9 @@ export default async function BookPage({ params }: { params: { id: string } }) {
     notFound();
   }
 
+  // Touch the access timestamp
+  await db.update(books).set({ lastOpenedAt: new Date() }).where(eq(books.id, bookId));
+
   const vocab = await db.select()
     .from(translations)
     .where(

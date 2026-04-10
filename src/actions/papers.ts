@@ -169,4 +169,17 @@ export async function updatePaperDetails(paperId: string, title: string, authors
   }
 }
 
+export async function touchPaperAccess(paperId: string) {
+  const session = await getSession();
+  if (!session?.id) return { error: 'Unauthorized' };
 
+  try {
+    await db.update(papers).set({ lastOpenedAt: new Date() }).where(
+      eq(papers.id, paperId)
+    );
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (error) {
+    return { error: 'Failed to update access time' };
+  }
+}

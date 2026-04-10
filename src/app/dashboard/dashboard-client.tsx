@@ -136,11 +136,11 @@ export default function DashboardPage({
                                                         <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
                                                             <div className={`${carouselItems[heroIndex].type === 'book' ? 'bg-[#0f766e]' : 'bg-rose-700'} text-white text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.1em] px-3 py-1.5 sm:px-4 sm:py-2 rounded-full shadow-sm flex items-center`}>
                                                                 <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse mr-2" />
-                                                                {heroIndex === 0 ? 'Latest Addition' : 'Recently Opened'} {carouselItems[heroIndex].type === 'paper' ? 'Research' : ''}
+                                                                {carouselItems[heroIndex].lastOpenedAt ? 'Recently Opened' : 'Latest Addition'} {carouselItems[heroIndex].type === 'paper' ? 'Research' : ''}
                                                             </div>
-                                                            {heroIndex === 0 && carouselItems[0].type === 'book' && carouselItems[0].totalPages && progress > 0 && (
+                                                            {carouselItems[heroIndex].type === 'book' && carouselItems[heroIndex].totalPages && carouselItems[heroIndex].progress > 0 && (
                                                                 <div className="bg-white/10 backdrop-blur text-white text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.1em] px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-white/20">
-                                                                    {progress}% Mastered
+                                                                    {carouselItems[heroIndex].progress}% Mastered
                                                                 </div>
                                                             )}
                                                         </div>

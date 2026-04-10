@@ -42,6 +42,9 @@ export default async function PaperPage({ params }: { params: { id: string } }) 
     notFound();
   }
 
+  // Touch the access timestamp
+  await db.update(papers).set({ lastOpenedAt: new Date() }).where(eq(papers.id, paperId));
+
   const vocab = await db.select()
     .from(paperTranslations)
     .where(

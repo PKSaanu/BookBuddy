@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { saveTranslation } from '@/actions/translations';
 import { IconLoader, IconWorld, IconHistory, IconArrowRight, IconLanguage, IconBook, IconBookmarkPlus } from '@tabler/icons-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { PronunciationButton } from './pronunciation-button';
 
 export default function TranslationPanel({ 
@@ -177,9 +178,16 @@ export default function TranslationPanel({
       )}
 
       {/* Render translation output */}
-      {translatedText && (
-        <div className="mt-4 animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className="p-6 sm:p-10 bg-white border border-slate-200 rounded-[32px] shadow-sm relative overflow-hidden flex flex-col xl:flex-row items-center xl:items-center justify-between gap-8 md:gap-10">
+      <AnimatePresence>
+        {translatedText && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.98, height: 0, marginTop: 0, overflow: 'hidden' }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="mt-4 origin-top"
+          >
+            <div className="p-6 sm:p-10 bg-white border border-slate-200 rounded-[32px] shadow-sm relative flex flex-col xl:flex-row items-center xl:items-center justify-between gap-8 md:gap-10">
             <div className="flex-1 w-full text-center xl:text-left">
               <div className="flex flex-col gap-1 mb-4 xl:mb-2 items-center xl:items-start">
                 <span className="text-[10px] uppercase font-bold tracking-widest text-[#10175b]/50 inline-block">{preferredLanguage} Translation</span>
@@ -190,8 +198,8 @@ export default function TranslationPanel({
                   </div>
                 )}
               </div>
-              <div className="flex items-center justify-center xl:justify-start gap-4">
-                <p className="text-3xl sm:text-4xl text-[#10175b] font-serif font-bold tracking-tight leading-tight">{translatedText}</p>
+              <div className="flex items-center justify-center xl:justify-start gap-3 sm:gap-4">
+                <p className="text-xl sm:text-2xl lg:text-3xl text-[#10175b] font-serif font-bold tracking-tight leading-snug">{translatedText}</p>
                 <PronunciationButton
                   text={translatedText}
                   lang={preferredLanguage === 'Tamil' ? 'ta-IN' : 'si-LK'}
@@ -230,9 +238,10 @@ export default function TranslationPanel({
                 </div>
               </button>
             </div>
-          </div>
-        </div>
-      )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

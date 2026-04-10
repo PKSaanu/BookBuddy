@@ -9,7 +9,7 @@ import CurationList from './curation-list';
 import PaperNotes from './paper-notes';
 import { DeletePaperButton } from './delete-paper-button';
 import { EditPaperModal } from './edit-paper-modal';
-import { getPaperNotes, removePaperFile } from '@/actions/papers';
+import { getPaperNotes, removePaperFile, touchPaperAccess } from '@/actions/papers';
 import dynamic from 'next/dynamic';
 import PaperChat from './paper-chat';
 import ExportRibbon from '@/components/export-ribbon';
@@ -59,7 +59,8 @@ export default function PaperContent({
     window.scrollTo(0, 0);
     const scrollContainer = document.getElementById('paper-content-scroll');
     if (scrollContainer) scrollContainer.scrollTop = 0;
-  }, []);
+    touchPaperAccess(paper.id);
+  }, [paper.id]);
   const [fetchedNotes, setFetchedNotes] = useState<string | null>(null);
   const [isLoadingNotes, setIsLoadingNotes] = useState(false);
   

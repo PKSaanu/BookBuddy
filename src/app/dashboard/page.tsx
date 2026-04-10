@@ -25,10 +25,12 @@ export default async function DashboardPage() {
   const combinedItems = [
     ...userBooks.map(b => ({ ...b, type: 'book' as const })),
     ...userPapers.map(p => ({ ...p, type: 'paper' as const, author: p.authors })) 
-  ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  ].sort((a, b) => {
+    const aTime = a.lastOpenedAt ? a.lastOpenedAt.getTime() : a.createdAt.getTime();
+    const bTime = b.lastOpenedAt ? b.lastOpenedAt.getTime() : b.createdAt.getTime();
+    return bTime - aTime;
+  });
 
-  const recentItem = combinedItems[0];
-  const oldItems = combinedItems.slice(1);
 
   // Stats
   const [allBookTranslations, allPaperTranslations] = await Promise.all([
@@ -40,28 +42,31 @@ export default async function DashboardPage() {
     allBookTranslations.filter(t => userBooks.some(b => b.id === t.bookId)).length +
     allPaperTranslations.filter(t => userPapers.some(p => p.id === t.paperId)).length;
 
-  // Progress for recent item
-  let progress = 0;
-  if (recentItem) {
-    if (recentItem.type === 'book') {
-      const recentTranslations = allBookTranslations.filter(t => t.bookId === recentItem.id);
+  // Map progress directly into the items array for the carousel items
+  const finalItems = combinedItems.map((item, index) => {
+    let itemProgress = 0;
+    
+    // Only calculate progress for top 3 carousel items to save resources
+    if (index <= 2 && item.type === 'book') {
+      const recentTranslations = allBookTranslations.filter(t => t.bookId === item.id);
       const maxPage = recentTranslations.reduce((max, t) => Math.max(max, t.pageNumber || 0), 0);
-      progress = (recentItem as any).totalPages ? Math.round((maxPage / (recentItem as any).totalPages) * 100) : 0;
-    } else {
-      const recentTranslations = allPaperTranslations.filter(t => t.paperId === recentItem.id);
-      const maxPage = recentTranslations.reduce((max, t) => Math.max(max, t.pageNumber || 0), 0);
-      progress = 0; 
+      itemProgress = (item as any).totalPages ? Math.round((maxPage / (item as any).totalPages) * 100) : 0;
     }
-  }
+    
+    return { ...item, progress: itemProgress };
+  });
+
+  const recentItem = finalItems[0];
+  const oldItems = finalItems.slice(1);
 
   return (
     <DashboardClient 
       userName={userName}
-      items={combinedItems}
+      items={finalItems}
       userVocabCount={userVocabCount}
       recentItem={recentItem}
       oldItems={oldItems}
-      progress={progress}
+      progress={recentItem?.progress || 0}
       isResearcher={isResearcher}
     />
   );

@@ -9,7 +9,7 @@ import CurationList from './curation-list';
 import BookNotes from './book-notes';
 import { DeleteBookButton } from './delete-book-button';
 import { EditBookModal } from './edit-book-modal';
-import { getBookNotes, removeBookFile } from '@/actions/books';
+import { getBookNotes, removeBookFile, touchBookAccess } from '@/actions/books';
 import dynamic from 'next/dynamic';
 import BookChat from './book-chat';
 import ExportRibbon from '@/components/export-ribbon';
@@ -72,6 +72,7 @@ export default function BookContent({
       }
     };
     loadNotes();
+    touchBookAccess(book.id);
   }, [book.id]);
   const [fetchedNotes, setFetchedNotes] = useState<string | null>(null);
   const [isLoadingNotes, setIsLoadingNotes] = useState(false);

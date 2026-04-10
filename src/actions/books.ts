@@ -236,3 +236,18 @@ export async function removeBookFile(bookId: string) {
   }
 }
 
+export async function touchBookAccess(bookId: string) {
+  const session = await getSession();
+  if (!session?.id) return { error: 'Unauthorized' };
+
+  try {
+    await db.update(books).set({ lastOpenedAt: new Date() }).where(
+      and(eq(books.id, bookId), eq(books.userId, session.id as string))
+    );
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (error) {
+    return { error: 'Failed to update access time' };
+  }
+}
+
