@@ -7,7 +7,6 @@ export const users = pgTable('users', {
   passwordHash: text('password_hash').notNull(),
   preferredLanguage: varchar('preferred_language', { length: 50 }).notNull().default('Tamil'), // 'Tamil' or 'Sinhala'
   gender: varchar('gender', { length: 50 }).notNull().default('male'), // Profile avatar gender: 'male' or 'female'
-  gender: varchar('gender', { length: 50 }).notNull().default('male'), // Profile avatar gender: 'male' or 'female'
   isResearcher: boolean('is_researcher').default(false).notNull(),
   resetToken: text('reset_token'),
   resetTokenExpiry: timestamp('reset_token_expiry'),
