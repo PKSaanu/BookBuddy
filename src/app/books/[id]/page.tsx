@@ -8,7 +8,7 @@ import BookContent from './book-content';
 
 export default async function BookPage({ params }: { params: { id: string } }) {
   const session = await getSession();
-  
+
   if (!session?.id) {
     redirect('/login');
   }
@@ -16,23 +16,23 @@ export default async function BookPage({ params }: { params: { id: string } }) {
   const { id: bookId } = await params;
 
   const [book] = await db.select({
-      id: books.id,
-      title: books.title,
-      author: books.author,
-      coverImage: books.coverImage,
-      totalPages: books.totalPages,
-      pdfPageCount: books.pdfPageCount,
-      userId: books.userId,
-      fileUrl: books.fileUrl,
-      currentPage: books.currentPage,
-      createdAt: books.createdAt,
-    })
+    id: books.id,
+    title: books.title,
+    author: books.author,
+    coverImage: books.coverImage,
+    totalPages: books.totalPages,
+    pdfPageCount: books.pdfPageCount,
+    userId: books.userId,
+    fileUrl: books.fileUrl,
+    currentPage: books.currentPage,
+    createdAt: books.createdAt,
+  })
     .from(books)
     .where(eq(books.id, bookId));
 
   const [user] = await db.select({
-      preferredLanguage: users.preferredLanguage,
-    })
+    preferredLanguage: users.preferredLanguage,
+  })
     .from(users)
     .where(eq(users.id, session.id as string));
 
@@ -48,10 +48,10 @@ export default async function BookPage({ params }: { params: { id: string } }) {
   const vocab = await db.select()
     .from(translations)
     .where(
-        and(
-            eq(translations.bookId, bookId),
-            eq(translations.userId, session.id as string)
-        )
+      and(
+        eq(translations.bookId, bookId),
+        eq(translations.userId, session.id as string)
+      )
     )
     .orderBy(desc(translations.pageNumber), desc(translations.createdAt));
 
@@ -60,11 +60,11 @@ export default async function BookPage({ params }: { params: { id: string } }) {
 
   return (
     <LayoutWrapper disableScroll={true}>
-      <BookContent 
-        book={book as any} 
-        session={session} 
-        vocab={vocab as any} 
-        progressPercent={progressPercent} 
+      <BookContent
+        book={book as any}
+        session={session}
+        vocab={vocab as any}
+        progressPercent={progressPercent}
         preferredLanguage={user.preferredLanguage || 'Tamil'}
       />
     </LayoutWrapper>

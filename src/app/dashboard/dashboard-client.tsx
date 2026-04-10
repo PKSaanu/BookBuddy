@@ -138,7 +138,7 @@ export default function DashboardPage({
                                                                 <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse mr-2" />
                                                                 {carouselItems[heroIndex].lastOpenedAt ? 'Recently Opened' : 'Latest Addition'} {carouselItems[heroIndex].type === 'paper' ? 'Research' : ''}
                                                             </div>
-                                                            {carouselItems[heroIndex].type === 'book' && carouselItems[heroIndex].totalPages && carouselItems[heroIndex].progress > 0 && (
+                                                            {carouselItems[heroIndex].type === 'book' && (carouselItems[heroIndex].totalPages || carouselItems[heroIndex].pdfPageCount) && carouselItems[heroIndex].progress > 0 && (
                                                                 <div className="bg-white/10 backdrop-blur text-white text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.1em] px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-white/20">
                                                                     {carouselItems[heroIndex].progress}% Mastered
                                                                 </div>

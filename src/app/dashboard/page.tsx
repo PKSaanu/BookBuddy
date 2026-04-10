@@ -50,7 +50,8 @@ export default async function DashboardPage() {
     if (index <= 2 && item.type === 'book') {
       const recentTranslations = allBookTranslations.filter(t => t.bookId === item.id);
       const maxPage = recentTranslations.reduce((max, t) => Math.max(max, t.pageNumber || 0), 0);
-      itemProgress = (item as any).totalPages ? Math.round((maxPage / (item as any).totalPages) * 100) : 0;
+      const effectiveTotalPages = (item as any).pdfPageCount || (item as any).totalPages || 0;
+      itemProgress = effectiveTotalPages ? Math.round((maxPage / effectiveTotalPages) * 100) : 0;
     }
     
     return { ...item, progress: itemProgress };
