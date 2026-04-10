@@ -44,7 +44,7 @@ export default function LayoutWrapper({ children, disableScroll = false }: { chi
         <MobileNav onOpenMenu={() => setIsSidebarOpen(true)} />
         
         {/* overflow-y-scroll ensures the scrollbar gutter is always present, preventing horizontal shifting */}
-        <main className={`flex-1 md:ml-56 mt-16 md:mt-0 overflow-x-hidden scroll-smooth ${disableScroll ? '' : 'overflow-y-scroll'}`}>
+        <main className={`flex-1 md:ml-56 mt-20 md:mt-0 overflow-x-hidden scroll-smooth ${disableScroll ? '' : 'overflow-y-scroll'}`}>
           {children}
         </main>
       </div>

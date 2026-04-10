@@ -56,6 +56,9 @@ export default function PaperContent({
   
   useEffect(() => {
     setMounted(true);
+    window.scrollTo(0, 0);
+    const scrollContainer = document.getElementById('paper-content-scroll');
+    if (scrollContainer) scrollContainer.scrollTop = 0;
   }, []);
   const [fetchedNotes, setFetchedNotes] = useState<string | null>(null);
   const [isLoadingNotes, setIsLoadingNotes] = useState(false);
@@ -146,7 +149,7 @@ export default function PaperContent({
   const showProgress = !!currentPaper.pdfPageCount;
 
   return (
-    <div className="flex h-[calc(100vh-64px)] md:h-screen w-full overflow-hidden relative">
+    <div className="flex h-[calc(100vh-80px)] md:h-screen w-full overflow-hidden relative">
       {/* Status Notification */}
       {statusMessage && (
         <div className={`fixed top-4 right-4 left-4 sm:left-auto sm:top-10 sm:right-10 z-[200] max-w-sm sm:w-80 p-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-10 ${statusMessage.type === 'success' ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : 'bg-red-50 border border-red-200 text-red-800'}`}>
@@ -160,9 +163,35 @@ export default function PaperContent({
 
       {/* Main Content Area */}
       <motion.div 
+        id="paper-content-scroll"
         layout
-        className="flex-1 h-full overflow-y-auto px-5 py-8 md:px-12 md:py-10 xl:px-16 xl:py-12 relative"
+        className="flex-1 h-full overflow-y-auto md:px-12 md:py-10 xl:px-16 xl:py-12 relative"
       >
+        {/* Mobile Action Ribbon (Visible only < md) - Flush to container top */}
+        <div className="md:hidden flex w-full bg-[#10175b] text-white overflow-x-auto hide-scrollbar border-b border-[#10175b]/80 shadow-md">
+            <Link href="/library" className="flex-1 flex items-center justify-center py-4 px-2 border-r border-white/10 active:bg-white/10 transition-colors shrink-0 min-w-[64px]">
+              <IconArrowLeft className="w-6 h-6 text-white/80" />
+            </Link>
+            
+            <button onClick={() => setIsEditModalOpen(true)} className="flex-1 flex items-center justify-center py-4 px-2 border-r border-white/10 active:bg-white/10 transition-colors shrink-0 min-w-[64px]">
+              <IconEdit className="w-6 h-6 text-white/80" />
+            </button>
+
+            <button onClick={toggleNotes} className={`flex-1 flex items-center justify-center py-4 px-2 border-r border-white/10 transition-colors shrink-0 min-w-[64px] ${isNotesOpen ? 'bg-white/20' : 'active:bg-white/10'}`}>
+              <IconNotes className="w-6 h-6 text-white/80" />
+            </button>
+            
+            <DeletePaperButton paperId={paper.id} paperTitle={currentPaper.title} variant="ribbon" />
+            
+            {showProgress && (
+              <div className="flex-1 flex items-center justify-center py-4 px-2 bg-[#0f766e] active:bg-[#0f766e]/90 transition-colors shrink-0 min-w-[64px]">
+                <span className="text-[14px] font-black">{progressPercentValue}%</span>
+              </div>
+            )}
+        </div>
+
+        {/* Padded inner content wrapper for mobile */}
+        <div className="px-5 py-8 md:p-0">
         {/* Export Archive Ribbon - Now inside scrollable area */}
         <ExportRibbon 
           title={currentPaper.title}
@@ -175,7 +204,7 @@ export default function PaperContent({
         <div className="max-w-[900px] mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex items-center justify-between w-full mb-6">
+            <div className="hidden md:flex items-center justify-between w-full mb-6">
               <Link href="/library" className="inline-flex items-center text-[10px] md:text-[12px] font-bold text-[#10175b] hover:text-[#1a2066] transition-colors group uppercase tracking-[0.1em]">
                 <IconArrowLeft className="w-4 h-4 mr-2 transform group-hover:-translate-x-1 transition-transform" />
                 Back to Library
@@ -207,7 +236,7 @@ export default function PaperContent({
                 )}
 
                 {/* PDF Control Buttons - Desktop Only */}
-                <div className="hidden md:flex items-center gap-3">
+                <div className="flex items-center gap-3">
                   {localFileUrl ? (
                     <div className="flex items-center gap-2">
                       <button 
@@ -282,6 +311,7 @@ export default function PaperContent({
               paperId={paper.id} 
             />
           </div>
+        </div>
         </div>
       </motion.div>
 

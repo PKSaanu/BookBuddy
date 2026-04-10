@@ -24,12 +24,15 @@ export default function BookNotes({ bookId, initialNotes, isLoading = false, onC
     }
   }, [initialNotes]);
 
-  // Sync state if initialNotes changes after initial fetch
+  // Block background scroll when component mounts
   useEffect(() => {
-    if (initialNotes !== null) {
-      setNotes(initialNotes);
-    }
-  }, [initialNotes]);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
+
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -181,7 +184,7 @@ export default function BookNotes({ bookId, initialNotes, isLoading = false, onC
             onChange={(e) => setNotes(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Reflect on your reading..."
-            className="w-full h-full bg-transparent border-none focus:ring-0 focus:outline-none outline-none resize-none text-[15px] md:text-lg font-serif text-[#10175b] placeholder:text-slate-300 leading-relaxed relative z-10 animate-in fade-in duration-500"
+            className="w-full h-full bg-transparent border-none focus:ring-0 focus:outline-none outline-none resize-none text-base md:text-lg font-serif text-[#10175b] placeholder:text-slate-300 leading-relaxed relative z-10 animate-in fade-in duration-500"
             autoFocus
           />
         )}

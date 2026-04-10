@@ -5,7 +5,7 @@ import { IconTrash, IconLoader, IconAlertCircle } from '@tabler/icons-react';
 import { deletePaper } from '@/actions/papers';
 import { useRouter } from 'next/navigation';
 
-export function DeletePaperButton({ paperId, paperTitle }: { paperId: string, paperTitle: string }) {
+export function DeletePaperButton({ paperId, paperTitle, variant = 'default' }: { paperId: string, paperTitle: string, variant?: 'default' | 'ribbon' }) {
   const [showModal, setShowModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
@@ -36,10 +36,13 @@ export function DeletePaperButton({ paperId, paperTitle }: { paperId: string, pa
     <>
       <button
         onClick={() => setShowModal(true)}
-        className="group flex items-center justify-center p-2 rounded-full hover:bg-red-50 transition-colors"
+        className={variant === 'ribbon' 
+          ? "flex-1 flex items-center justify-center py-4 px-2 border-r border-white/10 active:bg-white/10 transition-colors shrink-0 min-w-[64px] text-white" 
+          : "group flex items-center justify-center p-2 rounded-full hover:bg-red-50 transition-colors"
+        }
         title="Delete Paper"
       >
-        <IconTrash size={18} className="text-slate-400 group-hover:text-red-500 transition-colors" />
+        <IconTrash className={variant === 'ribbon' ? "w-6 h-6 text-white/80" : "text-slate-400 group-hover:text-red-500 transition-colors w-[18px] h-[18px]"} />
       </button>
 
       {showModal && (

@@ -237,7 +237,7 @@ export default async function AboutPage() {
               />
             </div>
             <p className="text-[11px] font-sans text-slate-400">
-              © {new Date().getFullYear()} BookBudddy. Built by P.K. Saanu.
+              © {new Date().getFullYear()} BookBudddy. Built by <a href="https://www.linkedin.com/in/saanusan/" target="_blank" rel="noopener noreferrer" className="hover:text-[#10175b] underline decoration-slate-300 underline-offset-2 transition-colors">P.K. Saanu</a>.
             </p>
           </div>
         </footer>

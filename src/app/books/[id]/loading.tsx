@@ -3,14 +3,24 @@ import LayoutWrapper from '@/components/layout-wrapper';
 export default function BookLoading() {
   return (
     <LayoutWrapper>
-      <div className="px-5 py-8 md:px-12 md:py-10 xl:px-16 xl:py-12 animate-pulse w-full">
-        <div className="max-w-[1000px] mx-auto">
+      <div className="md:px-12 md:py-10 xl:px-16 xl:py-12 animate-pulse w-full">
+        {/* Skeleton Mobile Ribbon */}
+        <div className="md:hidden flex w-full bg-[#10175b]/5 h-[64px] border-b border-slate-200">
+            <div className="flex-1 border-r border-white"></div>
+            <div className="flex-1 border-r border-white"></div>
+            <div className="flex-1 border-r border-white"></div>
+            <div className="flex-1 border-r border-white"></div>
+            <div className="flex-1 bg-[#0f766e]/10"></div>
+        </div>
+        
+        <div className="px-5 py-8 md:p-0">
+          <div className="max-w-[1000px] mx-auto">
             
             {/* Book Header Section Skeleton */}
             <div className="mb-8 border-b border-slate-200/50 pb-8">
-                <div className="flex items-center justify-between w-full mb-8">
+                <div className="hidden md:flex items-center justify-between w-full mb-8">
                     <div className="h-4 w-24 bg-slate-200 rounded-md"></div>
-                    <div className="flex items-center gap-2 md:gap-3">
+                    <div className="flex flex-wrap items-center gap-2 md:gap-3">
                         <div className="h-8 w-16 bg-slate-100 rounded-full"></div>
                         <div className="h-8 w-16 bg-slate-100 rounded-full"></div>
                         <div className="h-8 w-12 bg-red-50/50 rounded-full"></div>
@@ -67,6 +77,7 @@ export default function BookLoading() {
                     ))}
                 </div>
             </div>
+        </div>
         </div>
       </div>
     </LayoutWrapper>

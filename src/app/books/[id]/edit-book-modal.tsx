@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { updateBookDetails } from '@/actions/books';
 import { IconLoader, IconCheck, IconChevronRight } from '@tabler/icons-react';
 import { motion } from 'framer-motion';
@@ -23,6 +23,11 @@ export function EditBookModal({ book, onClose, onUpdate }: {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,15 +64,20 @@ export function EditBookModal({ book, onClose, onUpdate }: {
         {/* Decorative 'Archive' corner */}
         <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-slate-200 to-transparent opacity-30 pointer-events-none" />
 
+        <button 
+          onClick={onClose} 
+          className="absolute top-6 right-6 sm:top-8 sm:right-8 text-slate-400 hover:text-[#10175b] transition-all p-2 hover:bg-slate-100 rounded-full z-[20]"
+          aria-label="Close modal"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+
         <div className="relative z-10 w-full">
           <div className="flex flex-col md:flex-row gap-6 mb-12 justify-between items-start md:items-end">
             <div className="flex flex-col gap-2">
               <h3 className="text-2xl md:text-3xl font-serif text-[#10175b] tracking-tight">Update Archive.</h3>
               <p className="text-xs text-slate-500 font-medium italic opacity-70">Modify the reading record in your library.</p>
             </div>
-            <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
           </div>
 
           <form onSubmit={handleSubmit} className="w-full space-y-8">

@@ -27,7 +27,11 @@ export function AddBookHeaderButton({ isResearcher }: { isResearcher?: boolean }
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowAddModal(false)}></div>
           <div className="relative z-10 w-full max-w-[95%] md:max-w-2xl lg:max-w-3xl animate-in fade-in zoom-in-95 duration-200">
-             <CreateBookModal onSuccess={() => setShowAddModal(false)} isResearcher={isResearcher} />
+             <CreateBookModal 
+               onSuccess={() => setShowAddModal(false)} 
+               isResearcher={isResearcher} 
+               onClose={() => setShowAddModal(false)}
+             />
           </div>
         </div>
       )}

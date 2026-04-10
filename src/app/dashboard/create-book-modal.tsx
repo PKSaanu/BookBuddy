@@ -35,7 +35,7 @@ interface OpenLibraryDoc {
   first_publish_year?: number;
 }
 
-export function CreateBookModal({ onSuccess, isResearcher }: { onSuccess?: () => void, isResearcher?: boolean }) {
+export function CreateBookModal({ onSuccess, isResearcher, onClose }: { onSuccess?: () => void, isResearcher?: boolean, onClose?: () => void }) {
   const router = useRouter();
   const [type, setType] = useState<'book' | 'paper'>('book');
   
@@ -152,6 +152,16 @@ export function CreateBookModal({ onSuccess, isResearcher }: { onSuccess?: () =>
       {/* Decorative 'Archive' corner */}
       <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-slate-200 to-transparent opacity-30 pointer-events-none" />
 
+      {onClose && (
+        <button 
+          onClick={onClose} 
+          className="absolute top-6 right-6 sm:top-8 sm:right-8 text-slate-400 hover:text-[#10175b] transition-all p-2 hover:bg-slate-100 rounded-full z-[20]"
+          aria-label="Close modal"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      )}
+
 
       <div className="relative z-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
@@ -167,21 +177,23 @@ export function CreateBookModal({ onSuccess, isResearcher }: { onSuccess?: () =>
         </div>
 
         {isResearcher && (
-          <div className="flex items-center gap-8 border-b border-[#10175b]/10 mb-10 overflow-x-auto whitespace-nowrap">
+          <div className="flex w-full border-b border-[#10175b]/10 mb-8 sm:mb-10">
             <button
               type="button"
               onClick={() => setType('book')}
-              className={`relative pb-3 text-[11px] font-bold uppercase tracking-widest transition-all ${type === 'book' ? 'text-[#10175b]' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`flex-1 relative pb-3 text-[11px] font-bold uppercase tracking-widest transition-all text-center ${type === 'book' ? 'text-[#10175b]' : 'text-slate-400 hover:text-slate-600'}`}
             >
-              Bookshelf Collection
+              <span className="hidden sm:inline">Bookshelf Collection</span>
+              <span className="sm:hidden">Book</span>
               {type === 'book' && <motion.div layoutId="modalActiveTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#10175b]" />}
             </button>
             <button
               type="button"
               onClick={() => setType('paper')}
-              className={`relative pb-3 text-[11px] font-bold uppercase tracking-widest transition-all ${type === 'paper' ? 'text-[#10175b]' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`flex-1 relative pb-3 text-[11px] font-bold uppercase tracking-widest transition-all text-center ${type === 'paper' ? 'text-[#10175b]' : 'text-slate-400 hover:text-slate-600'}`}
             >
-              Academic Research
+              <span className="hidden sm:inline">Academic Research</span>
+              <span className="sm:hidden">Research</span>
               {type === 'paper' && <motion.div layoutId="modalActiveTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#10175b]" />}
             </button>
           </div>
@@ -204,7 +216,7 @@ export function CreateBookModal({ onSuccess, isResearcher }: { onSuccess?: () =>
           <div className="space-y-8 relative">
             <div className="relative">
               <label className="block text-[11px] font-mono font-bold uppercase tracking-[0.25em] text-[#10175b]/50 mb-3 ml-1">
-                {type === 'book' ? "Subject Property: Title" : "Subject Property: Research Title"}
+                {type === 'book' ? "Subject Property: Title" : "Subject Property: Title"}
               </label>
               <div className="relative group">
                 <input
