@@ -27,9 +27,6 @@ interface PdfReaderProps {
   onPageChange: (page: number) => void;
   onFileRemoved: () => void;
   savedVocab: any[];
-  voiceGender?: string;
-  voiceRate?: string;
-  voiceName?: string;
 }
 
 
@@ -44,10 +41,7 @@ export default function PdfReader({
   onTranslate, 
   onPageChange, 
   onFileRemoved,
-  savedVocab,
-  voiceGender = 'female',
-  voiceRate = '0.8',
-  voiceName = ''
+  savedVocab
 }: PdfReaderProps) {
 
 
@@ -691,9 +685,6 @@ export default function PdfReader({
                           text={activeTranslationText}
                           pageNumber={pageNumber}
                           onNavigate={(page) => setPageNumber(page)}
-                          voiceGender={voiceGender}
-                          voiceRate={voiceRate}
-                          voiceName={voiceName}
                         />
 
                     </div>
@@ -734,7 +725,7 @@ export default function PdfReader({
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative z-10 w-full max-w-md bg-[#1a1c1e] border border-white/10 rounded-[32px] overflow-hidden shadow-2xl p-8"
+              className="relative z-10 w-full max-w-md max-h-[90vh] overflow-y-auto bg-[#1a1c1e] border border-white/10 rounded-[32px] shadow-2xl p-6 sm:p-8"
             >
               <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-500 mb-6 mx-auto">
                 <IconTrash size={32} />

@@ -97,7 +97,6 @@ export async function verifyEmail(token: string) {
       email: targetUser.email, 
       preferredLanguage: targetUser.preferredLanguage,
       gender: targetUser.gender,
-      voiceGender: targetUser.voiceGender
     });
     await setAuthCookie(tokenStr);
 
@@ -276,9 +275,7 @@ export async function login(prevState: any, formData: FormData) {
       name: user.name, 
       email: user.email, 
       preferredLanguage: user.preferredLanguage,
-      gender: user.gender,
-      voiceGender: user.voiceGender
-    });
+      gender: user.gender    });
     await setAuthCookie(token);
 
   } catch (error: any) {

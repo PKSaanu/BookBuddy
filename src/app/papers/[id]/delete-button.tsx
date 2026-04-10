@@ -52,7 +52,7 @@ export function DeleteTranslationButton({ id, paperId }: { id: string, paperId: 
             onClick={() => !isDeleting && setShowModal(false)}
           />
           
-          <div className="relative z-10 w-full max-w-md bg-[#F4F5F6] rounded-[24px] shadow-2xl p-8 animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative z-10 w-full max-w-md max-h-[90vh] overflow-y-auto bg-[#F4F5F6] rounded-[24px] shadow-2xl p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200">
              <div className="w-14 h-14 bg-red-100/50 rounded-2xl flex items-center justify-center text-red-600 mb-6 border border-red-200/50">
                  <IconAlertCircle size={28} strokeWidth={2} />
              </div>

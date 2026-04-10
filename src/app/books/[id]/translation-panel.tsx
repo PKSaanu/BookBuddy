@@ -10,17 +10,11 @@ export default function TranslationPanel({
   preferredLanguage,
   externalText,
   externalPageNumber,
-  voiceGender,
-  voiceRate,
-  voiceName
 }: { 
   bookId: string, 
   preferredLanguage: string,
   externalText?: string,
-  externalPageNumber?: number,
-  voiceGender?: string,
-  voiceRate?: string,
-  voiceName?: string
+  externalPageNumber?: number
 }) {
   const [mounted, setMounted] = useState(false);
   const [inputText, setInputText] = useState('');
@@ -153,9 +147,6 @@ export default function TranslationPanel({
                     <PronunciationButton 
                       text={inputText} 
                       lang="en-US" 
-                      voiceGender={voiceGender} 
-                      voiceRate={voiceRate} 
-                      voiceName={voiceName}
                     />
                   )}
                 </div>
@@ -204,9 +195,6 @@ export default function TranslationPanel({
                 <PronunciationButton
                   text={translatedText}
                   lang={preferredLanguage === 'Tamil' ? 'ta-IN' : 'si-LK'}
-                  voiceGender={voiceGender}
-                  voiceRate={voiceRate}
-                  voiceName={voiceName}
                 />
               </div>
             </div>

@@ -25,9 +25,6 @@ interface MiniTranslatorProps {
   pageNumber: number;
   onSaved?: () => void;
   onNavigate?: (page: number) => void;
-  voiceGender?: string;
-  voiceRate?: string;
-  voiceName?: string;
 }
 
 
@@ -38,10 +35,7 @@ export default function MiniTranslator({
   text, 
   pageNumber,
   onSaved,
-  onNavigate,
-  voiceGender = 'female',
-  voiceRate = '0.8',
-  voiceName = ''
+  onNavigate
 }: MiniTranslatorProps) {
 
   const [translatedText, setTranslatedText] = useState('');
@@ -200,9 +194,6 @@ export default function MiniTranslator({
                 <PronunciationButton 
                   text={text} 
                   lang="en-US" 
-                  voiceGender={voiceGender} 
-                  voiceRate={voiceRate} 
-                  voiceName={voiceName}
                 />
               </div>
               <p className="text-sm font-serif text-[#10175b] leading-tight line-clamp-2 italic">
@@ -222,9 +213,6 @@ export default function MiniTranslator({
                   <PronunciationButton 
                     text={translatedText} 
                     lang={preferredLanguage === 'Tamil' ? 'ta-IN' : 'si-LK'} 
-                    voiceGender={voiceGender} 
-                    voiceRate={voiceRate} 
-                    voiceName={voiceName}
                   />
                 </div>
                 <p className="text-lg font-serif font-bold text-[#10175b] leading-tight mb-4">

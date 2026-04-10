@@ -57,7 +57,7 @@ export function DeleteAccountButton() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !isDeleting && setShowModal(false)}></div>
           
-          <div className="relative z-10 w-full max-w-lg bg-[#F4F5F6] rounded-[24px] shadow-2xl p-10 animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto bg-[#F4F5F6] rounded-[24px] shadow-2xl p-6 sm:p-10 animate-in fade-in zoom-in-95 duration-200">
              
              <div className="w-16 h-16 bg-red-100/50 rounded-2xl flex items-center justify-center text-red-600 mb-6 border border-red-200/50">
                  <IconAlertCircle size={32} strokeWidth={2} />

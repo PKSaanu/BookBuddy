@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IconNotes, IconChevronRight, IconTrash, IconArrowLeft, IconEdit, IconBook, IconLoader, IconFileUpload, IconMessageChatbot, IconChevronLeft, IconArrowsDiagonalMinimize2 } from '@tabler/icons-react';
+import { IconNotes, IconChevronRight, IconTrash, IconArrowLeft, IconEdit, IconBook, IconLoader, IconFileUpload, IconMessageChatbot, IconChevronLeft, IconArrowsDiagonalMinimize2, IconCheck } from '@tabler/icons-react';
 import Link from 'next/link';
 import TranslationPanel from './translation-panel';
 import CurationList from './curation-list';
@@ -42,9 +42,6 @@ interface PaperContentProps {
   vocab: any[];
   progressPercent: number;
   preferredLanguage?: string;
-  voiceGender?: string;
-  voiceRate?: string;
-  voiceName?: string;
 }
 
 export default function PaperContent({ 
@@ -52,10 +49,7 @@ export default function PaperContent({
   session, 
   vocab, 
   progressPercent, 
-  preferredLanguage = 'Tamil',
-  voiceGender = 'female',
-  voiceRate = '0.8',
-  voiceName = ''
+  preferredLanguage = 'Tamil'
 }: PaperContentProps) {
   const [mounted, setMounted] = useState(false);
   const [isNotesOpen, setIsNotesOpen] = useState(false);
@@ -74,6 +68,7 @@ export default function PaperContent({
   const [localFileUrl, setLocalFileUrl] = useState(paper.fileUrl);
   const [localCurrentPage, setLocalCurrentPage] = useState(paper.currentPage || 1);
   const [isUploading, setIsUploading] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<{type: 'success' | 'error', message: string} | null>(null);
 
   const [selectedText, setSelectedText] = useState('');
   const [selectedPage, setSelectedPage] = useState<number | undefined>(undefined);
@@ -100,10 +95,12 @@ export default function PaperContent({
           setCurrentBook(prev => ({ ...prev, pdfPageCount: data.pdfPageCount }));
         }
       } else {
-        alert(data.error || 'Upload failed');
+        setStatusMessage({ type: 'error', message: data.error || 'Upload failed' });
+        setTimeout(() => setStatusMessage(null), 5000);
       }
     } catch (err) {
-      alert('Upload failed');
+      setStatusMessage({ type: 'error', message: 'Upload failed' });
+      setTimeout(() => setStatusMessage(null), 5000);
     } finally {
       setIsUploading(false);
     }
@@ -118,7 +115,8 @@ export default function PaperContent({
       setLocalCurrentPage(1);
       setCurrentBook(prev => ({ ...prev, pdfPageCount: null }));
     } else {
-      alert(res.error || 'Failed to remove PDF');
+      setStatusMessage({ type: 'error', message: res.error || 'Failed to remove PDF' });
+      setTimeout(() => setStatusMessage(null), 5000);
     }
   };
 
@@ -149,6 +147,17 @@ export default function PaperContent({
 
   return (
     <div className="flex h-[calc(100vh-64px)] md:h-screen w-full overflow-hidden relative">
+      {/* Status Notification */}
+      {statusMessage && (
+        <div className={`fixed top-4 right-4 left-4 sm:left-auto sm:top-10 sm:right-10 z-[200] max-w-sm sm:w-80 p-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-10 ${statusMessage.type === 'success' ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : 'bg-red-50 border border-red-200 text-red-800'}`}>
+          {statusMessage.type === 'success' ? 
+            <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-white"><IconCheck size={14} strokeWidth={3} /></div> : 
+            <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
+          }
+          <p className="font-medium text-sm">{statusMessage.message}</p>
+        </div>
+      )}
+
       {/* Main Content Area */}
       <motion.div 
         layout
@@ -259,9 +268,6 @@ export default function PaperContent({
               preferredLanguage={preferredLanguage} 
               externalText={selectedText}
               externalPageNumber={selectedPage}
-              voiceGender={voiceGender}
-              voiceRate={voiceRate}
-              voiceName={voiceName}
             />
           </div>
 
@@ -274,9 +280,6 @@ export default function PaperContent({
             <CurationList 
               vocab={vocab as any} 
               paperId={paper.id} 
-              voiceGender={voiceGender} 
-              voiceRate={voiceRate} 
-              voiceName={voiceName}
             />
           </div>
         </div>

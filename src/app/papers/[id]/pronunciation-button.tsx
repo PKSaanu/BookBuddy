@@ -6,18 +6,13 @@ import { selectBestVoice } from '@/lib/audio';
 
 export function PronunciationButton({ 
     text, 
-    lang = 'en-US',
-    voiceGender = 'female',
-    voiceRate = '0.8',
-    voiceName = ''
+    lang = 'en-US'
 }: { 
     text: string, 
-    lang?: string,
-    voiceGender?: string,
-    voiceRate?: string,
-    voiceName?: string
+    lang?: string
 }) {
     const [isPlaying, setIsPlaying] = useState(false);
+    const voiceRate = '0.8';
 
     const speak = () => {
         if (typeof window === 'undefined' || !window.speechSynthesis) return;
@@ -28,7 +23,7 @@ export function PronunciationButton({
         const utterance = new SpeechSynthesisUtterance(text);
         
         const voices = window.speechSynthesis.getVoices();
-        const selectedVoice = selectBestVoice(voices, lang, voiceGender || 'female', voiceName);
+        const selectedVoice = selectBestVoice(voices, lang);
 
         if (selectedVoice) {
             utterance.voice = selectedVoice;

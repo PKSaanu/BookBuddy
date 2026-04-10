@@ -51,7 +51,7 @@ export function EditPaperModal({ paper, onClose, onUpdate }: {
       <motion.div 
         initial={{ opacity: 0, y: 30, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        className="bg-[#FDFCF7] p-8 md:p-10 rounded-[2rem] shadow-2xl border border-[#10175b]/10 relative overflow-hidden w-full max-w-2xl mx-auto group"
+        className="bg-[#FDFCF7] p-6 sm:p-10 rounded-[2rem] shadow-2xl border border-[#10175b]/10 relative overflow-y-auto max-h-[90vh] w-full max-w-2xl mx-auto group"
       >
         {/* Paper Texture Overlay */}
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/paper-fibers.png')] opacity-[0.2] pointer-events-none mix-blend-overlay" />

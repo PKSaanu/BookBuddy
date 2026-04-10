@@ -16,16 +16,10 @@ interface Translation {
 
 export default function CurationList({ 
     vocab, 
-    bookId,
-    voiceGender,
-    voiceRate,
-    voiceName
+    bookId
 }: { 
     vocab: Translation[], 
-    bookId: string,
-    voiceGender?: string,
-    voiceRate?: string,
-    voiceName?: string
+    bookId: string
 }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -145,9 +139,6 @@ export default function CurationList({
                                                         <PronunciationButton 
                                                             text={entry.originalText} 
                                                             lang="en-US" 
-                                                            voiceGender={voiceGender}
-                                                            voiceRate={voiceRate}
-                                                            voiceName={voiceName}
                                                         />
                                                     </div>
                                                 </div>
