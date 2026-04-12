@@ -2,7 +2,7 @@
 
 import { db } from '@/db/db';
 import { users } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, ilike } from 'drizzle-orm';
 import { hashPassword, verifyPassword, createToken, setAuthCookie, removeAuthCookie } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import crypto from 'crypto';
@@ -38,11 +38,12 @@ export async function requestPasswordReset(prevState: any, formData: FormData) {
     return { error: 'Too many requests. Please wait a few minutes before trying again.' };
   }
 
-  const email = formData.get('email') as string;
-  if (!email) return { error: 'Email is required' };
+  const rawEmail = formData.get('email') as string;
+  if (!rawEmail) return { error: 'Email is required' };
+  const email = rawEmail.toLowerCase();
 
   try {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
+    const [user] = await db.select().from(users).where(ilike(users.email, email));
     
     // For security, always return success even if email not found
     if (!user) {
@@ -107,9 +108,10 @@ export async function verifyEmail(token: string) {
   }
 }
 
-export async function resendVerificationEmail(email: string) {
+export async function resendVerificationEmail(rawEmail: string) {
+  const email = rawEmail.toLowerCase();
   try {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
+    const [user] = await db.select().from(users).where(ilike(users.email, email));
     
     if (!user || user.emailVerified) {
       return { success: true }; // Silent success
@@ -175,7 +177,8 @@ export async function resetPassword(prevState: any, formData: FormData) {
 
 export async function register(prevState: any, formData: FormData) {
   const name = formData.get('name') as string;
-  const email = formData.get('email') as string;
+  const rawEmail = formData.get('email') as string;
+  const email = rawEmail?.toLowerCase();
   const password = formData.get('password') as string;
   const preferredLanguage = formData.get('preferredLanguage') as string;
 
@@ -195,7 +198,7 @@ export async function register(prevState: any, formData: FormData) {
   }
 
   try {
-    const [existing] = await db.select().from(users).where(eq(users.email, email));
+    const [existing] = await db.select().from(users).where(ilike(users.email, email));
 
     if (existing) {
       // 2. Bounce check — block re-registration with a hard-bounced address
@@ -238,7 +241,8 @@ export async function register(prevState: any, formData: FormData) {
 
 
 export async function login(prevState: any, formData: FormData) {
-  const email = formData.get('email') as string;
+  const rawEmail = formData.get('email') as string;
+  const email = rawEmail?.toLowerCase();
   const password = formData.get('password') as string;
 
   if (!email || !password) {
@@ -251,7 +255,7 @@ export async function login(prevState: any, formData: FormData) {
   }
 
   try {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
+    const [user] = await db.select().from(users).where(ilike(users.email, email));
     
     if (!user) {
       return { error: 'Invalid email or password' };
