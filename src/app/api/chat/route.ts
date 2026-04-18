@@ -48,7 +48,27 @@ export async function POST(req: NextRequest) {
 
     const prompt = `Recent Conversation:\n${historyText}\n\nCompanion:`;
 
-    const result = await model.generateContent(prompt);
+    let result;
+    try {
+      result = await model.generateContent(prompt);
+    } catch (primaryError: any) {
+      console.warn("Primary API key failed:", primaryError.message);
+      const apiKey2 = process.env.GEMINI_API_KEY_2;
+      
+      if (apiKey2) {
+        console.log("Attempting fallback with GEMINI_API_KEY_2...");
+        const fallbackGenAI = new GoogleGenerativeAI(apiKey2);
+        const fallbackModel = fallbackGenAI.getGenerativeModel({
+          model: "gemini-2.5-flash",
+          systemInstruction: systemInstruction
+        });
+        // If this also fails, the error will be caught by the outer catch block
+        result = await fallbackModel.generateContent(prompt);
+      } else {
+        throw primaryError; // Rethrow to outer catch if no fallback key
+      }
+    }
+
     const response = await result.response;
     const text = response.text();
 
