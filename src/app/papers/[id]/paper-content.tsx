@@ -329,6 +329,7 @@ export default function PaperContent({
             <div className="w-[380px] xl:w-[420px] h-full">
               <div className="h-full w-full">
                 <PaperChat 
+                  paperId={currentPaper.id}
                   paperTitle={currentPaper.title} 
                   paperAuthors={currentPaper.author} 
                   preferredLanguage={mounted ? preferredLanguage : undefined}

@@ -617,6 +617,7 @@ export default function PdfReader({
                        </button>
 
                        <BookChat 
+                          bookId={bookId}
                           bookTitle={bookTitle}
                           bookAuthor={bookAuthor}
                           preferredLanguage={preferredLanguage}

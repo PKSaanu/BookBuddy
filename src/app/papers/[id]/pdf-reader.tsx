@@ -617,6 +617,7 @@ export default function PdfReader({
                        </button>
 
                        <PaperChat 
+                          paperId={paperId}
                           paperTitle={paperTitle}
                           paperAuthors={paperAuthors}
                           preferredLanguage={preferredLanguage}

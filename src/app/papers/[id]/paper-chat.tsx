@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { IconSend, IconLoader, IconRobot, IconUser, IconMessageChatbot, IconArrowsDiagonalMinimize2, IconCornerDownLeft } from '@tabler/icons-react';
+import { IconSend, IconLoader, IconRobot, IconUser, IconMessageChatbot, IconArrowsDiagonalMinimize2, IconCornerDownLeft, IconTrash } from '@tabler/icons-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 
@@ -11,6 +11,7 @@ interface Message {
 }
 
 interface PaperChatProps {
+  paperId?: string;
   paperTitle: string;
   paperAuthors?: string | null;
   isSidebar?: boolean;
@@ -18,16 +19,73 @@ interface PaperChatProps {
   onClose?: () => void;
 }
 
-export default function PaperChat({ paperTitle, paperAuthors, isSidebar = false, preferredLanguage = 'Tamil', onClose }: PaperChatProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'assistant',
-      content: `Hello! I'm your study companion for "${paperTitle}". I can help you with paperTranslations or answer questions about the paper's content. What's on your mind?`
+export default function PaperChat({ paperId, paperTitle, paperAuthors, isSidebar = false, preferredLanguage = 'Tamil', onClose }: PaperChatProps) {
+  const storageKey = paperId ? `bookbuddy_chat_paper_${paperId}` : `bookbuddy_chat_paper_title_${encodeURIComponent(paperTitle)}`;
+
+  const initialWelcomeMessage: Message = {
+    role: 'assistant',
+    content: `Hello! I'm your study companion for "${paperTitle}". I can help you with paper translations or answer questions about the paper's content. What's on your mind?`
+  };
+
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        }
+      } catch (e) {
+        console.error('Failed to parse paper chat history', e);
+      }
     }
-  ]);
+    return [initialWelcomeMessage];
+  });
+
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Sync to localStorage on messages update
+  useEffect(() => {
+    if (typeof window !== 'undefined' && messages.length > 0) {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(messages));
+      } catch (e) {
+        console.error('Failed to save paper chat history', e);
+      }
+    }
+  }, [messages, storageKey]);
+
+  // Load history when paperId or storageKey changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setMessages(parsed);
+            return;
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load paper chat history', e);
+      }
+    }
+    setMessages([initialWelcomeMessage]);
+  }, [storageKey, paperTitle]);
+
+  const handleClearHistory = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(storageKey);
+      } catch (e) {}
+    }
+    setMessages([initialWelcomeMessage]);
+  };
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -115,15 +173,24 @@ export default function PaperChat({ paperTitle, paperAuthors, isSidebar = false,
           </div>
         </div>
 
-        {onClose && (
+        <div className="flex items-center gap-1">
           <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-[#10175b] transition-all p-1"
-            title="Minimize Chat"
+            onClick={handleClearHistory}
+            className="text-slate-400 hover:text-red-500 transition-all p-1.5 rounded-lg hover:bg-red-50"
+            title="Clear Chat History"
           >
-            <IconArrowsDiagonalMinimize2 size={20} strokeWidth={2.5} />
+            <IconTrash size={18} strokeWidth={2} />
           </button>
-        )}
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="text-slate-400 hover:text-[#10175b] transition-all p-1.5 rounded-lg hover:bg-slate-100"
+              title="Minimize Chat"
+            >
+              <IconArrowsDiagonalMinimize2 size={20} strokeWidth={2.5} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Messages Area */}

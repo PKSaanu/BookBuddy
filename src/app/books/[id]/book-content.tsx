@@ -337,6 +337,7 @@ export default function BookContent({
             <div className="w-[380px] xl:w-[420px] h-full">
               <div className="h-full w-full">
                 <BookChat 
+                  bookId={currentBook.id}
                   bookTitle={currentBook.title} 
                   bookAuthor={currentBook.author} 
                   preferredLanguage={mounted ? preferredLanguage : undefined}
