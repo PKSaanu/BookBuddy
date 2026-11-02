@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { saveTranslation } from '@/actions/paperTranslations';
-import { IconLoader, IconWorld, IconHistory, IconArrowRight, IconLanguage, IconBook, IconBookmarkPlus } from '@tabler/icons-react';
+import { IconLoader, IconWorld, IconArrowRight, IconLanguage, IconBookmarkPlus } from '@tabler/icons-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PronunciationButton } from './pronunciation-button';
+import DictionaryMeaningCard from '@/components/dictionary-meaning-card';
+import { EnglishDictionaryData, AlternativeMeaningEntry } from '@/types/dictionary';
 
 export default function TranslationPanel({ 
   paperId, 
@@ -21,6 +23,8 @@ export default function TranslationPanel({
   const [inputText, setInputText] = useState('');
   const [translatedText, setTranslatedText] = useState('');
   const [correctedText, setCorrectedText] = useState('');
+  const [alternativeMeanings, setAlternativeMeanings] = useState<AlternativeMeaningEntry[] | null>(null);
+  const [englishDictionary, setEnglishDictionary] = useState<EnglishDictionaryData | null>(null);
   const [pageNumber, setPageNumber] = useState<string>('');
   
   useEffect(() => {
@@ -33,6 +37,8 @@ export default function TranslationPanel({
       setInputText(externalText);
       setTranslatedText(''); // Clear old translation
       setCorrectedText('');
+      setAlternativeMeanings(null);
+      setEnglishDictionary(null);
     }
     if (externalPageNumber) {
       setPageNumber(String(externalPageNumber));
@@ -52,6 +58,8 @@ export default function TranslationPanel({
     setError(null);
     setTranslatedText('');
     setCorrectedText('');
+    setAlternativeMeanings(null);
+    setEnglishDictionary(null);
 
     try {
       const res = await fetch('/api/translate', {
@@ -61,14 +69,21 @@ export default function TranslationPanel({
       });
       const data = await res.json();
 
-      if (data.translatedText) {
+      if (res.ok && data.translatedText) {
         setTranslatedText(data.translatedText);
         setCorrectedText(data.correctedText || inputText);
+        setAlternativeMeanings(data.alternativeMeanings || null);
+        setEnglishDictionary(data.englishDictionary || null);
+      } else if (res.ok && data.englishDictionary) {
+        setTranslatedText('');
+        setAlternativeMeanings(null);
+        setEnglishDictionary(data.englishDictionary);
+        setError('Tamil translation is temporarily unavailable, but English definition was found below.');
       } else {
-        setTranslatedText("I apologize, I'm unable to translate this section right now. Please try again soon.");
+        setError(data?.error || 'Translation is currently unavailable. Please try again in a moment.');
       }
-    } catch (err) {
-      setTranslatedText("I apologize, I'm unable to translate this section right now. Please try again soon.");
+    } catch {
+      setError('Network connection error. Please check your internet and try again.');
     } finally {
       setIsTranslating(false);
     }
@@ -99,6 +114,8 @@ export default function TranslationPanel({
         setInputText('');
         setTranslatedText('');
         setCorrectedText('');
+        setAlternativeMeanings(null);
+        setEnglishDictionary(null);
         setIsSaved(false);
         setIsSaving(false);
       }, 1700);
@@ -109,11 +126,11 @@ export default function TranslationPanel({
 
   return (
     <div className="w-full">
-      <div className="bg-[#EBECEF] rounded-[32px] p-6 sm:p-10 relative overflow-hidden group">
+      <div className="bg-[#EBECEF] rounded-[24px] sm:rounded-[32px] p-5 sm:p-8 md:p-10 relative overflow-hidden group">
 
-        <form onSubmit={handleTranslate} className="relative z-10 w-full flex flex-col h-full min-h-[150px] sm:min-h-[220px]">
+        <form onSubmit={handleTranslate} className="relative z-10 w-full flex flex-col h-full min-h-[140px] sm:min-h-[200px]">
           <div>
-            <label htmlFor="english-text" className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.15em] text-[#10175b] mb-4">
+            <label htmlFor="english-text" className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.15em] text-[#10175b] mb-3">
               Enter a word or sentence
             </label>
             <textarea
@@ -124,26 +141,28 @@ export default function TranslationPanel({
                 if (translatedText) {
                   setTranslatedText('');
                   setCorrectedText('');
+                  setAlternativeMeanings(null);
+                  setEnglishDictionary(null);
                 }
               }}
               placeholder="Type here to decipher..."
-              className="w-full bg-transparent border-b border-slate-300 focus:border-[#10175b] focus:outline-none resize-none text-2xl sm:text-[32px] md:text-[40px] font-serif text-[#10175b] transition-colors placeholder:text-slate-300/80 pb-2 h-[60px] sm:h-[80px]"
+              className="w-full bg-transparent border-b border-slate-300 focus:border-[#10175b] focus:outline-none resize-none text-xl sm:text-[30px] md:text-[38px] font-serif text-[#10175b] transition-colors placeholder:text-slate-300/80 pb-2 h-[55px] sm:h-[75px]"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
-                  handleTranslate(e as any);
+                  handleTranslate(e as unknown as React.FormEvent);
                 }
               }}
             />
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-between mt-auto pt-6 gap-6 sm:gap-0">
+          <div className="flex flex-col sm:flex-row items-center justify-between mt-auto pt-5 sm:pt-6 gap-4 sm:gap-0">
 
             <div className="flex items-center gap-4 w-full sm:w-auto">
-              <div className="flex items-center gap-3 sm:gap-4 bg-white px-4 sm:px-6 py-3 rounded-full shadow-sm border border-slate-200 w-full sm:w-auto justify-center sm:justify-start">
-                <IconWorld size={16} className="text-[#10175b]/60" />
-                <div className="flex items-center gap-2">
-                  <span className="text-[13px] sm:text-[14px] font-bold text-[#10175b]">English</span>
+              <div className="flex items-center gap-2 sm:gap-4 bg-white px-3 sm:px-6 py-2.5 sm:py-3 rounded-full shadow-xs border border-slate-200 w-full sm:w-auto justify-center sm:justify-start">
+                <IconWorld size={16} className="text-[#10175b]/60 shrink-0" />
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <span className="text-[12px] sm:text-[14px] font-bold text-[#10175b]">English</span>
                   {inputText && (
                     <PronunciationButton 
                       text={inputText} 
@@ -151,8 +170,8 @@ export default function TranslationPanel({
                     />
                   )}
                 </div>
-                <IconArrowRight size={14} className="text-slate-300 mx-1" />
-                <span className="text-[13px] sm:text-[14px] font-bold text-[#10175b]">
+                <IconArrowRight size={14} className="text-slate-300 mx-1 shrink-0" />
+                <span className="text-[12px] sm:text-[14px] font-bold text-[#10175b]">
                   {mounted ? preferredLanguage : '...'}
                 </span>
               </div>
@@ -161,10 +180,10 @@ export default function TranslationPanel({
             <button
               type="submit"
               disabled={isTranslating || !inputText.trim()}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-10 py-4 rounded-[16px] shadow-lg shadow-[#10175b]/20 text-[15px] font-bold text-white bg-[#10175b] hover:bg-[#1a2066] focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap active:scale-[0.98]"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 sm:px-10 py-3.5 sm:py-4 rounded-[16px] shadow-lg shadow-[#10175b]/15 text-[14px] sm:text-[15px] font-bold text-white bg-[#10175b] hover:bg-[#1a2066] focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap active:scale-[0.98]"
             >
-              {isTranslating ? <IconLoader className="animate-spin w-5 h-5" /> : <IconLanguage className="w-5 h-5" />}
-              {isTranslating ? 'Translating...' : 'Translate'}
+              {isTranslating ? <IconLoader className="animate-spin w-4 h-4 sm:w-5 sm:h-5" /> : <IconLanguage className="w-4 h-4 sm:w-5 sm:h-5" />}
+              <span>{isTranslating ? 'Translating...' : 'Translate'}</span>
             </button>
 
           </div>
@@ -172,14 +191,14 @@ export default function TranslationPanel({
       </div>
 
       {error && (
-        <div className="mt-5 p-4 bg-red-50 text-red-600 font-bold rounded-xl text-sm border border-red-100">
+        <div className="mt-4 p-3.5 sm:p-4 bg-red-50 text-red-600 font-bold rounded-xl text-xs sm:text-sm border border-red-100">
           {error}
         </div>
       )}
 
       {/* Render translation output */}
       <AnimatePresence>
-        {translatedText && (
+        {(translatedText || englishDictionary) && (
           <motion.div 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -187,57 +206,91 @@ export default function TranslationPanel({
             transition={{ duration: 0.4, ease: "easeInOut" }}
             className="mt-4 origin-top"
           >
-            <div className="p-6 sm:p-10 bg-white border border-slate-200 rounded-[32px] shadow-sm relative flex flex-col xl:flex-row items-center xl:items-center justify-between gap-8 md:gap-10">
-            <div className="flex-1 w-full text-center xl:text-left">
-              <div className="flex flex-col gap-1 mb-4 xl:mb-2 items-center xl:items-start">
-                <span className="text-[10px] uppercase font-bold tracking-widest text-[#10175b]/50 inline-block">{preferredLanguage} Translation</span>
-                {correctedText && correctedText.toLowerCase() !== inputText.toLowerCase() && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-[9px] px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded font-bold uppercase tracking-tighter">Corrected Entry</span>
-                    <span className="text-[11px] font-serif italic text-slate-400">"{correctedText}"</span>
+            <div className="p-5 sm:p-8 md:p-10 bg-white border border-slate-200 rounded-[24px] sm:rounded-[32px] shadow-xs relative flex flex-col xl:flex-row items-stretch xl:items-start justify-between gap-6 md:gap-8">
+              
+              <div className="flex-1 w-full text-left">
+                {translatedText ? (
+                  <>
+                    <div className="flex flex-col gap-1 mb-3">
+                      <span className="text-[10px] uppercase font-bold tracking-widest text-[#10175b]/50 inline-block">
+                        {preferredLanguage} Translation
+                      </span>
+                      {correctedText && correctedText.toLowerCase() !== inputText.toLowerCase() && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded font-bold uppercase tracking-tighter">
+                            Corrected Entry
+                          </span>
+                          <span className="text-[11px] font-serif italic text-slate-400">&ldquo;{correctedText}&rdquo;</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-3 sm:gap-4 mb-2">
+                      <p className="text-xl sm:text-2xl lg:text-3xl text-[#10175b] font-serif font-bold tracking-tight leading-snug">
+                        {translatedText}
+                      </p>
+                      <PronunciationButton
+                        text={translatedText}
+                        lang={preferredLanguage === 'Tamil' ? 'ta-IN' : 'si-LK'}
+                      />
+                    </div>
+                  </>
+                ) : null}
+
+                {/* English Meanings & Alternative Tamil Meanings Card */}
+                <DictionaryMeaningCard
+                  englishDictionary={englishDictionary}
+                  alternativeMeanings={alternativeMeanings}
+                  targetLanguage={preferredLanguage}
+                  onSelectAlternative={(alt) => setTranslatedText(alt)}
+                />
+              </div>
+
+              {/* Page Number & Save Controls */}
+              {translatedText ? (
+                <div className="flex flex-row items-center justify-between sm:justify-start gap-3 w-full xl:w-auto shrink-0 pt-2 xl:pt-0 border-t xl:border-t-0 border-slate-100">
+                  <div className="relative w-20 sm:w-24">
+                    <input
+                      type="number"
+                      value={pageNumber}
+                      onChange={(e) => setPageNumber(e.target.value)}
+                      placeholder="0"
+                      required
+                      className={`w-full px-3 py-3 sm:py-3.5 text-center rounded-[16px] sm:rounded-[18px] border-2 focus:outline-none font-bold text-[#10175b] transition-all bg-[#F8F9FA] ${
+                        !pageNumber ? 'border-red-100 bg-red-50/30' : 'border-[#F0F1F3] focus:border-[#10175b]'
+                      }`}
+                    />
+                    <span className={`absolute -top-2 left-3 px-2 bg-[#F8F9FA] sm:bg-white text-[9px] font-black uppercase transition-colors rounded-sm ${
+                      !pageNumber ? 'text-red-400' : 'text-slate-400'
+                    }`}>
+                      Pg *
+                    </span>
                   </div>
-                )}
-              </div>
-              <div className="flex items-center justify-center xl:justify-start gap-3 sm:gap-4">
-                <p className="text-xl sm:text-2xl lg:text-3xl text-[#10175b] font-serif font-bold tracking-tight leading-snug">{translatedText}</p>
-                <PronunciationButton
-                  text={translatedText}
-                  lang={preferredLanguage === 'Tamil' ? 'ta-IN' : 'si-LK'}
-                />
-              </div>
-            </div>
 
-            <div className="flex flex-row items-center justify-center sm:justify-start gap-3 w-full xl:w-auto">
-              <div className="relative w-20 sm:w-24">
-                <input
-                  type="number"
-                  value={pageNumber}
-                  onChange={(e) => setPageNumber(e.target.value)}
-                  placeholder="0"
-                  required
-                  className={`w-full px-3 py-3 sm:py-4 text-center rounded-[18px] border-2 focus:outline-none font-bold text-[#10175b] transition-all bg-[#F8F9FA] ${!pageNumber ? 'border-red-100 bg-red-50/30' : 'border-[#F0F1F3] focus:border-[#10175b]'
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={isSaving || isSaved}
+                    className={`flex-1 sm:flex-none sm:min-w-[130px] inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-3 sm:py-3.5 text-[12px] sm:text-[13px] font-bold rounded-[16px] sm:rounded-[18px] border-2 transition-all duration-300 uppercase tracking-wider active:scale-[0.98] ${
+                      isSaved
+                        ? 'bg-[#0f766e] border-[#0f766e] text-white'
+                        : 'border-[#10175b] text-[#10175b] hover:bg-[#10175b] hover:text-white disabled:opacity-40'
                     }`}
-                />
-                <span className={`absolute -top-2 left-3 px-2 bg-[#F8F9FA] sm:bg-white text-[9px] font-black uppercase transition-colors rounded-sm ${!pageNumber ? 'text-red-400' : 'text-slate-400'
-                  }`}>
-                  Pg *
-                </span>
-              </div>
-
-              <button
-                onClick={handleSave}
-                disabled={isSaving || isSaved}
-                className={`flex-1 sm:flex-none sm:min-w-[120px] inline-flex items-center justify-center gap-2 px-6 py-3 sm:py-4 text-[13px] font-bold rounded-[18px] border-2 transition-all duration-300 uppercase tracking-wider active:scale-[0.98] ${isSaved
-                    ? 'bg-[#0f766e] border-[#0f766e] text-white'
-                    : 'border-[#10175b] text-[#10175b] hover:bg-[#10175b] hover:text-white disabled:opacity-40'
-                  }`}
-              >
-                <div className="flex items-center gap-2">
-                  {isSaved ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> : isSaving ? <IconLoader className="animate-spin w-4 h-4" /> : <IconBookmarkPlus className="w-4 h-4" strokeWidth={2.5} />}
-                  <span>{isSaved ? 'Saved' : isSaving ? '...' : 'Add'}</span>
+                  >
+                    <div className="flex items-center gap-2">
+                      {isSaved ? (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      ) : isSaving ? (
+                        <IconLoader className="animate-spin w-4 h-4" />
+                      ) : (
+                        <IconBookmarkPlus className="w-4 h-4" strokeWidth={2.5} />
+                      )}
+                      <span>{isSaved ? 'Saved' : isSaving ? '...' : 'Add Word'}</span>
+                    </div>
+                  </button>
                 </div>
-              </button>
-            </div>
+              ) : null}
+
             </div>
           </motion.div>
         )}

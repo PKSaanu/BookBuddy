@@ -3,7 +3,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { PronunciationButton } from './pronunciation-button';
 import { DeleteTranslationButton } from './delete-button';
-import { IconSearch, IconChevronLeft, IconChevronRight, IconArrowUp, IconX } from '@tabler/icons-react';
+import { IconSearch, IconChevronLeft, IconChevronRight, IconArrowUp, IconX, IconCards } from '@tabler/icons-react';
+import FlashcardsModal from '@/components/flashcards-modal';
 
 interface Translation {
     id: string;
@@ -24,6 +25,7 @@ export default function CurationList({
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [showGoToTop, setShowGoToTop] = useState(false);
+    const [isFlashcardsOpen, setIsFlashcardsOpen] = useState(false);
     const itemsPerPage = 10;
 
     const filteredVocab = useMemo(() => {
@@ -73,7 +75,7 @@ export default function CurationList({
     if (vocab.length === 0) {
         return (
             <div className="bg-transparent border border-dashed border-slate-200 rounded-[24px] p-20 text-center">
-                <p className="text-slate-400 font-serif italic text-xl">"This curation is currently unwritten. Decipher your first sentence above."</p>
+                <p className="text-slate-400 font-serif italic text-xl">&ldquo;This curation is currently unwritten. Decipher your first sentence above.&rdquo;</p>
             </div>
         );
     }
@@ -81,28 +83,40 @@ export default function CurationList({
     return (
         <div className="relative">
 
-            {/* Search */}
-            <div className="mb-8 relative">
-                <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
-                    <IconSearch size={16} className="text-slate-400" />
+            {/* Search & Flashcards Bar */}
+            <div className="mb-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="relative flex-1">
+                    <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
+                        <IconSearch size={16} className="text-slate-400" />
+                    </div>
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                        placeholder="Search in your curation..."
+                        className="w-full pl-12 pr-10 py-3.5 bg-white border border-slate-200 rounded-[18px] focus:outline-none focus:ring-4 focus:ring-slate-50 focus:border-[#10175b] transition-all text-sm font-medium text-[#10175b] placeholder:text-slate-300 shadow-sm"
+                    />
+                    {searchQuery && (
+                        <button onClick={() => setSearchQuery('')} className="absolute inset-y-0 right-5 flex items-center text-slate-300 hover:text-slate-500">
+                            <IconX size={16} />
+                        </button>
+                    )}
                 </div>
-                <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                    placeholder="Search in your curation..."
-                    className="w-full pl-12 pr-10 py-3.5 bg-white border border-slate-200 rounded-[18px] focus:outline-none focus:ring-4 focus:ring-slate-50 focus:border-[#10175b] transition-all text-sm font-medium text-[#10175b] placeholder:text-slate-300 shadow-sm"
-                />
-                {searchQuery && (
-                    <button onClick={() => setSearchQuery('')} className="absolute inset-y-0 right-5 flex items-center text-slate-300 hover:text-slate-500">
-                        <IconX size={16} />
-                    </button>
-                )}
+
+                <button
+                    type="button"
+                    onClick={() => setIsFlashcardsOpen(true)}
+                    className="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-[#10175b] text-white rounded-[18px] text-xs sm:text-sm font-bold shadow-md shadow-[#10175b]/15 hover:bg-[#1a2066] transition-all active:scale-95 shrink-0"
+                    title="Practice vocabulary with interactive flashcards"
+                >
+                    <IconCards size={18} />
+                    <span>Practice Flashcards ({filteredVocab.length})</span>
+                </button>
             </div>
 
             {filteredVocab.length === 0 ? (
                 <div className="text-center py-16 bg-slate-50/50 rounded-[28px] border border-dashed border-slate-100">
-                    <p className="text-slate-400 font-serif italic">No matching curations found for "{searchQuery}"</p>
+                    <p className="text-slate-400 font-serif italic">No matching curations found for &ldquo;{searchQuery}&rdquo;</p>
                 </div>
             ) : (
                 <div className="space-y-8">
@@ -205,6 +219,14 @@ export default function CurationList({
             >
                 <IconArrowUp size={20} strokeWidth={2.5} />
             </button>
+
+            {/* Interactive Flashcards Practice Modal */}
+            <FlashcardsModal
+                isOpen={isFlashcardsOpen}
+                onClose={() => setIsFlashcardsOpen(false)}
+                words={filteredVocab}
+                title="Book Vocabulary Practice"
+            />
         </div>
     );
 }

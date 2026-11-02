@@ -45,7 +45,7 @@ export default async function PaperPage({ params }: { params: { id: string } }) 
   // Touch the access timestamp
   await db.update(papers).set({ lastOpenedAt: new Date() }).where(eq(papers.id, paperId));
 
-  const vocab = await db.select()
+  const rawVocab = await db.select()
     .from(paperTranslations)
     .where(
         and(
@@ -54,6 +54,15 @@ export default async function PaperPage({ params }: { params: { id: string } }) 
         )
     )
     .orderBy(desc(paperTranslations.pageNumber), desc(paperTranslations.createdAt));
+
+  // Deduplicate vocab entries by originalText (case-insensitive) so duplicates never display
+  const seenWords = new Set<string>();
+  const vocab = rawVocab.filter((item) => {
+    const key = item.originalText.trim().toLowerCase();
+    if (seenWords.has(key)) return false;
+    seenWords.add(key);
+    return true;
+  });
 
   const maxPage = vocab.reduce((max, t) => Math.max(max, t.pageNumber || 0), 0);
   const progressPercent = 0;

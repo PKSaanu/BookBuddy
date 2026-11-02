@@ -3,7 +3,7 @@
 import { db } from '@/db/db';
 import { translations, books } from '@/db/schema';
 import { getSession } from '@/lib/auth';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 export async function saveTranslation(
@@ -27,20 +27,52 @@ export async function saveTranslation(
     return { error: 'A valid Page Number is required to save this curation.' };
   }
 
+  const cleanOriginal = originalText.trim();
+
   try {
+    // Check if this word is already saved for this book & user (case-insensitive)
+    const existing = await db
+      .select()
+      .from(translations)
+      .where(
+        and(
+          eq(translations.bookId, bookId),
+          eq(translations.userId, session.id as string),
+          sql`LOWER(TRIM(${translations.originalText})) = ${cleanOriginal.toLowerCase()}`
+        )
+      )
+      .limit(1);
+
+    if (existing && existing.length > 0) {
+      // Update existing translation instead of inserting a duplicate
+      const [updated] = await db
+        .update(translations)
+        .set({
+          translatedText,
+          language,
+          pageNumber: pageNumber || existing[0].pageNumber,
+          createdAt: new Date()
+        })
+        .where(eq(translations.id, existing[0].id))
+        .returning();
+
+      revalidatePath(`/books/${bookId}`);
+      return { success: true, translation: updated, isUpdate: true };
+    }
+
     const [newTranslation] = await db.insert(translations).values({
       bookId,
       userId: session.id as string,
-      originalText,
+      originalText: cleanOriginal,
       translatedText,
       language,
       pageNumber
     }).returning();
     
     revalidatePath(`/books/${bookId}`);
-    return { success: true, translation: newTranslation };
+    return { success: true, translation: newTranslation, isUpdate: false };
   } catch (error) {
-    console.error(error);
+    console.error('Failed to save translation:', error);
     return { error: 'Failed to save translation' };
   }
 }
@@ -64,6 +96,7 @@ export async function deleteTranslation(id: string, bookId: string) {
     revalidatePath(`/books/${bookId}`);
     return { success: true };
   } catch (error) {
+    console.error('Failed to delete translation:', error);
     return { error: 'Failed to delete translation' };
   }
 }
@@ -73,7 +106,7 @@ export async function getLatestTranslations(bookId: string, limit = 10) {
   if (!session?.id) return { error: 'Unauthorized' };
 
   try {
-    const history = await db.select()
+    const rawHistory = await db.select()
       .from(translations)
       .where(
         and(
@@ -81,13 +114,21 @@ export async function getLatestTranslations(bookId: string, limit = 10) {
           eq(translations.userId, session.id as string)
         )
       )
-      .orderBy(desc(translations.pageNumber), desc(translations.createdAt))
-      .limit(limit);
+      .orderBy(desc(translations.createdAt))
+      .limit(limit * 2);
 
-    
+    // Deduplicate history by word so same word never appears multiple times
+    const seen = new Set<string>();
+    const history = rawHistory.filter(item => {
+      const key = item.originalText.trim().toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).slice(0, limit);
+
     return { success: true, history };
   } catch (error) {
+    console.error('Failed to fetch history:', error);
     return { error: 'Failed to fetch history' };
   }
 }
-

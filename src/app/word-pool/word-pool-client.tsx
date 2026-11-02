@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { IconSearch, IconX, IconArrowRight, IconExternalLink } from '@tabler/icons-react';
+import { IconSearch, IconX, IconArrowRight, IconCards } from '@tabler/icons-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import FlashcardsModal from '@/components/flashcards-modal';
 
 interface Translation {
   id: string;
@@ -12,11 +13,12 @@ interface Translation {
   bookId?: string;
   paperId?: string;
   language: string;
-  createdAt: any;
+  createdAt: Date | string;
 }
 
 export default function WordPoolClient({ initialWords }: { initialWords: Translation[] }) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [isFlashcardsOpen, setIsFlashcardsOpen] = useState(false);
 
   const filteredWords = useMemo(() => {
     if (!searchQuery.trim()) return initialWords;
@@ -75,11 +77,23 @@ export default function WordPoolClient({ initialWords }: { initialWords: Transla
         )}
       </div>
 
-      {/* Result Count */}
-      <div className="flex items-center gap-3">
+      {/* Result Count & Practice Action */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <span className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[11px] font-black uppercase tracking-widest rounded-full">
           {filteredWords.length} Words Found
         </span>
+
+        {filteredWords.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setIsFlashcardsOpen(true)}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#10175b] text-white rounded-full text-xs sm:text-sm font-bold shadow-md shadow-[#10175b]/15 hover:bg-[#1a2066] transition-all active:scale-95"
+            title="Practice your whole vocabulary pool with interactive flashcards"
+          >
+            <IconCards size={17} />
+            <span>Practice Flashcards ({filteredWords.length})</span>
+          </button>
+        )}
       </div>
 
       {/* Word Cloud Surface */}
@@ -141,6 +155,14 @@ export default function WordPoolClient({ initialWords }: { initialWords: Transla
       <p className="text-slate-400 text-xs md:text-sm font-medium tracking-wide flex items-center gap-2 px-4">
         Tip: Hover over a word to see its translation and click to jump back to the book.
       </p>
+
+      {/* Global Vocabulary Flashcards Practice Modal */}
+      <FlashcardsModal
+        isOpen={isFlashcardsOpen}
+        onClose={() => setIsFlashcardsOpen(false)}
+        words={filteredWords}
+        title="All Deciphered Vocabulary"
+      />
     </div>
   );
 }

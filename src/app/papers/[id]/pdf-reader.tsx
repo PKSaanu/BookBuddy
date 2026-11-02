@@ -685,6 +685,7 @@ export default function PdfReader({
                           preferredLanguage={preferredLanguage}
                           text={activeTranslationText}
                           pageNumber={pageNumber}
+                          savedVocab={savedVocab}
                           onNavigate={(page) => setPageNumber(page)}
                         />
 

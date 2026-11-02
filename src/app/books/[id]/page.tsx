@@ -45,7 +45,7 @@ export default async function BookPage({ params }: { params: { id: string } }) {
   // Touch the access timestamp
   await db.update(books).set({ lastOpenedAt: new Date() }).where(eq(books.id, bookId));
 
-  const vocab = await db.select()
+  const rawVocab = await db.select()
     .from(translations)
     .where(
       and(
@@ -54,6 +54,15 @@ export default async function BookPage({ params }: { params: { id: string } }) {
       )
     )
     .orderBy(desc(translations.pageNumber), desc(translations.createdAt));
+
+  // Deduplicate vocab entries by originalText (case-insensitive) so duplicates never display
+  const seenWords = new Set<string>();
+  const vocab = rawVocab.filter((item) => {
+    const key = item.originalText.trim().toLowerCase();
+    if (seenWords.has(key)) return false;
+    seenWords.add(key);
+    return true;
+  });
 
   const maxPage = vocab.reduce((max, t) => Math.max(max, t.pageNumber || 0), 0);
   const progressPercent = book.totalPages ? Math.round((maxPage / book.totalPages) * 100) : 0;
