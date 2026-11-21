@@ -257,14 +257,17 @@ export default function MiniTranslator({
         ) : (
           <div className="space-y-3">
             {/* Original Text Section */}
-            <div className="bg-slate-50/70 p-2.5 sm:p-3 rounded-xl border border-slate-100">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[9px] sm:text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Original</span>
+            <div className="bg-slate-50/70 p-3 sm:p-3.5 rounded-2xl border border-slate-100 relative pr-14 shadow-2xs">
+              <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3">
                 <PronunciationButton 
                   text={currentText} 
                   lang="en-US" 
+                  variant="round"
                 />
               </div>
+              <span className="text-[9px] sm:text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                Original
+              </span>
               <p className="text-sm sm:text-[15px] font-serif text-[#10175b] leading-snug italic font-medium">
                 &ldquo;{currentText}&rdquo;
               </p>
@@ -280,17 +283,18 @@ export default function MiniTranslator({
                 
                 {/* Target Translation */}
                 {translatedText ? (
-                  <div className="bg-indigo-50/40 border border-indigo-100/60 p-3 rounded-xl">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[9px] sm:text-[10px] font-bold text-indigo-600 uppercase tracking-wider">
-                        {preferredLanguage} Translation
-                      </span>
+                  <div className="bg-indigo-50/40 border border-indigo-100/60 p-3.5 sm:p-4 rounded-2xl relative pr-14 shadow-2xs">
+                    <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3">
                       <PronunciationButton 
                         text={translatedText} 
                         lang={preferredLanguage === 'Tamil' ? 'ta-IN' : 'si-LK'} 
+                        variant="round"
                       />
                     </div>
-                    <p className="text-lg sm:text-xl font-serif font-bold text-[#10175b] leading-tight">
+                    <span className="text-[9px] sm:text-[10px] font-bold text-indigo-600 uppercase tracking-wider block mb-1">
+                      {preferredLanguage} Translation
+                    </span>
+                    <p className="text-xl sm:text-2xl font-serif font-bold text-[#10175b] leading-snug">
                       {translatedText}
                     </p>
                   </div>

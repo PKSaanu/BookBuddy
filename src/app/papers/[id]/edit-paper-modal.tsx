@@ -116,9 +116,15 @@ export function EditPaperModal({ paper, onClose, onUpdate }: {
                     Catalog Year
                   </label>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    autoComplete="off"
                     value={totalPages}
-                    onChange={(e) => setTotalPages(e.target.value)}
+                    onChange={(e) => setTotalPages(e.target.value.replace(/[^0-9]/g, ''))}
+                    onKeyDown={(e) => {
+                      if (['.', '-', '+', 'e', 'E', ','].includes(e.key)) e.preventDefault();
+                    }}
                     placeholder="2014"
                     className="w-full px-4 py-3 bg-white/50 border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#10175b]/20 focus:border-[#10175b] text-base text-slate-900 placeholder-slate-300 font-serif transition-all"
                   />

@@ -402,8 +402,19 @@ export default function PdfReader({
               <form onSubmit={handleJumpPage} className="flex items-center gap-2 font-mono text-[13px] text-white select-none group">
                 <input 
                   type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="off"
                   value={jumpPage}
-                  onChange={(e) => setJumpPage(e.target.value)}
+                  onChange={(e) => {
+                    const cleanInt = e.target.value.replace(/[^0-9]/g, '');
+                    setJumpPage(cleanInt);
+                  }}
+                  onKeyDown={(e) => {
+                    if (['.', '-', '+', 'e', 'E', ','].includes(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
                   onBlur={handleJumpPage}
                   className="w-10 bg-slate-700/50 border border-slate-600 rounded text-center text-indigo-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-bold"
                 />

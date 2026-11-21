@@ -314,9 +314,15 @@ export function CreateBookModal({ onSuccess, isResearcher, onClose }: { onSucces
                 <input
                   name={type === 'book' ? "totalPages" : "year"}
                   value={totalPages}
-                  onChange={(e) => setTotalPages(e.target.value)}
+                  onChange={(e) => setTotalPages(e.target.value.replace(/[^0-9]/g, ''))}
+                  onKeyDown={(e) => {
+                    if (['.', '-', '+', 'e', 'E', ','].includes(e.key)) e.preventDefault();
+                  }}
                   placeholder="0000"
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="off"
                   className="w-full px-4 py-2 bg-white/50 border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#10175b]/20 focus:border-[#10175b] text-sm text-slate-800 placeholder-slate-300 font-serif transition-all"
                 />
               </div>

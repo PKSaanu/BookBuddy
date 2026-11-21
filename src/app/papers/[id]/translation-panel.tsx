@@ -127,9 +127,20 @@ export default function TranslationPanel({
   return (
     <div className="w-full">
       <div className="bg-[#EBECEF] rounded-[24px] sm:rounded-[32px] p-5 sm:p-8 md:p-10 relative overflow-hidden group">
+        {/* Upper right round speaking button for the inputted English word */}
+        {inputText.trim() && (
+          <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20">
+            <PronunciationButton
+              text={inputText.trim()}
+              lang="en-US"
+              variant="round"
+              size="md"
+            />
+          </div>
+        )}
 
         <form onSubmit={handleTranslate} className="relative z-10 w-full flex flex-col h-full min-h-[140px] sm:min-h-[200px]">
-          <div>
+          <div className="pr-12 sm:pr-14">
             <label htmlFor="english-text" className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.15em] text-[#10175b] mb-3">
               Enter a word or sentence
             </label>
@@ -161,15 +172,7 @@ export default function TranslationPanel({
             <div className="flex items-center gap-4 w-full sm:w-auto">
               <div className="flex items-center gap-2 sm:gap-4 bg-white px-3 sm:px-6 py-2.5 sm:py-3 rounded-full shadow-xs border border-slate-200 w-full sm:w-auto justify-center sm:justify-start">
                 <IconWorld size={16} className="text-[#10175b]/60 shrink-0" />
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <span className="text-[12px] sm:text-[14px] font-bold text-[#10175b]">English</span>
-                  {inputText && (
-                    <PronunciationButton 
-                      text={inputText} 
-                      lang="en-US" 
-                    />
-                  )}
-                </div>
+                <span className="text-[12px] sm:text-[14px] font-bold text-[#10175b]">English</span>
                 <IconArrowRight size={14} className="text-slate-300 mx-1 shrink-0" />
                 <span className="text-[12px] sm:text-[14px] font-bold text-[#10175b]">
                   {mounted ? preferredLanguage : '...'}
@@ -210,8 +213,17 @@ export default function TranslationPanel({
               
               <div className="flex-1 w-full text-left">
                 {translatedText ? (
-                  <>
-                    <div className="flex flex-col gap-1 mb-3">
+                  <div className="relative pr-14 sm:pr-16 mb-4">
+                    {/* Upper right round speaking button */}
+                    <div className="absolute top-0 right-0">
+                      <PronunciationButton
+                        text={translatedText}
+                        lang={preferredLanguage === 'Tamil' ? 'ta-IN' : 'si-LK'}
+                        variant="round"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1 mb-2">
                       <span className="text-[10px] uppercase font-bold tracking-widest text-[#10175b]/50 inline-block">
                         {preferredLanguage} Translation
                       </span>
@@ -225,16 +237,10 @@ export default function TranslationPanel({
                       )}
                     </div>
 
-                    <div className="flex items-center gap-3 sm:gap-4 mb-2">
-                      <p className="text-xl sm:text-2xl lg:text-3xl text-[#10175b] font-serif font-bold tracking-tight leading-snug">
-                        {translatedText}
-                      </p>
-                      <PronunciationButton
-                        text={translatedText}
-                        lang={preferredLanguage === 'Tamil' ? 'ta-IN' : 'si-LK'}
-                      />
-                    </div>
-                  </>
+                    <p className="text-2xl sm:text-3xl lg:text-4xl text-[#10175b] font-serif font-bold tracking-tight leading-snug">
+                      {translatedText}
+                    </p>
+                  </div>
                 ) : null}
 
                 {/* English Meanings & Alternative Tamil Meanings Card */}
@@ -251,9 +257,20 @@ export default function TranslationPanel({
                 <div className="flex flex-row items-center justify-between sm:justify-start gap-3 w-full xl:w-auto shrink-0 pt-2 xl:pt-0 border-t xl:border-t-0 border-slate-100">
                   <div className="relative w-20 sm:w-24">
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      autoComplete="off"
                       value={pageNumber}
-                      onChange={(e) => setPageNumber(e.target.value)}
+                      onChange={(e) => {
+                        const cleanInt = e.target.value.replace(/[^0-9]/g, '');
+                        setPageNumber(cleanInt);
+                      }}
+                      onKeyDown={(e) => {
+                        if (['.', '-', '+', 'e', 'E', ','].includes(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
                       placeholder="0"
                       required
                       className={`w-full px-3 py-3 sm:py-3.5 text-center rounded-[16px] sm:rounded-[18px] border-2 focus:outline-none font-bold text-[#10175b] transition-all bg-[#F8F9FA] ${

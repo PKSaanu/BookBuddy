@@ -60,7 +60,10 @@ export default function CurationList({
     }, [paginatedVocab]);
 
     const [hasMounted, setHasMounted] = useState(false);
-    useEffect(() => { setHasMounted(true); }, []);
+    useEffect(() => { 
+        const timer = setTimeout(() => setHasMounted(true), 0);
+        return () => clearTimeout(timer);
+    }, []);
 
     const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -153,6 +156,9 @@ export default function CurationList({
                                                         <PronunciationButton 
                                                             text={entry.originalText} 
                                                             lang="en-US" 
+                                                            variant="round"
+                                                            size="sm"
+                                                            theme="english"
                                                         />
                                                     </div>
                                                 </div>
@@ -162,6 +168,15 @@ export default function CurationList({
                                                     <p className="text-lg font-sm text-[#012B5B] leading-tight truncate">
                                                         {entry.translatedText}
                                                     </p>
+                                                    <div className="shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                                        <PronunciationButton 
+                                                            text={entry.translatedText} 
+                                                            lang={entry.language === 'Tamil' ? 'ta-IN' : 'si-LK'} 
+                                                            variant="round"
+                                                            size="sm"
+                                                            theme="translated"
+                                                        />
+                                                    </div>
                                                 </div>
 
                                                 <p className="text-[9px] font-bold font-sans uppercase tracking-[0.2em] text-slate-400 mt-1.5">
