@@ -1,6 +1,4 @@
-import { db } from '@/db/db';
-import { users } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { markUserEmailBounced } from '@/db/queries';
 import { Webhook } from 'svix';
 import { headers } from 'next/headers';
 
@@ -48,11 +46,7 @@ export async function POST(req: Request) {
 
     if (bouncedEmail && bounceType === 'hard') {
       try {
-        await db
-          .update(users)
-          .set({ emailBounced: true })
-          .where(eq(users.email, bouncedEmail));
-        
+        await markUserEmailBounced(bouncedEmail);
         console.log(`[Resend Webhook] Marked hard bounce for: ${bouncedEmail}`);
       } catch (err) {
         console.error('[Resend Webhook] DB update failed:', err);

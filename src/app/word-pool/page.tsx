@@ -1,10 +1,8 @@
-import { db } from '@/db/db';
-import { books, translations, paperTranslations } from '@/db/schema';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { eq, desc, inArray } from 'drizzle-orm';
 import LayoutWrapper from '@/components/layout-wrapper';
 import WordPoolClient from './word-pool-client';
+import { getWordPoolData } from '@/db/queries';
 
 export default async function WordPoolPage() {
   const session = await getSession();
@@ -13,12 +11,7 @@ export default async function WordPoolPage() {
     redirect('/login');
   }
 
-  const [bookTranslations, researchTranslations] = await Promise.all([
-    db.select().from(translations).where(eq(translations.userId, session.id as string)).orderBy(desc(translations.createdAt)),
-    db.select().from(paperTranslations).where(eq(paperTranslations.userId, session.id as string)).orderBy(desc(paperTranslations.createdAt))
-  ]);
-  
-  const userTranslations = [...bookTranslations, ...researchTranslations].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  const userTranslations = await getWordPoolData(session.id as string);
 
   return (
     <LayoutWrapper>

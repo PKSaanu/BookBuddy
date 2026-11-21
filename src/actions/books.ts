@@ -1,14 +1,21 @@
 'use server';
 
 import { del } from '@vercel/blob';
-
-import { db } from '@/db/db';
-
-import { books } from '@/db/schema';
 import { getSession } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { eq, and, ilike } from 'drizzle-orm';
+import {
+  checkBookDuplicate,
+  insertBook,
+  getBookById,
+  deleteBook as deleteBookQuery,
+  updateBookNotes as updateBookNotesQuery,
+  updateBook as updateBookQuery,
+  getBookNotes as getBookNotesQuery,
+  updateBookCurrentPage,
+  clearBookFile,
+  touchBookLastOpened,
+} from '@/db/queries';
 
 export async function createBook(prevState: any, formData: FormData) {
   const session = await getSession();
@@ -26,25 +33,14 @@ export async function createBook(prevState: any, formData: FormData) {
     return { error: 'Book title is required' };
   }
 
-  // Case-Insensitive Duplicate Check
-  const existingBook = await db.select()
-    .from(books)
-    .where(
-      and(
-        ilike(books.title, title),
-        eq(books.userId, session.id as string)
-      )
-    )
-    .limit(1);
-
-  if (existingBook.length > 0) {
+  // Case-Insensitive Duplicate Check via DAL
+  const isDuplicate = await checkBookDuplicate(title, session.id as string);
+  if (isDuplicate) {
     return { error: 'This book is already in your library.' };
   }
 
-
-
   try {
-    await db.insert(books).values({
+    await insertBook({
       title,
       author,
       coverImage,
@@ -68,14 +64,7 @@ export async function deleteBook(id: string) {
   }
 
   try {
-    const [book] = await db.select({ fileUrl: books.fileUrl })
-      .from(books)
-      .where(
-        and(
-          eq(books.id, id),
-          eq(books.userId, session.id as string)
-        )
-      );
+    const book = await getBookById(id, session.id as string);
 
     if (book?.fileUrl) {
       try {
@@ -85,12 +74,7 @@ export async function deleteBook(id: string) {
       }
     }
 
-    await db.delete(books).where(
-      and(
-        eq(books.id, id),
-        eq(books.userId, session.id as string)
-      )
-    );
+    await deleteBookQuery(id, session.id as string);
     
     revalidatePath('/dashboard');
     revalidatePath('/library');
@@ -107,15 +91,7 @@ export async function updateBookNotes(bookId: string, notes: string) {
   }
 
   try {
-    await db.update(books)
-      .set({ notes })
-      .where(
-        and(
-          eq(books.id, bookId),
-          eq(books.userId, session.id as string)
-        )
-      );
-    
+    await updateBookNotesQuery(bookId, session.id as string, notes);
     revalidatePath(`/books/${bookId}`);
     return { success: true };
   } catch (error) {
@@ -130,15 +106,7 @@ export async function updateBookDetails(bookId: string, title: string, author: s
   }
 
   try {
-    await db.update(books)
-      .set({ title, author, totalPages })
-      .where(
-        and(
-          eq(books.id, bookId),
-          eq(books.userId, session.id as string)
-        )
-      );
-    
+    await updateBookQuery(bookId, session.id as string, { title, author, totalPages });
     revalidatePath(`/books/${bookId}`);
     revalidatePath('/dashboard');
     revalidatePath('/library');
@@ -155,16 +123,8 @@ export async function getBookNotes(bookId: string) {
   }
 
   try {
-    const [book] = await db.select({ notes: books.notes })
-      .from(books)
-      .where(
-        and(
-          eq(books.id, bookId),
-          eq(books.userId, session.id as string)
-        )
-      );
-    
-    return { success: true, notes: book?.notes || '' };
+    const notes = await getBookNotesQuery(bookId, session.id as string);
+    return { success: true, notes };
   } catch (error) {
     return { error: 'Failed to fetch notes' };
   }
@@ -175,60 +135,29 @@ export async function updateBookProgress(bookId: string, pageNumber: number) {
   if (!session?.id) return { error: 'Unauthorized' };
 
   try {
-    await db.update(books)
-      .set({ currentPage: pageNumber })
-      .where(
-        and(
-          eq(books.id, bookId),
-          eq(books.userId, session.id as string)
-        )
-      );
-    
-    // No revalidatePath here to avoid jarring UI flickers during background save
+    await updateBookCurrentPage(bookId, session.id as string, pageNumber);
     return { success: true };
   } catch (error) {
     return { error: 'Failed to update progress' };
   }
 }
 
-
 export async function removeBookFile(bookId: string) {
-
   const session = await getSession();
   if (!session?.id) return { error: 'Unauthorized' };
 
   try {
-    // 1. Fetch current file URL
-    const [book] = await db.select({ fileUrl: books.fileUrl })
-      .from(books)
-      .where(
-        and(
-          eq(books.id, bookId),
-          eq(books.userId, session.id as string)
-        )
-      );
+    const book = await getBookById(bookId, session.id as string);
 
-    // 2. Delete from Vercel Blob if it exists
     if (book?.fileUrl) {
       try {
         await del(book.fileUrl);
       } catch (e) {
         console.error('Failed to delete blob from Vercel:', e);
-        // Continue anyway to clear local DB state
       }
     }
 
-    // 3. Clear from Database
-    await db.update(books)
-      .set({ fileUrl: null, currentPage: 1, pdfPageCount: null })
-      .where(
-        and(
-          eq(books.id, bookId),
-          eq(books.userId, session.id as string)
-        )
-      );
-
-    
+    await clearBookFile(bookId, session.id as string);
     revalidatePath(`/books/${bookId}`);
     return { success: true };
   } catch (error) {
@@ -241,13 +170,10 @@ export async function touchBookAccess(bookId: string) {
   if (!session?.id) return { error: 'Unauthorized' };
 
   try {
-    await db.update(books).set({ lastOpenedAt: new Date() }).where(
-      and(eq(books.id, bookId), eq(books.userId, session.id as string))
-    );
+    await touchBookLastOpened(bookId);
     revalidatePath('/dashboard');
     return { success: true };
   } catch (error) {
     return { error: 'Failed to update access time' };
   }
 }
-

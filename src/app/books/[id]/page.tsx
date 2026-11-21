@@ -1,10 +1,13 @@
-import { db } from '@/db/db';
-import { books, translations, users } from '@/db/schema';
 import { getSession } from '@/lib/auth';
 import { redirect, notFound } from 'next/navigation';
-import { eq, desc, and } from 'drizzle-orm';
 import LayoutWrapper from '@/components/layout-wrapper';
 import BookContent from './book-content';
+import {
+  getBookById,
+  getUserLanguagePreference,
+  touchBookLastOpened,
+  getBookTranslations,
+} from '@/db/queries';
 
 export default async function BookPage({ params }: { params: { id: string } }) {
   const session = await getSession();
@@ -15,54 +18,16 @@ export default async function BookPage({ params }: { params: { id: string } }) {
 
   const { id: bookId } = await params;
 
-  const [book] = await db.select({
-    id: books.id,
-    title: books.title,
-    author: books.author,
-    coverImage: books.coverImage,
-    totalPages: books.totalPages,
-    pdfPageCount: books.pdfPageCount,
-    userId: books.userId,
-    fileUrl: books.fileUrl,
-    currentPage: books.currentPage,
-    createdAt: books.createdAt,
-  })
-    .from(books)
-    .where(eq(books.id, bookId));
+  const [book, preferredLanguage, vocab] = await Promise.all([
+    getBookById(bookId, session.id as string),
+    getUserLanguagePreference(session.id as string),
+    getBookTranslations(bookId, session.id as string),
+    touchBookLastOpened(bookId),
+  ]);
 
-  const [user] = await db.select({
-    preferredLanguage: users.preferredLanguage,
-  })
-    .from(users)
-    .where(eq(users.id, session.id as string));
-
-  const preferredLanguage = user?.preferredLanguage || 'Tamil';
-
-  if (!book || book.userId !== session.id) {
+  if (!book) {
     notFound();
   }
-
-  // Touch the access timestamp
-  await db.update(books).set({ lastOpenedAt: new Date() }).where(eq(books.id, bookId));
-
-  const rawVocab = await db.select()
-    .from(translations)
-    .where(
-      and(
-        eq(translations.bookId, bookId),
-        eq(translations.userId, session.id as string)
-      )
-    )
-    .orderBy(desc(translations.pageNumber), desc(translations.createdAt));
-
-  // Deduplicate vocab entries by originalText (case-insensitive) so duplicates never display
-  const seenWords = new Set<string>();
-  const vocab = rawVocab.filter((item) => {
-    const key = item.originalText.trim().toLowerCase();
-    if (seenWords.has(key)) return false;
-    seenWords.add(key);
-    return true;
-  });
 
   const maxPage = vocab.reduce((max, t) => Math.max(max, t.pageNumber || 0), 0);
   const progressPercent = book.totalPages ? Math.round((maxPage / book.totalPages) * 100) : 0;
@@ -70,11 +35,11 @@ export default async function BookPage({ params }: { params: { id: string } }) {
   return (
     <LayoutWrapper disableScroll={true}>
       <BookContent
-        book={book as any}
+        book={book}
         session={session}
-        vocab={vocab as any}
+        vocab={vocab}
         progressPercent={progressPercent}
-        preferredLanguage={user.preferredLanguage || 'Tamil'}
+        preferredLanguage={preferredLanguage}
       />
     </LayoutWrapper>
   );

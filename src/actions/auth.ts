@@ -1,13 +1,20 @@
 'use server';
 
-import { db } from '@/db/db';
-import { users } from '@/db/schema';
-import { eq, ilike } from 'drizzle-orm';
+import {
+  getUserByEmail,
+  setUserPasswordResetToken,
+  getUsersWithActiveVerificationToken,
+  markUserEmailVerified,
+  updateUserVerificationToken,
+  getUsersWithActiveResetToken,
+  updateUserPassword,
+  createUser,
+  updateUserGender as updateUserGenderQuery,
+} from '@/db/queries';
 import { hashPassword, verifyPassword, createToken, setAuthCookie, removeAuthCookie } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import crypto from 'crypto';
 import { sendPasswordResetEmail } from '@/lib/email';
-import { and, gte } from 'drizzle-orm';
 import { isEmailDeliverable } from '@/lib/dns';
 import { loginRatelimit, signupRatelimit, resetRatelimit } from '@/lib/ratelimit';
 import { headers } from 'next/headers';
@@ -43,7 +50,7 @@ export async function requestPasswordReset(prevState: any, formData: FormData) {
   const email = rawEmail.toLowerCase();
 
   try {
-    const [user] = await db.select().from(users).where(ilike(users.email, email));
+    const user = await getUserByEmail(email);
     
     // For security, always return success even if email not found
     if (!user) {
@@ -54,9 +61,7 @@ export async function requestPasswordReset(prevState: any, formData: FormData) {
     const resetTokenHash = await hashPassword(token); // Hash the token for storage
     const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
 
-    await db.update(users)
-      .set({ resetToken: resetTokenHash, resetTokenExpiry })
-      .where(eq(users.id, user.id));
+    await setUserPasswordResetToken(user.id, resetTokenHash, resetTokenExpiry);
 
     await sendPasswordResetEmail(email, token);
 
@@ -69,7 +74,7 @@ export async function requestPasswordReset(prevState: any, formData: FormData) {
 
 export async function verifyEmail(token: string) {
   try {
-    const allUsers = await db.select().from(users).where(gte(users.verificationTokenExpiry, new Date()));
+    const allUsers = await getUsersWithActiveVerificationToken();
     
     let targetUser = null;
     for (const user of allUsers) {
@@ -83,13 +88,7 @@ export async function verifyEmail(token: string) {
       return { error: 'Invalid or expired verification link' };
     }
 
-    await db.update(users)
-      .set({ 
-        emailVerified: true, 
-        verificationToken: null, 
-        verificationTokenExpiry: null 
-      })
-      .where(eq(users.id, targetUser.id));
+    await markUserEmailVerified(targetUser.id);
 
     // Auto-login after verification
     const tokenStr = await createToken({ 
@@ -111,7 +110,7 @@ export async function verifyEmail(token: string) {
 export async function resendVerificationEmail(rawEmail: string) {
   const email = rawEmail.toLowerCase();
   try {
-    const [user] = await db.select().from(users).where(ilike(users.email, email));
+    const user = await getUserByEmail(email);
     
     if (!user || user.emailVerified) {
       return { success: true }; // Silent success
@@ -121,12 +120,7 @@ export async function resendVerificationEmail(rawEmail: string) {
     const verificationTokenHash = await hashPassword(verificationToken);
     const verificationTokenExpiry = new Date(Date.now() + 24 * 3600000);
 
-    await db.update(users)
-      .set({ 
-        verificationToken: verificationTokenHash, 
-        verificationTokenExpiry 
-      })
-      .where(eq(users.id, user.id));
+    await updateUserVerificationToken(user.id, verificationTokenHash, verificationTokenExpiry);
 
     const { sendEmailVerificationEmail } = await import('@/lib/email');
     await sendEmailVerificationEmail(email, verificationToken);
@@ -145,7 +139,7 @@ export async function resetPassword(prevState: any, formData: FormData) {
   if (!token || !password) return { error: 'Missing required fields' };
 
   try {
-    const allUsers = await db.select().from(users).where(gte(users.resetTokenExpiry, new Date()));
+    const allUsers = await getUsersWithActiveResetToken();
     
     let targetUser = null;
     for (const user of allUsers) {
@@ -160,13 +154,7 @@ export async function resetPassword(prevState: any, formData: FormData) {
     }
 
     const passwordHash = await hashPassword(password);
-    await db.update(users)
-      .set({ 
-        passwordHash, 
-        resetToken: null, 
-        resetTokenExpiry: null 
-      })
-      .where(eq(users.id, targetUser.id));
+    await updateUserPassword(targetUser.id, passwordHash);
 
     return { success: true };
   } catch (error) {
@@ -198,7 +186,7 @@ export async function register(prevState: any, formData: FormData) {
   }
 
   try {
-    const [existing] = await db.select().from(users).where(ilike(users.email, email));
+    const existing = await getUserByEmail(email);
 
     if (existing) {
       // 2. Bounce check — block re-registration with a hard-bounced address
@@ -210,23 +198,18 @@ export async function register(prevState: any, formData: FormData) {
 
     const passwordHash = await hashPassword(password);
 
-    const [newUser] = await db.insert(users).values({
-        name,
-        email,
-        passwordHash,
-        preferredLanguage,
-    }).returning();
+    const newUser = await createUser({
+      name,
+      email,
+      passwordHash,
+      preferredLanguage,
+    });
 
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const verificationTokenHash = await hashPassword(verificationToken);
     const verificationTokenExpiry = new Date(Date.now() + 24 * 3600000); // 24 hours
 
-    await db.update(users)
-      .set({ 
-        verificationToken: verificationTokenHash, 
-        verificationTokenExpiry 
-      })
-      .where(eq(users.id, newUser.id));
+    await updateUserVerificationToken(newUser.id, verificationTokenHash, verificationTokenExpiry);
 
     const { sendEmailVerificationEmail } = await import('@/lib/email');
     await sendEmailVerificationEmail(email, verificationToken);
@@ -238,7 +221,6 @@ export async function register(prevState: any, formData: FormData) {
     return { error: 'Something went wrong during registration.' };
   }
 }
-
 
 export async function login(prevState: any, formData: FormData) {
   const rawEmail = formData.get('email') as string;
@@ -255,7 +237,7 @@ export async function login(prevState: any, formData: FormData) {
   }
 
   try {
-    const [user] = await db.select().from(users).where(ilike(users.email, email));
+    const user = await getUserByEmail(email);
     
     if (!user) {
       return { error: 'Invalid email or password' };
@@ -279,7 +261,8 @@ export async function login(prevState: any, formData: FormData) {
       name: user.name, 
       email: user.email, 
       preferredLanguage: user.preferredLanguage,
-      gender: user.gender    });
+      gender: user.gender
+    });
     await setAuthCookie(token);
 
   } catch (error: any) {
@@ -301,9 +284,7 @@ export async function updateUserGender(gender: string) {
   }
 
   try {
-    await db.update(users)
-      .set({ gender })
-      .where(eq(users.id, session.id as string));
+    await updateUserGenderQuery(session.id as string, gender);
 
     // Update the session token with the new gender, while preserving other settings
     const newToken = await createToken({

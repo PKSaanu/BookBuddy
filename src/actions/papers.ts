@@ -1,17 +1,27 @@
 'use server';
 
-import { db } from '@/db/db';
-import { papers } from '@/db/schema';
+import { del } from '@vercel/blob';
 import { getSession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { eq } from 'drizzle-orm';
+import {
+  checkPaperDuplicate,
+  insertPaper,
+  getPaperById,
+  deletePaper as deletePaperQuery,
+  updatePaper as updatePaperQuery,
+  updatePaperNotes as updatePaperNotesQuery,
+  getPaperNotes as getPaperNotesQuery,
+  updatePaperCurrentPage,
+  clearPaperFile,
+  touchPaperLastOpened,
+} from '@/db/queries';
 
 export async function createPaper(prevState: any, formData: FormData) {
   const session = await getSession();
   if (!session?.id) return { error: 'Unauthorized' };
 
-  const title = formData.get('title') as string;
+  const title = (formData.get('title') as string || '').trim();
   const authors = formData.get('authors') as string;
   const year = formData.get('year') ? parseInt(formData.get('year') as string, 10) : null;
   const fileUrl = formData.get('fileUrl') as string;
@@ -20,16 +30,19 @@ export async function createPaper(prevState: any, formData: FormData) {
     return { error: 'Title is required' };
   }
 
+  const isDuplicate = await checkPaperDuplicate(title, session.id as string);
+  if (isDuplicate) {
+    return { error: 'This paper is already in your research library.' };
+  }
+
   try {
-    const [paper] = await db.insert(papers)
-      .values({
-        title,
-        authors: authors || null,
-        year: year || null,
-        fileUrl: fileUrl || null,
-        userId: session.id as string,
-      })
-      .returning();
+    await insertPaper({
+      title,
+      authors: authors || null,
+      year: year || null,
+      fileUrl: fileUrl || null,
+      userId: session.id as string,
+    });
 
     revalidatePath('/dashboard');
     revalidatePath('/library');
@@ -46,8 +59,8 @@ export async function getPaperNotes(paperId: string) {
   if (!session?.id) return { error: 'Unauthorized' };
 
   try {
-    const [paper] = await db.select({ notes: papers.notes }).from(papers).where(eq(papers.id, paperId));
-    return { success: true, notes: paper?.notes || '' };
+    const notes = await getPaperNotesQuery(paperId, session.id as string);
+    return { success: true, notes };
   } catch (error) {
     return { error: 'Failed to fetch notes' };
   }
@@ -58,44 +71,36 @@ export async function savePaperNotes(paperId: string, notes: string) {
   if (!session?.id) return { error: 'Unauthorized' };
 
   try {
-    // Only allow updating if the user owns the paper
-    const userPapers = await db.select().from(papers).where(eq(papers.id, paperId));
-    if (!userPapers.length || userPapers[0].userId !== session.id) return { error: 'Unauthorized' };
-
-    await db.update(papers)
-      .set({ notes })
-      .where(eq(papers.id, paperId));
+    await updatePaperNotesQuery(paperId, session.id as string, notes);
+    revalidatePath(`/papers/${paperId}`);
     return { success: true };
   } catch (error) {
     return { error: 'Failed to save notes' };
   }
 }
 
-export async function removePaperFile(paperId: string) {
+export async function updatePaperNotes(paperId: string, notes: string) {
+  return await savePaperNotes(paperId, notes);
+}
+
+export async function updatePaperDetails(paperId: string, title: string, authors: string, year: number, totalPages?: number) {
   const session = await getSession();
   if (!session?.id) return { error: 'Unauthorized' };
 
   try {
-    const [paper] = await db.select().from(papers).where(eq(papers.id, paperId));
-    
-    if (!paper || paper.userId !== session.id) {
-      return { error: 'Unauthorized or paper not found' };
-    }
-
-    if (paper.fileUrl) {
-      const { del } = await import('@vercel/blob');
-      await del(paper.fileUrl);
-    }
-
-    await db.update(papers)
-      .set({ fileUrl: null, currentPage: 1, pdfPageCount: null })
-      .where(eq(papers.id, paperId));
+    await updatePaperQuery(paperId, session.id as string, {
+      title,
+      authors,
+      year,
+      totalPages,
+    });
 
     revalidatePath(`/papers/${paperId}`);
+    revalidatePath('/library');
+    revalidatePath('/dashboard');
     return { success: true };
   } catch (error) {
-    console.error('Failed to remove paper file:', error);
-    return { error: 'Failed to remove file' };
+    return { error: 'Failed to update paper details' };
   }
 }
 
@@ -104,19 +109,18 @@ export async function deletePaper(paperId: string) {
   if (!session?.id) return { error: 'Unauthorized' };
 
   try {
-    const [paper] = await db.select().from(papers).where(eq(papers.id, paperId));
-    
-    if (!paper || paper.userId !== session.id) {
-      return { error: 'Unauthorized or paper not found' };
+    const paper = await getPaperById(paperId, session.id as string);
+
+    if (paper?.fileUrl) {
+      try {
+        await del(paper.fileUrl);
+      } catch (e) {
+        console.error('Failed to delete file from blob storage:', e);
+      }
     }
 
-    if (paper.fileUrl) {
-      const { del } = await import('@vercel/blob');
-      await del(paper.fileUrl);
-    }
+    await deletePaperQuery(paperId, session.id as string);
 
-    await db.delete(papers).where(eq(papers.id, paperId));
-    
     revalidatePath('/dashboard');
     revalidatePath('/library');
     return { success: true };
@@ -125,47 +129,38 @@ export async function deletePaper(paperId: string) {
   }
 }
 
-export async function updatePaperNotes(paperId: string, notes: string) {
-  return await savePaperNotes(paperId, notes);
-}
-
-export async function updatePaperProgress(paperId: string, page: number) {
+export async function updatePaperProgress(paperId: string, pageNumber: number) {
   const session = await getSession();
   if (!session?.id) return { error: 'Unauthorized' };
 
   try {
-    const [paper] = await db.select().from(papers).where(eq(papers.id, paperId));
-    if (!paper || paper.userId !== session.id) return { error: 'Unauthorized' };
-
-    await db.update(papers)
-      .set({ currentPage: page })
-      .where(eq(papers.id, paperId));
-      
-    // Intentionally not revalidating path to prevent reader stutter unless needed
+    await updatePaperCurrentPage(paperId, session.id as string, pageNumber);
     return { success: true };
   } catch (error) {
-    return { error: 'Failed to save progress' };
+    return { error: 'Failed to update progress' };
   }
 }
 
-export async function updatePaperDetails(paperId: string, title: string, authors: string, year: number | null) {
+export async function removePaperFile(paperId: string) {
   const session = await getSession();
   if (!session?.id) return { error: 'Unauthorized' };
 
   try {
-    if (!title) return { error: 'Title is required' };
+    const paper = await getPaperById(paperId, session.id as string);
 
-    const [paper] = await db.select().from(papers).where(eq(papers.id, paperId));
-    if (!paper || paper.userId !== session.id) return { error: 'Unauthorized' };
+    if (paper?.fileUrl) {
+      try {
+        await del(paper.fileUrl);
+      } catch (e) {
+        console.error('Failed to delete blob from Vercel:', e);
+      }
+    }
 
-    await db.update(papers)
-      .set({ title, authors: authors || null, year })
-      .where(eq(papers.id, paperId));
-
+    await clearPaperFile(paperId, session.id as string);
     revalidatePath(`/papers/${paperId}`);
     return { success: true };
   } catch (error) {
-    return { error: 'Failed to update details' };
+    return { error: 'Failed to remove file' };
   }
 }
 
@@ -174,9 +169,7 @@ export async function touchPaperAccess(paperId: string) {
   if (!session?.id) return { error: 'Unauthorized' };
 
   try {
-    await db.update(papers).set({ lastOpenedAt: new Date() }).where(
-      eq(papers.id, paperId)
-    );
+    await touchPaperLastOpened(paperId);
     revalidatePath('/dashboard');
     return { success: true };
   } catch (error) {
