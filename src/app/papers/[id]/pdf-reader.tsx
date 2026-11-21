@@ -408,7 +408,11 @@ export default function PdfReader({
                   value={jumpPage}
                   onChange={(e) => {
                     const cleanInt = e.target.value.replace(/[^0-9]/g, '');
-                    setJumpPage(cleanInt);
+                    if (cleanInt && numPages && parseInt(cleanInt, 10) > numPages) {
+                      setJumpPage(String(numPages));
+                    } else {
+                      setJumpPage(cleanInt);
+                    }
                   }}
                   onKeyDown={(e) => {
                     if (['.', '-', '+', 'e', 'E', ','].includes(e.key)) {

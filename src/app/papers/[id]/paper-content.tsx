@@ -298,6 +298,7 @@ export default function PaperContent({
               preferredLanguage={preferredLanguage} 
               externalText={selectedText}
               externalPageNumber={selectedPage}
+              totalPages={effectiveTotalPages}
             />
           </div>
 

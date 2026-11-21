@@ -306,6 +306,7 @@ export default function BookContent({
               preferredLanguage={preferredLanguage} 
               externalText={selectedText}
               externalPageNumber={selectedPage}
+              totalPages={effectiveTotalPages}
             />
           </div>
 

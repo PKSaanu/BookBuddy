@@ -13,11 +13,13 @@ export default function TranslationPanel({
   preferredLanguage,
   externalText,
   externalPageNumber,
+  totalPages,
 }: { 
   bookId: string, 
   preferredLanguage: string,
   externalText?: string,
-  externalPageNumber?: number
+  externalPageNumber?: number,
+  totalPages?: number | null
 }) {
   const [mounted, setMounted] = useState(false);
   const [inputText, setInputText] = useState('');
@@ -93,14 +95,19 @@ export default function TranslationPanel({
     const finalOriginalText = correctedText || inputText;
     if (!translatedText || !finalOriginalText || isSaved) return;
 
-    if (!pageNumber || parseInt(pageNumber, 10) <= 0) {
-      setError('A valid Page Number is required to save this curation.');
+    const pageNum = parseInt(pageNumber, 10);
+    if (!pageNumber || isNaN(pageNum) || pageNum <= 0) {
+      setError('A valid Page Number (1 or greater) is required to save this curation.');
+      return;
+    }
+
+    if (totalPages && pageNum > totalPages) {
+      setError(`Page number cannot exceed total page count of ${totalPages}.`);
       return;
     }
 
     setIsSaving(true);
 
-    const pageNum = parseInt(pageNumber, 10);
     const result = await saveTranslation(bookId, finalOriginalText, translatedText, preferredLanguage, pageNum);
     if (result.error) {
       setError(result.error);
@@ -255,33 +262,51 @@ export default function TranslationPanel({
               {/* Page Number & Save Controls */}
               {translatedText ? (
                 <div className="flex flex-row items-center justify-between sm:justify-start gap-3 w-full xl:w-auto shrink-0 pt-2 xl:pt-0 border-t xl:border-t-0 border-slate-100">
-                  <div className="relative w-20 sm:w-24">
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      autoComplete="off"
-                      value={pageNumber}
-                      onChange={(e) => {
-                        const cleanInt = e.target.value.replace(/[^0-9]/g, '');
-                        setPageNumber(cleanInt);
-                      }}
-                      onKeyDown={(e) => {
-                        if (['.', '-', '+', 'e', 'E', ','].includes(e.key)) {
-                          e.preventDefault();
-                        }
-                      }}
-                      placeholder="0"
-                      required
-                      className={`w-full px-3 py-3 sm:py-3.5 text-center rounded-[16px] sm:rounded-[18px] border-2 focus:outline-none font-bold text-[#10175b] transition-all bg-[#F8F9FA] ${
-                        !pageNumber ? 'border-red-100 bg-red-50/30' : 'border-[#F0F1F3] focus:border-[#10175b]'
-                      }`}
-                    />
-                    <span className={`absolute -top-2 left-3 px-2 bg-[#F8F9FA] sm:bg-white text-[9px] font-black uppercase transition-colors rounded-sm ${
-                      !pageNumber ? 'text-red-400' : 'text-slate-400'
-                    }`}>
-                      Pg *
-                    </span>
+                  <div className="flex items-center gap-2">
+                    <div className="relative w-20 sm:w-24">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        autoComplete="off"
+                        value={pageNumber}
+                        onChange={(e) => {
+                          const cleanInt = e.target.value.replace(/[^0-9]/g, '');
+                          if (cleanInt && totalPages && parseInt(cleanInt, 10) > totalPages) {
+                            setPageNumber(String(totalPages));
+                            setError(`Page number cannot exceed total page count of ${totalPages}. Clamped to max.`);
+                          } else {
+                            setPageNumber(cleanInt);
+                            if (error && error.includes('total page count')) {
+                              setError(null);
+                            }
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (['.', '-', '+', 'e', 'E', ','].includes(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
+                        placeholder="1"
+                        required
+                        className={`w-full px-3 py-3 sm:py-3.5 text-center rounded-[16px] sm:rounded-[18px] border-2 focus:outline-none font-bold text-[#10175b] transition-all bg-[#F8F9FA] ${
+                          !pageNumber || (totalPages && parseInt(pageNumber, 10) > totalPages)
+                            ? 'border-red-200 bg-red-50/30' 
+                            : 'border-[#F0F1F3] focus:border-[#10175b]'
+                        }`}
+                      />
+                      <span className={`absolute -top-2 left-3 px-2 bg-[#F8F9FA] sm:bg-white text-[9px] font-black uppercase transition-colors rounded-sm ${
+                        !pageNumber ? 'text-red-400' : 'text-slate-400'
+                      }`}>
+                        Pg *
+                      </span>
+                    </div>
+
+                    {totalPages ? (
+                      <span className="text-xs font-bold text-slate-400 font-mono tracking-tight shrink-0">
+                        / {totalPages}
+                      </span>
+                    ) : null}
                   </div>
 
                   <button

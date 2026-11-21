@@ -148,11 +148,13 @@ export default function CurationList({
                                             {/* Left: text content */}
                                             <div className="flex-1 min-w-0">
                                                 {/* English */}
-                                                <div className="flex items-center gap-2 mb-4">
-                                                    <h4 className="text-lg font-serif font-semibold text-[#171717] leading-tight group-hover:text-[#10175b] transition-colors truncate">
-                                                        {entry.originalText}
-                                                    </h4>
-                                                    <div className="shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                                <div className="flex items-start justify-between gap-3 mb-3">
+                                                    <div className="flex-1 min-w-0">
+                                                        <h4 className="text-base sm:text-lg font-serif font-semibold text-[#171717] leading-relaxed group-hover:text-[#10175b] transition-colors break-words whitespace-normal">
+                                                            {entry.originalText}
+                                                        </h4>
+                                                    </div>
+                                                    <div className="shrink-0 pt-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                                         <PronunciationButton 
                                                             text={entry.originalText} 
                                                             lang="en-US" 
@@ -164,11 +166,13 @@ export default function CurationList({
                                                 </div>
 
                                                 {/* Translation */}
-                                                <div className="flex items-center gap-2">
-                                                    <p className="text-lg font-sm text-[#012B5B] leading-tight truncate">
-                                                        {entry.translatedText}
-                                                    </p>
-                                                    <div className="shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-base sm:text-lg font-serif text-[#012B5B] leading-relaxed break-words whitespace-normal">
+                                                            {entry.translatedText}
+                                                        </p>
+                                                    </div>
+                                                    <div className="shrink-0 pt-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                                         <PronunciationButton 
                                                             text={entry.translatedText} 
                                                             lang={entry.language === 'Tamil' ? 'ta-IN' : 'si-LK'} 
@@ -179,7 +183,7 @@ export default function CurationList({
                                                     </div>
                                                 </div>
 
-                                                <p className="text-[9px] font-bold font-sans uppercase tracking-[0.2em] text-slate-400 mt-1.5">
+                                                <p className="text-[9px] font-bold font-sans uppercase tracking-[0.2em] text-slate-400 mt-2">
                                                     {entry.language} Translation
                                                 </p>
                                             </div>
