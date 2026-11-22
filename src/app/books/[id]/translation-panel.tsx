@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { saveTranslation } from '@/actions/translations';
-import { IconLoader, IconWorld, IconArrowRight, IconLanguage, IconBookmarkPlus } from '@tabler/icons-react';
+import { IconLoader, IconWorld, IconArrowRight, IconLanguage, IconBookmarkPlus, IconCheck } from '@tabler/icons-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PronunciationButton } from './pronunciation-button';
 import DictionaryMeaningCard from '@/components/dictionary-meaning-card';
@@ -125,7 +125,7 @@ export default function TranslationPanel({
         setEnglishDictionary(null);
         setIsSaved(false);
         setIsSaving(false);
-      }, 1700);
+      }, 1100);
 
       // We keep the page number for the next translation as requested
     }
@@ -313,21 +313,21 @@ export default function TranslationPanel({
                     type="button"
                     onClick={handleSave}
                     disabled={isSaving || isSaved}
-                    className={`flex-1 sm:flex-none sm:min-w-[130px] inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-3 sm:py-3.5 text-[12px] sm:text-[13px] font-bold rounded-[16px] sm:rounded-[18px] border-2 transition-all duration-300 uppercase tracking-wider active:scale-[0.98] ${
+                    className={`flex-1 sm:flex-none sm:min-w-[135px] inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-3 sm:py-3.5 text-xs sm:text-sm font-bold rounded-[16px] sm:rounded-[18px] transition-all duration-200 tracking-wide active:scale-[0.98] select-none ${
                       isSaved
-                        ? 'bg-[#0f766e] border-[#0f766e] text-white'
-                        : 'border-[#10175b] text-[#10175b] hover:bg-[#10175b] hover:text-white disabled:opacity-40'
+                        ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                        : 'bg-[#10175b] hover:bg-[#18237e] text-white shadow-md shadow-[#10175b]/15 hover:shadow-lg hover:shadow-[#10175b]/25 disabled:opacity-50 disabled:cursor-not-allowed'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 whitespace-nowrap">
                       {isSaved ? (
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        <IconCheck className="w-4 h-4 stroke-[2.5]" />
                       ) : isSaving ? (
                         <IconLoader className="animate-spin w-4 h-4" />
                       ) : (
-                        <IconBookmarkPlus className="w-4 h-4" strokeWidth={2.5} />
+                        <IconBookmarkPlus className="w-4 h-4" strokeWidth={2.2} />
                       )}
-                      <span>{isSaved ? 'Saved' : isSaving ? '...' : 'Add Word'}</span>
+                      <span>{isSaved ? 'Saved!' : isSaving ? 'Saving...' : 'Save Word'}</span>
                     </div>
                   </button>
                 </div>
