@@ -6,6 +6,7 @@ import { DeleteTranslationButton } from './delete-button';
 import { IconSearch, IconChevronLeft, IconChevronRight, IconArrowUp, IconX, IconCards, IconChevronDown, IconLoader } from '@tabler/icons-react';
 import FlashcardsModal from '@/components/flashcards-modal';
 import DictionaryMeaningCard from '@/components/dictionary-meaning-card';
+import Pagination from '@/components/pagination';
 import { EnglishDictionaryData, AlternativeMeaningEntry } from '@/types/dictionary';
 
 interface Translation {
@@ -22,19 +23,6 @@ interface DictionaryCacheItem {
     alternativeMeanings?: AlternativeMeaningEntry[] | null;
     loading: boolean;
     error?: string | null;
-}
-
-function getPageNumbers(current: number, total: number): (number | string)[] {
-    if (total <= 5) {
-        return Array.from({ length: total }, (_, i) => i + 1);
-    }
-    if (current <= 3) {
-        return [1, 2, 3, '...', total];
-    }
-    if (current >= total - 2) {
-        return [1, '...', total - 2, total - 1, total];
-    }
-    return [1, '...', current, '...', total];
 }
 
 export default function CurationList({ 
@@ -190,14 +178,6 @@ export default function CurationList({
         }, 40);
     };
 
-    if (!hasMounted) {
-        return (
-            <div className="min-h-[300px] flex items-center justify-center">
-                <div className="w-7 h-7 border-[3px] border-[#10175b] border-t-transparent rounded-full animate-spin" />
-            </div>
-        );
-    }
-
     if (vocab.length === 0) {
         return (
             <div className="bg-transparent border border-dashed border-slate-200 rounded-[24px] p-20 text-center">
@@ -335,7 +315,7 @@ export default function CurationList({
 
                                                 {/* Right: date + delete */}
                                                 <div className="flex flex-col items-end gap-2 shrink-0">
-                                                    <span className="text-[10px] font-sans text-slate-400 tracking-wide">{dateStr}</span>
+                                                    <span suppressHydrationWarning className="text-[10px] font-sans text-slate-400 tracking-wide">{dateStr}</span>
                                                     <div className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                                         <DeleteTranslationButton id={entry.id} bookId={bookId} />
                                                     </div>
@@ -382,67 +362,12 @@ export default function CurationList({
                 </div>
             )}
 
-            {/* Pagination with specific numbered pages */}
-            {totalPages > 1 && (
-                <div className="mt-12 flex items-center justify-center gap-1.5 sm:gap-2 py-6 border-t border-slate-100 w-full select-none">
-                    <button
-                        type="button"
-                        disabled={currentPage === 1}
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        className="h-8 sm:h-9 px-2 sm:px-3.5 flex items-center justify-center gap-1 text-xs font-bold text-slate-600 hover:text-[#10175b] disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer rounded-xl bg-white hover:bg-slate-50 border border-slate-200/80 active:scale-95 shrink-0"
-                        aria-label="Previous page"
-                    >
-                        <IconChevronLeft size={16} strokeWidth={2.5} />
-                        <span className="hidden sm:inline text-[11px] font-sans uppercase tracking-widest">Prev</span>
-                    </button>
-
-                    {/* Numbered Page Buttons */}
-                    <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-                        {getPageNumbers(currentPage, totalPages).map((p, idx) => {
-                            if (p === '...') {
-                                return (
-                                    <span 
-                                        key={`ellipsis-${idx}`} 
-                                        className="w-6 h-8 sm:w-8 sm:h-9 flex items-center justify-center text-slate-400 text-xs font-mono select-none"
-                                    >
-                                        ...
-                                    </span>
-                                );
-                            }
-
-                            const pageNum = p as number;
-                            const isActive = pageNum === currentPage;
-
-                            return (
-                                <button
-                                    key={`page-${pageNum}`}
-                                    type="button"
-                                    onClick={() => handlePageChange(pageNum)}
-                                    className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer shrink-0 ${
-                                        isActive
-                                            ? 'bg-[#10175b] text-white shadow-md shadow-[#10175b]/20 scale-105'
-                                            : 'bg-white hover:bg-slate-100 text-slate-600 hover:text-[#10175b] border border-slate-200/80 active:scale-95'
-                                    }`}
-                                    aria-current={isActive ? 'page' : undefined}
-                                >
-                                    {pageNum}
-                                </button>
-                            );
-                        })}
-                    </div>
-
-                    <button
-                        type="button"
-                        disabled={currentPage === totalPages}
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        className="h-8 sm:h-9 px-2 sm:px-3.5 flex items-center justify-center gap-1 text-xs font-bold text-slate-600 hover:text-[#10175b] disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer rounded-xl bg-white hover:bg-slate-50 border border-slate-200/80 active:scale-95 shrink-0"
-                        aria-label="Next page"
-                    >
-                        <span className="hidden sm:inline text-[11px] font-sans uppercase tracking-widest">Next</span>
-                        <IconChevronRight size={16} strokeWidth={2.5} />
-                    </button>
-                </div>
-            )}
+            {/* Reusable Numbered Pagination */}
+            <Pagination 
+                currentPage={currentPage} 
+                totalPages={totalPages} 
+                onPageChange={handlePageChange} 
+            />
 
             {/* Go to Top */}
             <button

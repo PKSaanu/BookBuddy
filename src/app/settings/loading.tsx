@@ -6,7 +6,7 @@ export default function SettingsLoading() {
       <div className="max-w-[1400px] mx-auto p-10 lg:p-16 min-h-full flex flex-col xl:flex-row gap-16 xl:gap-24 relative animate-pulse w-full">
         
         {/* Main Content Area Skeleton */}
-        <div className="flex-1 space-y-16 max-w-4xl pt-8">
+        <div className="flex-1 space-y-20 max-w-4xl pt-8">
             <div className="space-y-4">
                 <div className="h-12 w-64 bg-slate-200 rounded-2xl mb-4"></div>
                 <div className="h-4 w-full max-w-md bg-slate-100 rounded-md mb-2"></div>

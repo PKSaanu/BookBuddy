@@ -14,6 +14,7 @@ interface LibraryItem {
   coverImage?: string | null;
   totalPages?: number | null;
   pdfPageCount?: number | null;
+  pdfPageOffset?: number | null;
   year?: number | null;
   type: 'book' | 'paper';
   translationCount: number;
@@ -71,6 +72,7 @@ export function LibraryClient({ isResearcher, books, papers, combinedItems }: Li
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-6 md:gap-x-10 gap-y-12 md:gap-y-16 min-h-[400px]">
         {itemsToDisplay.map((item, index) => {
           const href = item.type === 'book' ? `/books/${item.id}` : `/papers/${item.id}`;
+          const effectiveTotalPages = item.totalPages || (item.pdfPageCount ? Math.max(1, item.pdfPageCount - (item.pdfPageOffset || 0)) : null);
           
           return (
             <Link 
@@ -115,8 +117,8 @@ export function LibraryClient({ isResearcher, books, papers, combinedItems }: Li
                   <span className={`h-[1px] w-4 ${item.type === 'book' ? 'bg-slate-300' : 'bg-rose-300'} transition-all duration-300 group-hover:w-8 ${item.type === 'book' ? 'group-hover:bg-[#10175b]' : 'group-hover:bg-rose-700'}`} />
                   <p className={`text-[9px] font-black uppercase tracking-[0.2em] ${item.type === 'book' ? 'text-[#10175b]/40' : 'text-rose-700/60'} whitespace-nowrap`}>
                     {item.type === 'book' 
-                      ? ((item.pdfPageCount || item.totalPages) ? `PAGE ${item.maxPage} / ${item.pdfPageCount || item.totalPages}` : 'NEW ARCHIVE')
-                      : (item.pdfPageCount ? `PAGE ${item.maxPage} / ${item.pdfPageCount}` : (item.year ? `YEAR ${item.year}` : 'NEW ARCHIVE'))
+                      ? (effectiveTotalPages ? `PAGE ${item.maxPage} / ${effectiveTotalPages}` : 'NEW ARCHIVE')
+                      : (effectiveTotalPages ? `PAGE ${item.maxPage} / ${effectiveTotalPages}` : (item.year ? `YEAR ${item.year}` : 'NEW ARCHIVE'))
                     }
                   </p>
                 </div>

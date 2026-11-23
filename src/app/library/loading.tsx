@@ -7,7 +7,7 @@ export default function LibraryLoading() {
       <div className="px-6 py-10 md:px-12 md:py-16 xl:px-16 xl:py-20 bg-[#F4F5F6] min-h-screen w-full">
         <div className="max-w-7xl mx-auto">
             {/* Header Section Static (No Skeleton) */}
-            <div className="mb-20 pb-12 border-b border-slate-300 flex flex-col xl:flex-row xl:items-end justify-between gap-12 relative">
+            <div className="mb-16 md:mb-20 pb-12 border-b border-slate-300 flex flex-col xl:flex-row xl:items-end justify-between gap-12 relative">
                 <div className="max-w-3xl w-full">
                     <div className="flex items-center gap-3 mb-6">
                         <div className="w-10 h-10 bg-[#10175b] rounded-xl flex items-center justify-center text-white shadow-lg">

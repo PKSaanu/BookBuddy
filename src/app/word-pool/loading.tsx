@@ -17,12 +17,13 @@ export default function WordPoolLoading() {
         <div className="space-y-12 animate-pulse mt-8">
           {/* Skeleton Search Input */}
           <div className="relative max-w-2xl">
-            <div className="w-full bg-slate-200 rounded-full h-14 md:h-16 shadow-sm"></div>
+            <div className="w-full bg-slate-200/70 rounded-full h-12 shadow-sm"></div>
           </div>
 
-          {/* Skeleton Result Count */}
-          <div className="flex items-center gap-3">
-             <div className="w-24 h-6 bg-indigo-50 rounded-full"></div>
+          {/* Skeleton Result Count & Practice Action */}
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+             <div className="w-28 h-6 bg-indigo-50 rounded-full"></div>
+             <div className="w-44 h-10 bg-[#10175b]/15 rounded-full hidden sm:block"></div>
           </div>
 
           {/* Skeleton Word Cloud Surface */}

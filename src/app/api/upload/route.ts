@@ -41,6 +41,8 @@ export async function POST(request: NextRequest) {
       await updateBookFileUrl(bookId, session.id as string, blob.url, pdfPageCount);
 
       revalidatePath(`/books/${bookId}`);
+      revalidatePath('/library');
+      revalidatePath('/dashboard');
       return NextResponse.json({ success: true, fileUrl: blob.url, pdfPageCount });
     }
 
@@ -54,6 +56,8 @@ export async function POST(request: NextRequest) {
       await updatePaperFileUrl(paperId, session.id as string, blob.url, pdfPageCount);
 
       revalidatePath(`/papers/${paperId}`);
+      revalidatePath('/library');
+      revalidatePath('/dashboard');
       return NextResponse.json({ success: true, fileUrl: blob.url, pdfPageCount });
     }
 

@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import Sidebar from '@/components/sidebar';
 import MobileNav from '@/components/mobile-nav';
 import Link from 'next/link';
-import { IconBook2, IconBook, IconMicroscopeFilled, IconFileText, IconBookFilled, IconBookmarkFilled, IconArrowRight } from '@tabler/icons-react';
+import { IconBook2, IconBook, IconMicroscopeFilled, IconFileText, IconBookFilled, IconBookmarkFilled, IconArrowRight, IconCards } from '@tabler/icons-react';
+import FlashcardsModal from '@/components/flashcards-modal';
 
 import { AddBookHeaderButton } from './add-book-header-button';
 import { coverBackgrounds } from '@/lib/constants';
@@ -39,6 +40,7 @@ const carouselBackdrops = {
 export default function DashboardPage({
     userName,
     items,
+    runnerItems,
     userVocabCount,
     recentItem,
     oldItems,
@@ -47,6 +49,7 @@ export default function DashboardPage({
 }: {
     userName?: string,
     items: any[],
+    runnerItems?: any[],
     userVocabCount: number,
     recentItem: any,
     oldItems: any[],
@@ -56,8 +59,9 @@ export default function DashboardPage({
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [quoteIndex, setQuoteIndex] = useState(0);
     const [heroIndex, setHeroIndex] = useState(0);
+    const [selectedFlashcardBook, setSelectedFlashcardBook] = useState<any | null>(null);
 
-    const carouselItems = items.slice(0, Math.min(3, items.length));
+    const carouselItems = (runnerItems && runnerItems.length > 0) ? runnerItems : items.slice(0, Math.min(4, items.length));
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -88,7 +92,7 @@ export default function DashboardPage({
             <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
                 <MobileNav onOpenMenu={() => setIsSidebarOpen(true)} />
 
-                <main id="dashboard-main-scroll" className="flex-1 md:ml-56 mt-16 md:mt-0 px-8 py-10 md:px-12 md:py-12 xl:px-24 xl:py-16 overflow-y-scroll overflow-x-hidden scroll-smooth">
+                <main id="dashboard-main-scroll" className="flex-1 md:ml-56 mt-20 md:mt-0 px-8 py-10 md:px-12 md:py-12 xl:px-24 xl:py-16 overflow-y-scroll overflow-x-hidden scroll-smooth">
                     <div className="max-w-7xl mx-auto">
                         {/* Header / Intro */}
                         <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end mb-12 gap-8">
@@ -134,12 +138,39 @@ export default function DashboardPage({
 
                                                     <div className="absolute bottom-0 left-0 p-6 sm:p-8 md:p-12 w-full z-20">
                                                         <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
-                                                            <div className={`${carouselItems[heroIndex].type === 'book' ? 'bg-[#0f766e]' : 'bg-rose-700'} text-white text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.1em] px-3 py-1.5 sm:px-4 sm:py-2 rounded-full shadow-sm flex items-center`}>
-                                                                <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse mr-2" />
-                                                                {carouselItems[heroIndex].lastOpenedAt ? 'Recently Opened' : 'Latest Addition'} {carouselItems[heroIndex].type === 'paper' ? 'Research' : ''}
+                                                            {/* 4-Criteria Dynamic Header Badge */}
+                                                            <div className={`${carouselItems[heroIndex].criteria?.badgeBg || (carouselItems[heroIndex].type === 'book' ? 'bg-emerald-600' : 'bg-rose-700')} text-white text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.1em] px-3 py-1.5 sm:px-4 sm:py-2 rounded-full shadow-sm flex items-center`}>
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse mr-2 shrink-0" />
+                                                                <span>{carouselItems[heroIndex].criteria?.label || (carouselItems[heroIndex].lastOpenedAt ? 'Recently Opened' : 'Latest Addition')}</span>
                                                             </div>
+
+                                                            {/* Day / Time Window Badge */}
+                                                            {carouselItems[heroIndex].criteria?.timeWindow && (
+                                                                <div className="bg-white/15 backdrop-blur-md text-white text-[9px] sm:text-[11px] font-semibold tracking-[0.05em] px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-white/20 flex items-center shadow-xs">
+                                                                    <span>{carouselItems[heroIndex].criteria.timeWindow}</span>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Revisit & Recall Action Pill */}
+                                                            {carouselItems[heroIndex].criteria?.category === 'revisit_recall' && carouselItems[heroIndex].vocab?.length > 0 && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={(e) => {
+                                                                        e.preventDefault();
+                                                                        e.stopPropagation();
+                                                                        setSelectedFlashcardBook(carouselItems[heroIndex]);
+                                                                    }}
+                                                                    className="bg-purple-600 hover:bg-purple-500 text-white text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.1em] px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full shadow-md backdrop-blur-md flex items-center gap-1.5 border border-purple-300/40 transition-transform active:scale-95 z-30 cursor-pointer"
+                                                                    title="Practice vocabulary recall with interactive flashcards"
+                                                                >
+                                                                    <IconCards size={14} />
+                                                                    <span>Practice Recall ({carouselItems[heroIndex].vocab.length})</span>
+                                                                </button>
+                                                            )}
+
+                                                            {/* Progress Mastery Badge */}
                                                             {carouselItems[heroIndex].type === 'book' && (carouselItems[heroIndex].totalPages || carouselItems[heroIndex].pdfPageCount) && carouselItems[heroIndex].progress > 0 && (
-                                                                <div className="bg-white/10 backdrop-blur text-white text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.1em] px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-white/20">
+                                                                <div className="bg-white/10 backdrop-blur-md text-white text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.1em] px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-white/20 shadow-xs">
                                                                     {carouselItems[heroIndex].progress}% Mastered
                                                                 </div>
                                                             )}
@@ -303,6 +334,15 @@ export default function DashboardPage({
                             © {new Date().getFullYear()} BookBudddy. Built by <a href="https://www.linkedin.com/in/saanusan/" target="_blank" rel="noopener noreferrer" className="hover:text-[#10175b] underline decoration-slate-300 underline-offset-2 transition-colors">P.K. Saanu</a>.
                         </p>
                     </footer>
+
+                    {selectedFlashcardBook && (
+                        <FlashcardsModal
+                            isOpen={!!selectedFlashcardBook}
+                            onClose={() => setSelectedFlashcardBook(null)}
+                            words={selectedFlashcardBook.vocab || []}
+                            title={`Recall: ${selectedFlashcardBook.title}`}
+                        />
+                    )}
                 </main>
             </div>
         </div>

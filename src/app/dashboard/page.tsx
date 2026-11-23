@@ -9,7 +9,7 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
-  const { items, recentItem, userVocabCount, isResearcher, userName } =
+  const { items, runnerItems, recentItem, userVocabCount, isResearcher, userName } =
     await getDashboardData(session.id as string);
   const oldItems = items.slice(1);
 
@@ -17,6 +17,7 @@ export default async function DashboardPage() {
     <DashboardClient
       userName={userName}
       items={items}
+      runnerItems={runnerItems}
       userVocabCount={userVocabCount}
       recentItem={recentItem}
       oldItems={oldItems}
