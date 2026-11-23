@@ -83,7 +83,14 @@ export async function updatePaperNotes(paperId: string, notes: string) {
   return await savePaperNotes(paperId, notes);
 }
 
-export async function updatePaperDetails(paperId: string, title: string, authors: string, year: number, totalPages?: number) {
+export async function updatePaperDetails(
+  paperId: string, 
+  title: string, 
+  authors: string, 
+  year: number, 
+  totalPages?: number,
+  pdfPageOffset?: number
+) {
   const session = await getSession();
   if (!session?.id) return { error: 'Unauthorized' };
 
@@ -93,6 +100,7 @@ export async function updatePaperDetails(paperId: string, title: string, authors
       authors,
       year,
       totalPages,
+      ...(pdfPageOffset !== undefined ? { pdfPageOffset } : {}),
     });
 
     revalidatePath(`/papers/${paperId}`);
@@ -101,6 +109,19 @@ export async function updatePaperDetails(paperId: string, title: string, authors
     return { success: true };
   } catch (error) {
     return { error: 'Failed to update paper details' };
+  }
+}
+
+export async function setPaperPdfPageOffset(paperId: string, offset: number) {
+  const session = await getSession();
+  if (!session?.id) return { error: 'Unauthorized' };
+
+  try {
+    await updatePaperQuery(paperId, session.id as string, { pdfPageOffset: Math.max(0, offset) });
+    revalidatePath(`/papers/${paperId}`);
+    return { success: true };
+  } catch (error) {
+    return { error: 'Failed to update page offset' };
   }
 }
 

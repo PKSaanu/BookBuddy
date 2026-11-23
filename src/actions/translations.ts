@@ -30,7 +30,7 @@ export async function saveTranslation(
   }
 
   try {
-    const { translation, isUpdate } = await upsertBookTranslation({
+    const { translation, isUpdate, alreadyExists, existingPage } = await upsertBookTranslation({
       bookId,
       userId: session.id as string,
       originalText,
@@ -39,8 +39,16 @@ export async function saveTranslation(
       pageNumber,
     });
 
-    revalidatePath(`/books/${bookId}`);
-    return { success: true, translation, isUpdate };
+    if (!alreadyExists) {
+      revalidatePath(`/books/${bookId}`);
+    }
+    return { 
+      success: true, 
+      translation, 
+      isUpdate, 
+      alreadyExists: !!alreadyExists, 
+      existingPage 
+    };
   } catch (error) {
     console.error('Failed to save translation:', error);
     return { error: 'Failed to save translation' };

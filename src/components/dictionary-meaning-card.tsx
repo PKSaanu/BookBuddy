@@ -15,15 +15,17 @@ interface DictionaryMeaningCardProps {
   alternativeMeanings?: AlternativeMeaningEntry[] | null;
   targetLanguage?: string;
   onSelectAlternative?: (meaning: string) => void;
+  defaultExpanded?: boolean;
 }
 
 export default function DictionaryMeaningCard({
   englishDictionary,
   alternativeMeanings,
   targetLanguage = 'Tamil',
-  onSelectAlternative
+  onSelectAlternative,
+  defaultExpanded = false
 }: DictionaryMeaningCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   const hasEnglishMeanings = Boolean(
     englishDictionary && englishDictionary.meanings && englishDictionary.meanings.length > 0

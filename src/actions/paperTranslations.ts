@@ -25,7 +25,7 @@ export async function saveTranslation(
       return { error: 'Unauthorized or paper not found' };
     }
 
-    const { translation, isUpdate } = await upsertPaperTranslation({
+    const { translation, isUpdate, alreadyExists, existingPage } = await upsertPaperTranslation({
       paperId,
       userId: session.id as string,
       originalText,
@@ -34,8 +34,16 @@ export async function saveTranslation(
       pageNumber,
     });
 
-    revalidatePath(`/papers/${paperId}`);
-    return { success: true, translation, isUpdate };
+    if (!alreadyExists) {
+      revalidatePath(`/papers/${paperId}`);
+    }
+    return { 
+      success: true, 
+      translation, 
+      isUpdate, 
+      alreadyExists: !!alreadyExists, 
+      existingPage 
+    };
   } catch (error) {
     console.error('Failed to save paper translation:', error);
     return { error: 'Failed to save translation' };

@@ -10,16 +10,20 @@ interface Book {
   title: string;
   author: string | null;
   totalPages: number | null;
+  pdfPageCount?: number | null;
+  pdfPageOffset?: number | null;
+  fileUrl?: string | null;
 }
 
 export function EditBookModal({ book, onClose, onUpdate }: { 
   book: Book, 
   onClose: () => void, 
-  onUpdate: (updatedTitle: string, updatedAuthor: string, updatedPages: number) => void 
+  onUpdate: (updatedTitle: string, updatedAuthor: string, updatedPages: number, updatedOffset?: number) => void 
 }) {
   const [title, setTitle] = useState(book.title);
   const [author, setAuthor] = useState(book.author || '');
   const [totalPages, setTotalPages] = useState(String(book.totalPages || ''));
+  const [pdfStartPage, setPdfStartPage] = useState(String((book.pdfPageOffset || 0) + 1));
   const [isUpdating, setIsUpdating] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +41,16 @@ export function EditBookModal({ book, onClose, onUpdate }: {
     setError(null);
 
     const pageCount = parseInt(totalPages, 10);
-    const result = await updateBookDetails(book.id, title, author, isNaN(pageCount) ? 0 : pageCount);
+    const startPageNum = parseInt(pdfStartPage, 10);
+    const offset = isNaN(startPageNum) || startPageNum <= 1 ? 0 : startPageNum - 1;
+
+    const result = await updateBookDetails(
+      book.id, 
+      title, 
+      author, 
+      isNaN(pageCount) ? 0 : pageCount,
+      offset
+    );
 
     if (result.error) {
       setError(result.error);
@@ -45,7 +58,7 @@ export function EditBookModal({ book, onClose, onUpdate }: {
     } else {
       setIsSuccess(true);
       setTimeout(() => {
-        onUpdate(title, author, isNaN(pageCount) ? 0 : pageCount);
+        onUpdate(title, author, isNaN(pageCount) ? 0 : pageCount, offset);
         onClose();
       }, 1000);
     }
@@ -113,7 +126,7 @@ export function EditBookModal({ book, onClose, onUpdate }: {
 
                 <div>
                   <label className="block text-[11px] font-mono font-bold uppercase tracking-[0.25em] text-[#10175b]/50 mb-3 ml-1">
-                    Archive Volume (Pages)
+                    Book Total Pages (Physical)
                   </label>
                   <input
                     type="text"
@@ -130,6 +143,37 @@ export function EditBookModal({ book, onClose, onUpdate }: {
                   />
                 </div>
               </div>
+
+              {(book.fileUrl || book.pdfPageCount) && (
+                <div className="pt-2 border-t border-slate-200/60">
+                  <div className="flex items-center justify-between mb-2 ml-1">
+                    <label className="block text-[11px] font-mono font-bold uppercase tracking-[0.25em] text-[#10175b]/70">
+                      PDF Chapter 1 Start Page
+                    </label>
+                    {book.pdfPageCount ? (
+                      <span className="text-[10px] font-sans font-semibold text-slate-400">
+                        PDF has {book.pdfPageCount} total pages
+                      </span>
+                    ) : null}
+                  </div>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    autoComplete="off"
+                    value={pdfStartPage}
+                    onChange={(e) => setPdfStartPage(e.target.value.replace(/[^0-9]/g, ''))}
+                    onKeyDown={(e) => {
+                      if (['.', '-', '+', 'e', 'E', ','].includes(e.key)) e.preventDefault();
+                    }}
+                    placeholder="1"
+                    className="w-full px-4 py-3 bg-white/50 border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#10175b]/20 focus:border-[#10175b] text-base text-slate-900 placeholder-slate-300 font-serif transition-all"
+                  />
+                  <p className="text-[11px] text-slate-500 mt-2 ml-1 italic font-serif leading-relaxed">
+                    In your digital PDF, what page does Chapter 1 / Book Page 1 begin on? (e.g. if the PDF has 14 pages of covers/preface before Chapter 1, enter 15).
+                  </p>
+                </div>
+              )}
             </div>
 
             {error && (

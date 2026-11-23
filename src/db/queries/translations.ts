@@ -97,17 +97,12 @@ export async function upsertBookTranslation(data: {
     .limit(1);
 
   if (existing && existing.length > 0) {
-    const [updated] = await db
-      .update(translations)
-      .set({
-        translatedText: data.translatedText,
-        language: data.language,
-        pageNumber: data.pageNumber ?? existing[0].pageNumber,
-        createdAt: new Date(),
-      })
-      .where(eq(translations.id, existing[0].id))
-      .returning();
-    return { translation: updated, isUpdate: true };
+    return { 
+      translation: existing[0], 
+      isUpdate: true, 
+      alreadyExists: true, 
+      existingPage: existing[0].pageNumber 
+    };
   }
 
   const [inserted] = await db
@@ -121,7 +116,7 @@ export async function upsertBookTranslation(data: {
       pageNumber: data.pageNumber ?? null,
     })
     .returning();
-  return { translation: inserted, isUpdate: false };
+  return { translation: inserted, isUpdate: false, alreadyExists: false };
 }
 
 export async function deleteBookTranslation(
@@ -163,17 +158,12 @@ export async function upsertPaperTranslation(data: {
     .limit(1);
 
   if (existing && existing.length > 0) {
-    const [updated] = await db
-      .update(paperTranslations)
-      .set({
-        translatedText: data.translatedText,
-        language: data.language,
-        pageNumber: data.pageNumber ?? existing[0].pageNumber,
-        createdAt: new Date(),
-      })
-      .where(eq(paperTranslations.id, existing[0].id))
-      .returning();
-    return { translation: updated, isUpdate: true };
+    return { 
+      translation: existing[0], 
+      isUpdate: true, 
+      alreadyExists: true, 
+      existingPage: existing[0].pageNumber 
+    };
   }
 
   const [inserted] = await db
@@ -187,7 +177,7 @@ export async function upsertPaperTranslation(data: {
       pageNumber: data.pageNumber ?? null,
     })
     .returning();
-  return { translation: inserted, isUpdate: false };
+  return { translation: inserted, isUpdate: false, alreadyExists: false };
 }
 
 export async function deletePaperTranslation(

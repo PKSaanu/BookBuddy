@@ -33,6 +33,7 @@ interface BookContentProps {
     coverImage?: string | null;
     totalPages?: number | null;
     pdfPageCount?: number | null;
+    pdfPageOffset?: number | null;
     userId: string;
     fileUrl?: string | null;
     currentPage?: number | null;
@@ -155,10 +156,9 @@ export default function BookContent({
 
   // Re-calculate progress if book details change
   const maxPage = vocab.reduce((max, t) => Math.max(max, t.pageNumber || 0), 0);
-  const effectiveTotalPages = currentBook.pdfPageCount || currentBook.totalPages;
-  console.log(effectiveTotalPages)
+  const effectiveTotalPages = currentBook.totalPages || (currentBook.pdfPageCount ? Math.max(1, currentBook.pdfPageCount - (currentBook.pdfPageOffset || 0)) : null);
   const progressPercentValue = effectiveTotalPages 
-    ? Math.round((maxPage / effectiveTotalPages) * 100) 
+    ? Math.min(100, Math.round((maxPage / effectiveTotalPages) * 100)) 
     : 0;
 
   return (
@@ -372,8 +372,14 @@ export default function BookContent({
         <EditBookModal 
           book={currentBook as any} 
           onClose={() => setIsEditModalOpen(false)} 
-          onUpdate={(t, a, p) => {
-            setCurrentBook({ ...currentBook, title: t, author: a, totalPages: p });
+          onUpdate={(t, a, p, offset) => {
+            setCurrentBook({ 
+              ...currentBook, 
+              title: t, 
+              author: a, 
+              totalPages: p,
+              pdfPageOffset: offset !== undefined ? offset : currentBook.pdfPageOffset 
+            });
           }}
         />
       )}
@@ -413,15 +419,21 @@ export default function BookContent({
             fileUrl={localFileUrl} 
             bookId={book.id}
             bookTitle={currentBook.title}
+            bookAuthor={currentBook.author}
             preferredLanguage={session.preferredLanguage as string}
             initialPage={localCurrentPage}
+            pdfPageOffset={currentBook.pdfPageOffset || 0}
+            bookTotalPages={effectiveTotalPages}
+            onOffsetChange={(newOffset) => {
+              setCurrentBook(prev => ({ ...prev, pdfPageOffset: newOffset }));
+            }}
             savedVocab={vocab}
             onClose={() => setIsReaderOpen(false)}
             onPageChange={(page) => setLocalCurrentPage(page)}
             onFileRemoved={() => {
               setLocalFileUrl(null);
               setLocalCurrentPage(1);
-              setCurrentBook(prev => ({ ...prev, pdfPageCount: null }));
+              setCurrentBook(prev => ({ ...prev, pdfPageCount: null, pdfPageOffset: 0 }));
             }}
             onTranslate={(text, page) => {
               setSelectedText(text);
@@ -429,10 +441,7 @@ export default function BookContent({
               // Reader no longer closes automatically to preserve progress
             }}
           />
-
-
         )}
-
       </AnimatePresence>
 
     </div>

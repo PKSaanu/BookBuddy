@@ -37,7 +37,10 @@ export function DeleteTranslationButton({ id, paperId }: { id: string, paperId: 
   return (
     <>
       <button
-        onClick={() => setShowModal(true)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setShowModal(true);
+        }}
         disabled={isPending || isDeleting}
         className="text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50 focus:outline-none"
         title="Delete"

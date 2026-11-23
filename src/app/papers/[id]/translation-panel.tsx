@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { saveTranslation } from '@/actions/paperTranslations';
-import { IconLoader, IconWorld, IconArrowRight, IconLanguage, IconBookmarkPlus, IconCheck } from '@tabler/icons-react';
+import { IconLoader, IconWorld, IconArrowRight, IconLanguage, IconBookmarkPlus, IconCheck, IconBookmarkFilled } from '@tabler/icons-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PronunciationButton } from './pronunciation-button';
 import DictionaryMeaningCard from '@/components/dictionary-meaning-card';
@@ -51,6 +51,17 @@ export default function TranslationPanel({
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [duplicateAlert, setDuplicateAlert] = useState<{
+    word: string;
+    page?: number | null;
+  } | null>(null);
+  const duplicateTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (duplicateTimerRef.current) clearTimeout(duplicateTimerRef.current);
+    };
+  }, []);
 
   const handleTranslate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,6 +123,22 @@ export default function TranslationPanel({
     if (result.error) {
       setError(result.error);
       setIsSaving(false);
+    } else if (result.alreadyExists) {
+      setIsSaving(false);
+      setError(null);
+
+      if (duplicateTimerRef.current) {
+        clearTimeout(duplicateTimerRef.current);
+      }
+
+      setDuplicateAlert({
+        word: finalOriginalText,
+        page: result.existingPage || pageNum,
+      });
+
+      duplicateTimerRef.current = setTimeout(() => {
+        setDuplicateAlert(null);
+      }, 3000);
     } else {
       setIsSaved(true);
       setError(null);
@@ -133,6 +160,46 @@ export default function TranslationPanel({
 
   return (
     <div className="w-full">
+      {/* Friendly Research-Themed Duplicate Alert Popup */}
+      <AnimatePresence>
+        {duplicateAlert && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.96 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+            className="fixed top-6 right-4 left-4 sm:left-auto sm:right-8 z-[300] max-w-md bg-[#10175b] text-white p-4 sm:p-5 rounded-2xl shadow-2xl border border-white/20 flex items-start gap-3.5 backdrop-blur-md"
+          >
+            <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center shrink-0 mt-0.5 border border-amber-400/30">
+              <IconBookmarkFilled size={20} />
+            </div>
+
+            <div className="flex-1 min-w-0 pr-1">
+              <h4 className="text-sm font-bold tracking-tight text-white font-sans mb-1">
+                Already in Your Curation!
+              </h4>
+
+              <p className="text-xs text-white/80 leading-relaxed font-serif italic mb-3">
+                &ldquo;{duplicateAlert.word}&rdquo; is already bookmarked in this paper{duplicateAlert.page ? ` (Page ${duplicateAlert.page})` : ''}. Duplicate save was omitted so your research archive stays clean and organized.
+              </p>
+
+              <div className="flex items-center justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (duplicateTimerRef.current) clearTimeout(duplicateTimerRef.current);
+                    setDuplicateAlert(null);
+                  }}
+                  className="px-3.5 py-1 bg-white/15 hover:bg-white/25 active:scale-95 text-white text-xs font-bold rounded-lg transition-all"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="bg-[#EBECEF] rounded-[24px] sm:rounded-[32px] p-5 sm:p-8 md:p-10 relative overflow-hidden group">
         {/* Upper right round speaking button for the inputted English word */}
         {inputText.trim() && (

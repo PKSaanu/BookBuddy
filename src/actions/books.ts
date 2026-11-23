@@ -99,20 +99,46 @@ export async function updateBookNotes(bookId: string, notes: string) {
   }
 }
 
-export async function updateBookDetails(bookId: string, title: string, author: string, totalPages: number) {
+export async function updateBookDetails(
+  bookId: string, 
+  title: string, 
+  author: string, 
+  totalPages: number,
+  pdfPageOffset?: number
+) {
   const session = await getSession();
   if (!session?.id) {
     return { error: 'Unauthorized' };
   }
 
   try {
-    await updateBookQuery(bookId, session.id as string, { title, author, totalPages });
+    await updateBookQuery(bookId, session.id as string, { 
+      title, 
+      author, 
+      totalPages,
+      ...(pdfPageOffset !== undefined ? { pdfPageOffset } : {})
+    });
     revalidatePath(`/books/${bookId}`);
     revalidatePath('/dashboard');
     revalidatePath('/library');
     return { success: true };
   } catch (error) {
     return { error: 'Failed to update book details' };
+  }
+}
+
+export async function setBookPdfPageOffset(bookId: string, offset: number) {
+  const session = await getSession();
+  if (!session?.id) {
+    return { error: 'Unauthorized' };
+  }
+
+  try {
+    await updateBookQuery(bookId, session.id as string, { pdfPageOffset: Math.max(0, offset) });
+    revalidatePath(`/books/${bookId}`);
+    return { success: true };
+  } catch (error) {
+    return { error: 'Failed to update page offset' };
   }
 }
 

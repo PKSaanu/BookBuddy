@@ -53,7 +53,7 @@ export async function getDashboardData(userId: string) {
     if (index <= 2 && item.type === 'book') {
       const recentTranslations = allBookTranslations.filter((t) => t.bookId === item.id);
       const maxPage = recentTranslations.reduce((max, t) => Math.max(max, t.pageNumber || 0), 0);
-      const effectiveTotalPages = item.pdfPageCount || item.totalPages || 0;
+      const effectiveTotalPages = item.totalPages || (item.pdfPageCount ? Math.max(1, item.pdfPageCount - (item.pdfPageOffset || 0)) : 0);
       itemProgress = effectiveTotalPages ? Math.round((maxPage / effectiveTotalPages) * 100) : 0;
     }
     return { ...item, progress: itemProgress };

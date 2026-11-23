@@ -9,17 +9,23 @@ interface Paper {
   id: string;
   title: string;
   author: string | null;
-  totalPages: number | null;
+  authors?: string | null;
+  year?: number | null;
+  totalPages?: number | null;
+  pdfPageCount?: number | null;
+  pdfPageOffset?: number | null;
 }
 
 export function EditPaperModal({ paper, onClose, onUpdate }: { 
   paper: Paper, 
   onClose: () => void, 
-  onUpdate: (updatedTitle: string, updatedAuthor: string, updatedPages: number) => void 
+  onUpdate: (updatedTitle: string, updatedAuthor: string, updatedYear: number, updatedPages: number, updatedOffset?: number) => void 
 }) {
   const [title, setTitle] = useState(paper.title);
-  const [author, setAuthor] = useState(paper.author || '');
+  const [author, setAuthor] = useState(paper.author || paper.authors || '');
+  const [year, setYear] = useState(String(paper.year || ''));
   const [totalPages, setTotalPages] = useState(String(paper.totalPages || ''));
+  const [pdfStartPage, setPdfStartPage] = useState(String((paper.pdfPageOffset || 0) + 1));
   const [isUpdating, setIsUpdating] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,8 +42,19 @@ export function EditPaperModal({ paper, onClose, onUpdate }: {
     setIsUpdating(true);
     setError(null);
 
+    const yearNum = parseInt(year, 10);
     const pageCount = parseInt(totalPages, 10);
-    const result = await updatePaperDetails(paper.id, title, author, isNaN(pageCount) ? 0 : pageCount);
+    const startPageNum = parseInt(pdfStartPage, 10);
+    const offset = isNaN(startPageNum) || startPageNum <= 1 ? 0 : startPageNum - 1;
+
+    const result = await updatePaperDetails(
+      paper.id, 
+      title, 
+      author, 
+      isNaN(yearNum) ? 0 : yearNum,
+      isNaN(pageCount) ? 0 : pageCount,
+      offset
+    );
 
     if (result.error) {
       setError(result.error);
@@ -45,7 +62,7 @@ export function EditPaperModal({ paper, onClose, onUpdate }: {
     } else {
       setIsSuccess(true);
       setTimeout(() => {
-        onUpdate(title, author, isNaN(pageCount) ? 0 : pageCount);
+        onUpdate(title, author, isNaN(yearNum) ? 0 : yearNum, isNaN(pageCount) ? 0 : pageCount, offset);
         onClose();
       }, 1000);
     }
@@ -73,14 +90,14 @@ export function EditPaperModal({ paper, onClose, onUpdate }: {
         </button>
 
         <div className="relative z-10 w-full">
-          <div className="flex flex-col md:flex-row gap-6 mb-12 justify-between items-start md:items-end">
+          <div className="flex flex-col md:flex-row gap-6 mb-10 justify-between items-start md:items-end">
             <div className="flex flex-col gap-2">
               <h3 className="text-2xl md:text-3xl font-serif text-[#10175b] tracking-tight">Update Archive.</h3>
               <p className="text-xs text-slate-500 font-medium italic opacity-70">Modify the research record in your library.</p>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="w-full space-y-8">
+          <form onSubmit={handleSubmit} className="w-full space-y-6">
             <div className="space-y-4">
               <div>
                 <label className="block text-[11px] font-mono font-bold uppercase tracking-[0.25em] text-[#10175b]/50 mb-3 ml-1">
@@ -97,7 +114,7 @@ export function EditPaperModal({ paper, onClose, onUpdate }: {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-[11px] font-mono font-bold uppercase tracking-[0.25em] text-[#10175b]/50 mb-3 ml-1">
                     Research Lead(s)
@@ -120,14 +137,56 @@ export function EditPaperModal({ paper, onClose, onUpdate }: {
                     inputMode="numeric"
                     pattern="[0-9]*"
                     autoComplete="off"
-                    value={totalPages}
-                    onChange={(e) => setTotalPages(e.target.value.replace(/[^0-9]/g, ''))}
+                    value={year}
+                    onChange={(e) => setYear(e.target.value.replace(/[^0-9]/g, ''))}
                     onKeyDown={(e) => {
                       if (['.', '-', '+', 'e', 'E', ','].includes(e.key)) e.preventDefault();
                     }}
                     placeholder="2014"
                     className="w-full px-4 py-3 bg-white/50 border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#10175b]/20 focus:border-[#10175b] text-base text-slate-900 placeholder-slate-300 font-serif transition-all"
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+                <div>
+                  <label className="block text-[11px] font-mono font-bold uppercase tracking-[0.25em] text-[#10175b]/50 mb-3 ml-1">
+                    Paper Total Pages (Physical)
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    autoComplete="off"
+                    value={totalPages}
+                    onChange={(e) => setTotalPages(e.target.value.replace(/[^0-9]/g, ''))}
+                    onKeyDown={(e) => {
+                      if (['.', '-', '+', 'e', 'E', ','].includes(e.key)) e.preventDefault();
+                    }}
+                    placeholder="12"
+                    className="w-full px-4 py-3 bg-white/50 border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#10175b]/20 focus:border-[#10175b] text-base text-slate-900 placeholder-slate-300 font-serif transition-all"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-1.5 ml-1">The printed page count of this paper.</p>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-mono font-bold uppercase tracking-[0.25em] text-[#10175b]/50 mb-3 ml-1">
+                    PDF Page 1 Offset / Start Page
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    autoComplete="off"
+                    value={pdfStartPage}
+                    onChange={(e) => setPdfStartPage(e.target.value.replace(/[^0-9]/g, ''))}
+                    onKeyDown={(e) => {
+                      if (['.', '-', '+', 'e', 'E', ','].includes(e.key)) e.preventDefault();
+                    }}
+                    placeholder="1"
+                    className="w-full px-4 py-3 bg-white/50 border border-slate-200 focus:outline-none focus:ring-1 focus:ring-[#10175b]/20 focus:border-[#10175b] text-base text-slate-900 placeholder-slate-300 font-serif transition-all"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-1.5 ml-1">Which PDF page corresponds to Paper Pg 1 (default: 1).</p>
                 </div>
               </div>
             </div>

@@ -30,9 +30,12 @@ interface PaperContentProps {
     id: string;
     title: string;
     author?: string | null;
+    authors?: string | null;
+    year?: number | null;
     coverImage?: string | null;
     totalPages?: number | null;
     pdfPageCount?: number | null;
+    pdfPageOffset?: number | null;
     userId: string;
     fileUrl?: string | null;
     currentPage?: number | null;
@@ -142,9 +145,9 @@ export default function PaperContent({
 
   // Re-calculate progress if paper details change
   const maxPage = vocab.reduce((max, t) => Math.max(max, t.pageNumber || 0), 0);
-  const effectiveTotalPages = currentPaper.pdfPageCount || currentPaper.totalPages;
+  const effectiveTotalPages = currentPaper.totalPages || (currentPaper.pdfPageCount ? Math.max(1, currentPaper.pdfPageCount - (currentPaper.pdfPageOffset || 0)) : null);
   const progressPercentValue = effectiveTotalPages 
-    ? Math.round((maxPage / effectiveTotalPages) * 100) 
+    ? Math.min(100, Math.round((maxPage / effectiveTotalPages) * 100)) 
     : 0;
   
   const showProgress = !!currentPaper.pdfPageCount;
@@ -364,8 +367,16 @@ export default function PaperContent({
         <EditPaperModal 
           paper={currentPaper as any} 
           onClose={() => setIsEditModalOpen(false)} 
-          onUpdate={(t, a, p) => {
-            setCurrentBook({ ...currentPaper, title: t, author: a, totalPages: p });
+          onUpdate={(t, a, y, p, offset) => {
+            setCurrentBook({ 
+              ...currentPaper, 
+              title: t, 
+              author: a, 
+              authors: a, 
+              year: y, 
+              totalPages: p,
+              pdfPageOffset: offset !== undefined ? offset : currentPaper.pdfPageOffset 
+            });
           }}
         />
       )}
@@ -405,15 +416,21 @@ export default function PaperContent({
             fileUrl={localFileUrl} 
             paperId={paper.id}
             paperTitle={currentPaper.title}
+            paperAuthors={currentPaper.author || currentPaper.authors}
             preferredLanguage={session.preferredLanguage as string}
             initialPage={localCurrentPage}
+            pdfPageOffset={currentPaper.pdfPageOffset || 0}
+            paperTotalPages={effectiveTotalPages}
+            onOffsetChange={(newOffset) => {
+              setCurrentBook(prev => ({ ...prev, pdfPageOffset: newOffset }));
+            }}
             savedVocab={vocab}
             onClose={() => setIsReaderOpen(false)}
             onPageChange={(page) => setLocalCurrentPage(page)}
             onFileRemoved={() => {
               setLocalFileUrl(null);
               setLocalCurrentPage(1);
-              setCurrentBook(prev => ({ ...prev, pdfPageCount: null }));
+              setCurrentBook(prev => ({ ...prev, pdfPageCount: null, pdfPageOffset: 0 }));
             }}
             onTranslate={(text, page) => {
               setSelectedText(text);
@@ -421,10 +438,7 @@ export default function PaperContent({
               // Reader no longer closes automatically to preserve progress
             }}
           />
-
-
         )}
-
       </AnimatePresence>
 
     </div>

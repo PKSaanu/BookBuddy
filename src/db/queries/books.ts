@@ -11,6 +11,7 @@ export async function getBookById(bookId: string, userId: string) {
       coverImage: books.coverImage,
       totalPages: books.totalPages,
       pdfPageCount: books.pdfPageCount,
+      pdfPageOffset: books.pdfPageOffset,
       notes: books.notes,
       userId: books.userId,
       fileUrl: books.fileUrl,
@@ -68,6 +69,7 @@ export async function updateBook(
     title?: string;
     author?: string;
     totalPages?: number | null;
+    pdfPageOffset?: number | null;
   }
 ) {
   const [updated] = await db
@@ -76,10 +78,22 @@ export async function updateBook(
       ...(data.title !== undefined ? { title: data.title.trim() } : {}),
       ...(data.author !== undefined ? { author: data.author.trim() || null } : {}),
       ...(data.totalPages !== undefined ? { totalPages: data.totalPages } : {}),
+      ...(data.pdfPageOffset !== undefined ? { pdfPageOffset: data.pdfPageOffset } : {}),
     })
     .where(and(eq(books.id, bookId), eq(books.userId, userId)))
     .returning();
   return updated || null;
+}
+
+export async function updateBookPageOffset(
+  bookId: string,
+  userId: string,
+  pdfPageOffset: number
+) {
+  await db
+    .update(books)
+    .set({ pdfPageOffset })
+    .where(and(eq(books.id, bookId), eq(books.userId, userId)));
 }
 
 export async function deleteBook(bookId: string, userId: string) {
@@ -139,7 +153,7 @@ export async function updateBookFileUrl(
 export async function clearBookFile(bookId: string, userId: string) {
   await db
     .update(books)
-    .set({ fileUrl: null, currentPage: 1, pdfPageCount: null })
+    .set({ fileUrl: null, currentPage: 1, pdfPageCount: null, pdfPageOffset: 0 })
     .where(and(eq(books.id, bookId), eq(books.userId, userId)));
 }
 

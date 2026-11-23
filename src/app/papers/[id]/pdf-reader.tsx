@@ -5,8 +5,8 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 import { motion, AnimatePresence } from 'framer-motion';
-import { IconX, IconChevronLeft, IconChevronRight, IconLanguage, IconLoader, IconMessageChatbot, IconLayoutColumns, IconLayoutSidebarRightCollapse, IconLayoutSidebarRightExpand } from '@tabler/icons-react';
-import { updatePaperProgress, removePaperFile } from '@/actions/papers';
+import { IconX, IconChevronLeft, IconChevronRight, IconLanguage, IconLoader, IconMessageChatbot, IconLayoutColumns, IconLayoutSidebarRightCollapse, IconLayoutSidebarRightExpand, IconCheck } from '@tabler/icons-react';
+import { updatePaperProgress, removePaperFile, setPaperPdfPageOffset } from '@/actions/papers';
 import MiniTranslator from './mini-translator';
 import PaperChat from './paper-chat';
 import { IconTrash } from '@tabler/icons-react';
@@ -22,6 +22,9 @@ interface PdfReaderProps {
   paperAuthors?: string | null;
   preferredLanguage: string;
   initialPage?: number;
+  pdfPageOffset?: number;
+  paperTotalPages?: number | null;
+  onOffsetChange?: (offset: number) => void;
   onClose: () => void;
   onTranslate: (text: string, page: number) => void;
   onPageChange: (page: number) => void;
@@ -37,6 +40,9 @@ export default function PdfReader({
   paperAuthors,
   preferredLanguage, 
   initialPage = 1, 
+  pdfPageOffset = 0,
+  paperTotalPages,
+  onOffsetChange,
   onClose, 
   onTranslate, 
   onPageChange, 
@@ -50,6 +56,31 @@ export default function PdfReader({
 
   const [pageNumber, setPageNumber] = useState(initialPage);
   const [scale, setScale] = useState(1.0);
+  const [currentOffset, setCurrentOffset] = useState(pdfPageOffset);
+  const [showCalibrationPopover, setShowCalibrationPopover] = useState(false);
+  const [customCalibrateInput, setCustomCalibrateInput] = useState('');
+  const [isCalibrating, setIsCalibrating] = useState(false);
+  const [calibrationSuccess, setCalibrationSuccess] = useState(false);
+
+  useEffect(() => {
+    setCurrentOffset(pdfPageOffset);
+  }, [pdfPageOffset]);
+
+  const physicalPage = Math.max(1, pageNumber - currentOffset);
+
+  const handleSetOffset = async (newOffset: number) => {
+    setIsCalibrating(true);
+    const safeOffset = Math.max(0, newOffset);
+    setCurrentOffset(safeOffset);
+    onOffsetChange?.(safeOffset);
+    await setPaperPdfPageOffset(paperId, safeOffset);
+    setIsCalibrating(false);
+    setCalibrationSuccess(true);
+    setTimeout(() => {
+      setCalibrationSuccess(false);
+      setShowCalibrationPopover(false);
+    }, 1200);
+  };
   const [selection, setSelection] = useState<{ text: string; x: number; y: number } | null>(null);
   const [activeTranslationText, setActiveTranslationText] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -158,6 +189,7 @@ export default function PdfReader({
     if (selection) {
       setActiveTranslationText(selection.text);
       setIsSidebarOpen(true);
+      onTranslate(selection.text, physicalPage);
       setSelection(null);
       // We no longer clear selectionRects here, to keep them visible while translating.
       // Clear selection
@@ -389,17 +421,19 @@ export default function PdfReader({
             </span>
           </div>
 
-          {/* Center: Navigation (Strictly Centered) */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-4 z-10">
-            <div className="flex items-center gap-4 bg-slate-900/50 px-4 py-1.5 rounded-full border border-slate-700 shadow-inner">
+          {/* Center: Navigation & Calibration */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 sm:gap-3 z-10">
+            <div className="flex items-center gap-2 sm:gap-4 bg-slate-900/60 px-3 sm:px-4 py-1.5 rounded-full border border-slate-700 shadow-inner">
               <button 
                 disabled={pageNumber <= 1}
                 onClick={() => setPageNumber((prev: number) => Math.max(1, prev - 1))}
                 className="p-1 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                title="Previous PDF Page"
               >
-                <IconChevronLeft size={20} />
+                <IconChevronLeft size={18} />
               </button>
-              <form onSubmit={handleJumpPage} className="flex items-center gap-2 font-mono text-[13px] text-white select-none group">
+              <form onSubmit={handleJumpPage} className="flex items-center gap-1.5 font-mono text-[13px] text-white select-none group">
+                <span className="text-[10px] text-slate-400 font-sans uppercase font-bold tracking-wider hidden sm:inline">PDF</span>
                 <input 
                   type="text"
                   inputMode="numeric"
@@ -429,9 +463,128 @@ export default function PdfReader({
                 disabled={numPages === null || pageNumber >= numPages}
                 onClick={() => setNumPages === null ? null : setPageNumber((prev: number) => Math.min(numPages!, prev + 1))}
                 className="p-1 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                title="Next PDF Page"
               >
-                <IconChevronRight size={20} />
+                <IconChevronRight size={18} />
               </button>
+            </div>
+
+            {/* Paper Page Calibration Pill */}
+            <div className="relative">
+              <button 
+                onClick={() => setShowCalibrationPopover(!showCalibrationPopover)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-mono transition-all ${
+                  currentOffset > 0 
+                    ? 'bg-indigo-950/70 border-indigo-500/50 text-indigo-200 hover:border-indigo-400' 
+                    : 'bg-slate-900/60 border-slate-700 text-slate-300 hover:border-slate-500'
+                }`}
+                title="Click to calibrate physical paper page number"
+              >
+                <span className="font-semibold text-white">
+                  Paper Pg {pageNumber > currentOffset ? (pageNumber - currentOffset) : '1'}
+                </span>
+                {paperTotalPages && (
+                  <span className="text-slate-400 text-[11px]">/ {paperTotalPages}</span>
+                )}
+                {currentOffset > 0 && (
+                  <span className="text-[10px] bg-indigo-500/30 text-indigo-300 px-1.5 py-0.5 rounded font-mono font-medium">
+                    +{currentOffset}
+                  </span>
+                )}
+              </button>
+
+              {/* Calibration Popover */}
+              <AnimatePresence>
+                {showCalibrationPopover && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-[220]" 
+                      onClick={() => setShowCalibrationPopover(false)} 
+                    />
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-72 sm:w-80 p-4 bg-[#1e2227] border border-slate-700/80 rounded-2xl shadow-2xl z-[230] text-slate-200"
+                    >
+                      <div className="flex items-center justify-between pb-2 mb-3 border-b border-slate-700/60">
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-300 font-sans">
+                          Page Calibration
+                        </span>
+                        <span className="text-[10px] font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded">
+                          PDF Pg {pageNumber}
+                        </span>
+                      </div>
+
+                      <p className="text-[11px] text-slate-400 leading-relaxed mb-4 font-sans">
+                        Match PDF page numbers to your printed article's page count.
+                      </p>
+
+                      <div className="space-y-2.5">
+                        {/* Quick Action: Set Current PDF Page as Paper Page 1 */}
+                        <button
+                          type="button"
+                          disabled={isCalibrating}
+                          onClick={() => handleSetOffset(pageNumber - 1)}
+                          className="w-full flex items-center justify-between px-3 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 rounded-xl text-xs font-medium text-indigo-200 transition-all text-left"
+                        >
+                          <span>Set PDF Pg {pageNumber} as Paper Pg 1</span>
+                          <span className="text-[10px] text-indigo-400 font-mono font-bold">Offset +{pageNumber - 1}</span>
+                        </button>
+
+                        {/* Custom Alignment Form */}
+                        <form 
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            const targetPaperPg = parseInt(customCalibrateInput, 10);
+                            if (!isNaN(targetPaperPg) && targetPaperPg > 0) {
+                              handleSetOffset(pageNumber - targetPaperPg);
+                            }
+                          }}
+                          className="flex items-center gap-2 pt-1"
+                        >
+                          <span className="text-[11px] text-slate-400 shrink-0 font-sans">Printed Pg:</span>
+                          <input 
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            placeholder={String(pageNumber > currentOffset ? pageNumber - currentOffset : 1)}
+                            value={customCalibrateInput}
+                            onChange={(e) => setCustomCalibrateInput(e.target.value.replace(/[^0-9]/g, ''))}
+                            className="w-16 px-2 py-1 bg-slate-800 border border-slate-600 rounded-lg text-xs font-mono text-white text-center focus:outline-none focus:border-indigo-500"
+                          />
+                          <button
+                            type="submit"
+                            disabled={!customCalibrateInput || isCalibrating}
+                            className="flex-1 py-1 px-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-xs font-bold rounded-lg transition-all"
+                          >
+                            Apply
+                          </button>
+                        </form>
+
+                        {/* Reset Option */}
+                        {currentOffset > 0 && (
+                          <button
+                            type="button"
+                            disabled={isCalibrating}
+                            onClick={() => handleSetOffset(0)}
+                            className="w-full text-center text-[11px] text-slate-400 hover:text-white pt-1 transition-colors"
+                          >
+                            Reset Offset to 0 (1:1 with PDF)
+                          </button>
+                        )}
+
+                        {calibrationSuccess && (
+                          <div className="flex items-center justify-center gap-1.5 text-emerald-400 text-xs font-semibold pt-1">
+                            <IconCheck size={14} strokeWidth={3} />
+                            Calibrated successfully!
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
             
             <button 
@@ -699,9 +852,12 @@ export default function PdfReader({
                           paperId={paperId}
                           preferredLanguage={preferredLanguage}
                           text={activeTranslationText}
-                          pageNumber={pageNumber}
+                          pageNumber={physicalPage}
                           savedVocab={savedVocab}
-                          onNavigate={(page) => setPageNumber(page)}
+                          onNavigate={(savedPaperPage) => {
+                            const targetPdfPage = savedPaperPage + currentOffset;
+                            setPageNumber(Math.min(numPages || targetPdfPage, Math.max(1, targetPdfPage)));
+                          }}
                         />
 
                     </div>

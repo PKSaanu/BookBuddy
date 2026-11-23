@@ -12,6 +12,7 @@ export async function getPaperById(paperId: string, userId: string) {
       year: papers.year,
       totalPages: papers.totalPages,
       pdfPageCount: papers.pdfPageCount,
+      pdfPageOffset: papers.pdfPageOffset,
       fileUrl: papers.fileUrl,
       notes: papers.notes,
       currentPage: papers.currentPage,
@@ -72,6 +73,7 @@ export async function updatePaper(
     authors?: string | null;
     year?: number | null;
     totalPages?: number | null;
+    pdfPageOffset?: number | null;
   }
 ) {
   const [updated] = await db
@@ -81,10 +83,22 @@ export async function updatePaper(
       ...(data.authors !== undefined ? { authors: data.authors?.trim() || null } : {}),
       ...(data.year !== undefined ? { year: data.year } : {}),
       ...(data.totalPages !== undefined ? { totalPages: data.totalPages } : {}),
+      ...(data.pdfPageOffset !== undefined ? { pdfPageOffset: data.pdfPageOffset } : {}),
     })
     .where(and(eq(papers.id, paperId), eq(papers.userId, userId)))
     .returning();
   return updated || null;
+}
+
+export async function updatePaperPageOffset(
+  paperId: string,
+  userId: string,
+  pdfPageOffset: number
+) {
+  await db
+    .update(papers)
+    .set({ pdfPageOffset })
+    .where(and(eq(papers.id, paperId), eq(papers.userId, userId)));
 }
 
 export async function deletePaper(paperId: string, userId: string) {
@@ -144,7 +158,7 @@ export async function updatePaperFileUrl(
 export async function clearPaperFile(paperId: string, userId: string) {
   await db
     .update(papers)
-    .set({ fileUrl: null, currentPage: 1, pdfPageCount: null })
+    .set({ fileUrl: null, currentPage: 1, pdfPageCount: null, pdfPageOffset: 0 })
     .where(and(eq(papers.id, paperId), eq(papers.userId, userId)));
 }
 
